@@ -16,22 +16,18 @@
 
 package controllers
 
-import play.api.test.Helpers.{GET, route, status}
 import uk.gov.hmrc.disclosecrossborderarrangements.controllers.routes
 import uk.gov.hmrc.disclosecrossborderarrangements.services.IdService
 import base.SpecBase
 import org.mockito.Matchers.any
 import org.mockito.Mockito.when
-import org.scalacheck.Arbitrary.arbitrary
 import org.scalatestplus.scalacheck.ScalaCheckPropertyChecks
 import play.api.inject.bind
 import play.api.inject.guice.GuiceApplicationBuilder
-import play.api.libs.json.Json
 import play.api.test.FakeRequest
-import play.api.test.Helpers.{POST, route, status, _}
+import play.api.test.Helpers.{GET, route, status, _}
 import play.api.{Application, Configuration}
 import uk.gov.hmrc.disclosecrossborderarrangements.models.ArrangementId
-import uk.gov.hmrc.http.HttpResponse
 
 import scala.concurrent.Future
 
@@ -46,7 +42,7 @@ with ScalaCheckPropertyChecks {
       bind[IdService].toInstance(mockIdService)
     ).build()
 
-  val validArrangementId = ArrangementId(dateString = "20200601", suffix = "A1B1C1")
+  val validArrangementId: ArrangementId = ArrangementId(dateString = "20200601", suffix = "A1B1C1")
 
   "IdController"-{
     "verifyArrangementId" -{
