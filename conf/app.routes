@@ -1,3 +1,4 @@
 # microservice specific routes
 
 GET        /hello-world             uk.gov.hmrc.disclosecrossborderarrangements.controllers.MicroserviceHelloWorldController.hello
+GET        /verify-arrangement-id/:arrangementId uk.gov.hmrc.disclosecrossborderarrangements.controllers.IdController.verifyArrangementId(arrangementId: String)

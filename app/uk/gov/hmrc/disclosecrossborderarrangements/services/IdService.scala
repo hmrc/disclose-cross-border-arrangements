@@ -31,6 +31,8 @@ class IdService @Inject()(val dateHelper: DateHelper,
 
   def date : String = dateHelper.today.toString("YYYYMMdd")
 
+  val arrangementIdRegEx = "[A-Z]{2}[A]([2]\\d{3}(0[1-9]|1[0-2])(0[1-9]|[12]\\d|3[01]))([A-Z0-9]{6})"
+
   def generateArrangementId(): Future[ArrangementId] = {
 
     val newArrangementId =  ArrangementId(dateString = date, suffix = suffixHelper.generateSuffix())
@@ -51,6 +53,22 @@ class IdService @Inject()(val dateHelper: DateHelper,
     }
   }
 
-  def doesArrangementIdExist(arrangementId: String): Future[Boolean] = Future(true)
+  def verifyArrangementId(suppliedArrangementId: String): Future[Option[Boolean]] =
 
+    createArrangementIdFromSuppliedString(suppliedArrangementId) match {
+      case Some(validArrangementId) => arrangementIdRepository.doesArrangementIdExist(validArrangementId).map(
+                                       result => Some(result))
+      case None => Future(None)
+    }
+
+
+  def createArrangementIdFromSuppliedString(suppliedString: String): Option[ArrangementId] = {
+
+    if(suppliedString.matches(arrangementIdRegEx)) {
+    Some(ArrangementId(prefix = suppliedString.substring(0,3),
+                       dateString = suppliedString.substring(3, 11),
+                       suffix = suppliedString.substring(11)))
+    }else None
+
+  }
 }

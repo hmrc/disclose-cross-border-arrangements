@@ -62,7 +62,7 @@ class IdServiceSpec extends SpecBase
   val arrangementIdPrefix = "GBA"
   val disclosureIdPrefix = "GBD"
 
-  "ReferenceNumberService"- {
+  "IdService"- {
 
     "generateArrangementId" -{
 
@@ -122,6 +122,31 @@ class IdServiceSpec extends SpecBase
         verify(mockDisclosureIdRepository, times(1)).storeDisclosureId(any())
 
       }
+    }
+
+    "does arrangementId exist" -{
+      "must return true if arrangementId is in correct format and exists" in {
+        when(mockArrangementIdRepository.doesArrangementIdExist(any())).thenReturn(Future.successful(true))
+
+        val idAsString = "GBA" + expectedDateString + newSuffix
+        val formattedArrangementId = ArrangementId(prefix = "GBA",
+                                                   dateString = expectedDateString,
+                                                   suffix = newSuffix)
+        service.verifyArrangementId(idAsString).futureValue mustBe Some(true)
+
+        verify(mockArrangementIdRepository, times(1)).doesArrangementIdExist(formattedArrangementId)
+
+      }
+
+      "must return false arrangementId if arrangement id is in the correct format but does not exist" in {
+        when(mockArrangementIdRepository.doesArrangementIdExist(any())).thenReturn(Future.successful(false))
+
+        val id = "GBA" + expectedDateString + newSuffix
+        service.verifyArrangementId(id).futureValue mustBe Some(false)
+        verify(mockArrangementIdRepository, times(1)).doesArrangementIdExist(any())
+
+      }
+
     }
   }
 }
