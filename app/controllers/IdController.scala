@@ -14,17 +14,15 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.disclosecrossborderarrangements.controllers
+package controllers
 
+import config.AppConfig
 import javax.inject.Inject
 import play.api.mvc.{Action, AnyContent, ControllerComponents}
-import uk.gov.hmrc.disclosecrossborderarrangements.config.AppConfig
-import uk.gov.hmrc.disclosecrossborderarrangements.models.ArrangementId
-import uk.gov.hmrc.disclosecrossborderarrangements.services.IdService
+import services.IdService
 import uk.gov.hmrc.play.bootstrap.controller.BackendController
 
-import scala.concurrent.{ExecutionContext, Future}
-import scala.concurrent.ExecutionContext.global
+import scala.concurrent.ExecutionContext
 
 class IdController @Inject()(idService: IdService, appConfig: AppConfig, cc: ControllerComponents)
                             (implicit executionContext: ExecutionContext)

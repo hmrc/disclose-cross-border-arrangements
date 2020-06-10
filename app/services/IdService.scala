@@ -14,12 +14,12 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.disclosecrossborderarrangements.services
+package services
 
 import javax.inject.Inject
-import uk.gov.hmrc.disclosecrossborderarrangements.helpers.{DateHelper, SuffixHelper}
-import uk.gov.hmrc.disclosecrossborderarrangements.models.{ArrangementId, DisclosureId}
-import uk.gov.hmrc.disclosecrossborderarrangements.repositories.{ArrangementIdRepository, DisclosureIdRepository}
+import helpers.{DateHelper, SuffixHelper}
+import models.{ArrangementId, DisclosureId}
+import repositories.{ArrangementIdRepository, DisclosureIdRepository}
 
 import scala.concurrent.Future
 import scala.concurrent.ExecutionContext.Implicits.global

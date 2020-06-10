@@ -14,9 +14,7 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.disclosecrossborderarrangements.services
-
-import java.io.File
+package services
 
 import javax.inject.Inject
 import play.api.libs.iteratee.Enumerator
@@ -26,36 +24,37 @@ import reactivemongo.api.gridfs.Implicits._
 import reactivemongo.api.gridfs.{DefaultFileToSave, GridFS}
 import reactivemongo.bson._
 
-import scala.concurrent.ExecutionContext
+import scala.concurrent.{ExecutionContext, Future}
+import scala.xml.NodeSeq
 
 
 class GridFSStorageService @Inject()(mongo: ReactiveMongoComponent)(implicit ec: ExecutionContext) {
+  val gridFS: GridFS[BSONSerializationPack.type] = GridFS(mongo.mongoConnector.db())
 
-
-  def writeFileToGridFS(file: File) = {
-    /*val gridFS: Future[GridFS[BSONSerializationPack.type]] = mongo.asyncGridFS
-
-    gridFS.flatMap {
-      gfs =>
-        // Prepare the GridFS object to the file to be pushed
-        val gridfsObj = DefaultFileToSave(
-          filename = Some(file.getName),
-          contentType = Some("application/xml")
-        )
-
-        gfs.save( Enumerator.fromFile(file), gridfsObj)
-    }*/
-
-    val gridFS: GridFS[BSONSerializationPack.type] = GridFS(mongo.mongoConnector.db())
+  def writeFileToGridFS(fileName: String, enumerator: Enumerator[Array[Byte]]): Future[Boolean] = {
 
     val gridfsObj = DefaultFileToSave(
-      filename = Some(file.getName),
+      filename = Some(fileName),
       contentType = Some("application/xml")
     )
 
-    gridFS.save( Enumerator.fromFile(file), gridfsObj)
+    gridFS.save( enumerator, gridfsObj).map {
+      _ => true
+    }
   }
 
+  def readFileFromGridFS(fileName: String): Future[Option[Array[Byte]]] = {
+    //implicitly assumes uniqueness of filename TBD
+    gridFS.find(BSONDocument("filename" -> fileName)).headOption.flatMap {
+      case Some(readFile) =>  {
+        val buf = new java.io.ByteArrayOutputStream()
+        gridFS.readToOutputStream(readFile, buf).map{
+          _ => Some(buf.toByteArray)
+        }
+      }
+      case None => Future.successful(None)
+    }
 
+  }
 
 }

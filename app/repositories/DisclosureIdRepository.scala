@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.disclosecrossborderarrangements.repositories
+package repositories
 
 import akka.stream.Materializer
 import javax.inject.Inject
@@ -23,7 +23,7 @@ import play.modules.reactivemongo.ReactiveMongoApi
 import reactivemongo.api.indexes.{Index, IndexType}
 import reactivemongo.play.json.collection.JSONCollection
 import reactivemongo.play.json.ImplicitBSONHandlers.JsObjectDocumentWriter
-import uk.gov.hmrc.disclosecrossborderarrangements.models.DisclosureId
+import models.DisclosureId
 
 import scala.concurrent.{ExecutionContext, Future}
 

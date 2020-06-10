@@ -16,8 +16,8 @@
 
 package controllers
 
-import uk.gov.hmrc.disclosecrossborderarrangements.controllers.routes
-import uk.gov.hmrc.disclosecrossborderarrangements.services.IdService
+import controllers.routes
+import services.IdService
 import base.SpecBase
 import org.mockito.Matchers.any
 import org.mockito.Mockito.when
@@ -27,7 +27,7 @@ import play.api.inject.guice.GuiceApplicationBuilder
 import play.api.test.FakeRequest
 import play.api.test.Helpers.{GET, route, status, _}
 import play.api.{Application, Configuration}
-import uk.gov.hmrc.disclosecrossborderarrangements.models.ArrangementId
+import models.ArrangementId
 
 import scala.concurrent.Future
 
