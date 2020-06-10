@@ -1,4 +1,3 @@
-import uk.gov.hmrc.DefaultBuildSettings.integrationTestSettings
 import uk.gov.hmrc.SbtArtifactory
 import uk.gov.hmrc.sbtdistributables.SbtDistributablesPlugin.publishingSettings
 
@@ -9,6 +8,7 @@ lazy val microservice = Project(appName, file("."))
   .settings(
     majorVersion                     := 0,
     scalaVersion := "2.12.10",
+    PlayKeys.playDefaultPort := 9759,
     libraryDependencies              ++= AppDependencies.compile ++ AppDependencies.test
   )
   .settings(publishingSettings: _*)
