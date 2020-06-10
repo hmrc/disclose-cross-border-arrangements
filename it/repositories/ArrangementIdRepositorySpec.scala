@@ -1,12 +1,11 @@
 package repositories
 
+import models.ArrangementId
 import org.scalatest.concurrent.{IntegrationPatience, ScalaFutures}
 import org.scalatest.{FreeSpec, MustMatchers, OptionValues}
 import play.api.inject.guice.GuiceApplicationBuilder
 import play.api.test.Helpers._
 import suite.MongoSuite
-import uk.gov.hmrc.disclosecrossborderarrangements.models.ArrangementId
-import uk.gov.hmrc.disclosecrossborderarrangements.repositories.ArrangementIdRepository
 
 import scala.concurrent.ExecutionContext.Implicits.global
 

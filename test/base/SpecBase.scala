@@ -16,11 +16,6 @@
 
 package base
 
-/*
- * Copyright 2020 HM Revenue & Customs
- *
- */
-
 import org.scalatest._
 import org.scalatest.concurrent.{IntegrationPatience, ScalaFutures}
 import org.scalatestplus.mockito.MockitoSugar

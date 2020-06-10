@@ -14,12 +14,14 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.disclosecrossborderarrangements.helpers
+package helpers
 
-import org.joda.time.LocalDate
+import scala.util.Random
 
-class DateHelper {
+class SuffixHelper {
 
-  def today: LocalDate = LocalDate.now()
+  def generateSuffix(suffixLength: Int = 6) : String = {
+    Random.alphanumeric.take(suffixLength).mkString("").toUpperCase
+  }
 
 }
