@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.disclosecrossborderarrangements.models
+package models
 
 import play.api.libs.json.{Json, OFormat}
 

@@ -17,17 +17,16 @@
 package services
 
 import base.SpecBase
+import helpers.{DateHelper, SuffixHelper}
+import models.{ArrangementId, DisclosureId}
 import org.joda.time.LocalDate
-import org.scalatestplus.scalacheck.ScalaCheckPropertyChecks
-import org.mockito.Mockito
 import org.mockito.Matchers.any
+import org.mockito.Mockito
 import org.mockito.Mockito.{times, verify, when}
 import org.scalatest.BeforeAndAfterEach
 import org.scalatestplus.mockito.MockitoSugar
-import uk.gov.hmrc.disclosecrossborderarrangements.helpers.{DateHelper, SuffixHelper}
-import uk.gov.hmrc.disclosecrossborderarrangements.models.{ArrangementId, DisclosureId}
-import uk.gov.hmrc.disclosecrossborderarrangements.repositories.{ArrangementIdRepository, DisclosureIdRepository}
-import uk.gov.hmrc.disclosecrossborderarrangements.services.IdService
+import org.scalatestplus.scalacheck.ScalaCheckPropertyChecks
+import repositories.{ArrangementIdRepository, DisclosureIdRepository}
 
 import scala.concurrent.Future
 

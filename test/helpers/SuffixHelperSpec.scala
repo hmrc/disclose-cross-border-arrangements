@@ -17,7 +17,6 @@
 package helpers
 
 import base.SpecBase
-import uk.gov.hmrc.disclosecrossborderarrangements.helpers.SuffixHelper
 
 class SuffixHelperSpec extends SpecBase {
 
