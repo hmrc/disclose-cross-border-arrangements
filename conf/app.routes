@@ -1,3 +1,5 @@
 # microservice specific routes
 
 GET        /verify-arrangement-id/:arrangementId    controllers.IdController.verifyArrangementId(arrangementId: String)
+
+POST       /submit     controllers.SubmissionController.storeSubmission
