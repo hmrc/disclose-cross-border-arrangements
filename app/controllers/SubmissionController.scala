@@ -37,6 +37,12 @@ class SubmissionController @Inject()(
 
   def storeSubmission: Action[NodeSeq] = Action.async(parse.xml) {
     implicit request =>
+      //receive xml and find import instructions
+      //generate arrangementID and disclosure ID (based on instruction type)
+      //transform the file and store it
+      //audit original page and transformed page
+
+
       val xml = request.body
       val fileName = (xml \ "fileName").text
       val submissionFile = (xml \ "file").mkString
