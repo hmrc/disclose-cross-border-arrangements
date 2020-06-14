@@ -21,7 +21,7 @@ import helpers.{DateHelper, SuffixHelper}
 import models.{ArrangementId, DisclosureId}
 import org.joda.time.LocalDate
 import org.mockito.Matchers.any
-import org.mockito.Mockito
+import org.mockito.Mockito._
 import org.mockito.Mockito.{times, verify, when}
 import org.scalatest.BeforeAndAfterEach
 import org.scalatestplus.mockito.MockitoSugar
@@ -33,7 +33,7 @@ import scala.concurrent.Future
 class IdServiceSpec extends SpecBase
   with MockitoSugar
   with ScalaCheckPropertyChecks
-  with BeforeAndAfterEach{
+  with BeforeAndAfterEach {
 
   val mockDateHelper: DateHelper = mock[DateHelper]
   val mockSuffixHelper: SuffixHelper = mock[SuffixHelper]
@@ -56,7 +56,9 @@ class IdServiceSpec extends SpecBase
   val newArrangementId: ArrangementId = ArrangementId(dateString = expectedDateString, suffix = newSuffix)
   val newDisclosureId: DisclosureId = DisclosureId(dateString = expectedDateString, suffix = newSuffix)
 
-  override def beforeEach():Unit = Mockito.reset(mockArrangementIdRepository, mockDisclosureIdRepository)
+  override def beforeEach(): Unit = {
+    reset(mockArrangementIdRepository, mockDisclosureIdRepository)
+  }
 
   val arrangementIdPrefix = "GBA"
   val disclosureIdPrefix = "GBD"

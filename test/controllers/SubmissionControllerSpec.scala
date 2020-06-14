@@ -48,9 +48,17 @@ class SubmissionControllerSpec extends SpecBase with MockitoSugar {
         <submission>
           <fileName>my-file.xml</fileName>
           <file>
-            <test>
-              <result>Success!</result>
-            </test>
+            <DAC6_Arrangement version="First">
+              <Header>
+                <MessageRefId>GB0000000XXX</MessageRefId>
+                <Timestamp>2020-05-14T17:10:00</Timestamp>
+              </Header>
+              <ArrangementID>GBA20200601AAA000</ArrangementID>
+              <DAC6Disclosures>
+                <DisclosureImportInstruction>DAC6ADD</DisclosureImportInstruction>
+                <Disclosing></Disclosing>
+              </DAC6Disclosures>
+            </DAC6_Arrangement>
           </file>
         </submission>
 
@@ -68,9 +76,17 @@ class SubmissionControllerSpec extends SpecBase with MockitoSugar {
         <submission>
           <fileName>my-file.xml</fileName>
           <file>
-            <test>
-              <result>Success!</result>
-            </test>
+            <DAC6_Arrangement version="First">
+              <Header>
+                <MessageRefId>GB0000000XXX</MessageRefId>
+                <Timestamp>2020-05-14T17:10:00</Timestamp>
+              </Header>
+              <ArrangementID>GBA20200601AAA000</ArrangementID>
+              <DAC6Disclosures>
+                <DisclosureImportInstruction>DAC6ADD</DisclosureImportInstruction>
+                <Disclosing></Disclosing>
+              </DAC6Disclosures>
+            </DAC6_Arrangement>
           </file>
         </submission>
 
