@@ -19,8 +19,9 @@ package controllers
 import java.io.ByteArrayInputStream
 import java.nio.charset.StandardCharsets
 
+import helpers.DateHelper
 import javax.inject.Inject
-import models.ImportInstruction
+import models.{FileName, ImportInstruction}
 import play.api.Logger
 import play.api.libs.iteratee.Enumerator
 import play.api.libs.json.Json
@@ -35,7 +36,8 @@ class SubmissionController @Inject()(
                                       cc: ControllerComponents,
                                       submissionService: SubmissionService,
                                       transformService: TransformService,
-                                      storageService: GridFSStorageService
+                                      storageService: GridFSStorageService,
+                                      dateHelper: DateHelper
                                     )(implicit ec: ExecutionContext)
   extends BackendController(cc) {
 
@@ -46,15 +48,24 @@ class SubmissionController @Inject()(
       val xml = request.body
       val fileName = (xml \ "fileName").text
       val importInstruction = ImportInstruction((xml \\ "DisclosureImportInstruction").text)
-      val submissionFile: NodeSeq = (xml \ "file")
+      val disclosureID = (xml \\ "DisclosureID").text
+       val submissionFile: NodeSeq = (xml \ "file")
+       val submissionTime = dateHelper.now
 
       for {
         ids <- submissionService.generateIDsForInstruction(importInstruction)
+
         //transform the file and store it
         transformedFile = transformService.transformFileForIDs(submissionFile, ids)
         submissionByteStream = new ByteArrayInputStream(transformedFile.mkString.getBytes)
-        _ <- storageService.writeFileToGridFS(fileName, Enumerator.fromStream(submissionByteStream))
+
+        //filename altered to be as unique as possible
+        _ <- storageService.writeFileToGridFS(
+          FileName(fileName, disclosureID, ids, submissionTime).toString,
+          Enumerator.fromStream(submissionByteStream)
+        )
         //TODO: Add audits for original and modified files
+        //TODO: Store submission details in mongo
       } yield {
         Ok(Json.toJson(ids))
       }
