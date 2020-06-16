@@ -48,5 +48,34 @@ class GridFSStorageServiceSpec extends FreeSpec
         }
       }
     }
+
+    "must retrieve an xml file" in {
+      val app = new GuiceApplicationBuilder().build()
+
+      running(app) {
+
+        val storageService = app.injector.instanceOf[GridFSStorageService]
+
+        database.flatMap(_.drop()).futureValue
+
+        val xml =
+          <Test>
+            <Result>Success</Result>
+          </Test>
+
+        val stream: InputStream = new ByteArrayInputStream(xml.toString.getBytes(StandardCharsets.UTF_8))
+        val enumeration = Enumerator.fromStream(stream)
+        val readResult = storageService
+          .writeFileToGridFS("testFile.xml", enumeration)
+          .flatMap {
+            _ => storageService
+              .readFileFromGridFS("testFile.xml")
+          }
+
+        whenReady(readResult) { result =>
+          result.map(bytes => new String(bytes, StandardCharsets.UTF_8)).get mustBe xml.toString
+        }
+      }
+    }
   }
 }
