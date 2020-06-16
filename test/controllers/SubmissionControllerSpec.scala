@@ -80,24 +80,23 @@ class SubmissionControllerSpec extends SpecBase with MockitoSugar {
       status(result) mustBe INTERNAL_SERVER_ERROR
     }
 
-    /*    "when a submission is badly formed we respond with a BadRequest" in {
-          when(mockStorageService.writeFileToGridFS(any[String](), any()))
-            .thenReturn(Future.failed(new Exception("Boom!")))
+   "read a file out of the submission store" in {
+     val testXml =
+       <test>
+         <value>read this</value>
+       </test>
+     val testBytes = testXml.mkString.getBytes
 
-          val controller = application.injector.instanceOf[SubmissionController]
+     when(mockStorageService.readFileFromGridFS(any()))
+       .thenReturn(Future.successful(Some(testBytes)))
 
-          val submission =
-            """
-              |{
-              | "fileName": ""
-              |}
-              |""".stripMargin
+     //NB: This does not have a route attached as it is for testing only at this point
+     val controller = application.injector.instanceOf[SubmissionController]
+     val result = controller.readSubmissionFromStore("my-test-file.xml")(FakeRequest("GET", "/"))
 
-
-          val result: Future[Result] = controller.storeSubmission()(FakeRequest("POST", "", FakeHeaders(), Json.parse(submission)))
-
-          status(result) mustBe BAD_REQUEST
-        }*/
+     status(result) mustBe OK
+     contentAsString(result) mustBe testXml.toString
+   }
   }
 
 }
