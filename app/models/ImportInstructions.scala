@@ -14,13 +14,20 @@
  * limitations under the License.
  */
 
-package helpers
+package models
 
-import org.joda.time.{DateTime, LocalDate}
+sealed trait ImportInstruction
 
-class DateHelper {
+case object New extends ImportInstruction
+case object Add extends ImportInstruction
+case object Replace extends ImportInstruction
+case object Delete extends ImportInstruction
 
-  def today: LocalDate = LocalDate.now()
-  def now: DateTime = DateTime.now()
-
+object ImportInstruction {
+  def apply(name: String): ImportInstruction = name match {
+    case "DAC6NEW" => New
+    case "DAC6ADD" => Add
+    case "DAC6REP" => Replace
+    case "DAC6DEL" => Delete
+  }
 }

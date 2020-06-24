@@ -14,13 +14,19 @@
  * limitations under the License.
  */
 
-package helpers
+package models
 
-import org.joda.time.{DateTime, LocalDate}
+import play.api.libs.json.{Writes, __}
 
-class DateHelper {
+case class GeneratedIDs(arrangementID: Option[ArrangementId], disclosureID: Option[DisclosureId])
 
-  def today: LocalDate = LocalDate.now()
-  def now: DateTime = DateTime.now()
+object GeneratedIDs {
+  import play.api.libs.functional.syntax._
+
+  implicit lazy val writes: Writes[GeneratedIDs] =
+    (
+      (__ \ "arrangementID").writeNullable[String] and
+        (__ \ "disclosureID").writeNullable[String]
+      )(gen => (gen.arrangementID.map(_.value), gen.disclosureID.map(_.value)))
 
 }

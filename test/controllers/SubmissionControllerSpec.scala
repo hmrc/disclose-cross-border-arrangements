@@ -17,40 +17,68 @@
 package controllers
 
 import base.SpecBase
+import helpers.DateHelper
+import models.{ArrangementId, DisclosureId, GeneratedIDs}
+import org.joda.time.{DateTime, LocalDate}
+import org.mockito.ArgumentCaptor
 import org.mockito.Matchers.any
-import org.mockito.Mockito.when
+import org.mockito.Mockito._
+import org.scalatest.BeforeAndAfterEach
 import org.scalatestplus.mockito.MockitoSugar
 import play.api.inject.bind
 import play.api.mvc.Result
 import play.api.test.FakeRequest
 import play.api.test.Helpers.{status, _}
-import services.GridFSStorageService
+import services.{GridFSStorageService, SubmissionService}
 
 import scala.concurrent.Future
 
-class SubmissionControllerSpec extends SpecBase with MockitoSugar {
+class SubmissionControllerSpec extends SpecBase
+  with MockitoSugar
+  with BeforeAndAfterEach {
+
+  val mockStorageService = mock[GridFSStorageService]
+  val mockSubmissionService = mock[SubmissionService]
+  val mockDateHelper = mock[DateHelper]
+
+  override def beforeEach(): Unit = {
+    reset(mockStorageService, mockSubmissionService)
+  }
 
   "submission controller" - {
 
-    val mockStorageService = mock[GridFSStorageService]
+
+    val testDateTime = new DateTime(2020,5,14,17,10,0)
 
     val application = applicationBuilder()
       .overrides(
-        bind[GridFSStorageService].toInstance(mockStorageService)
+        bind[GridFSStorageService].toInstance(mockStorageService),
+        bind[SubmissionService].toInstance(mockSubmissionService),
+        bind[DateHelper].toInstance(mockDateHelper)
       )
       .build()
 
     "when a file is posted we store it and send an OK" in {
       when(mockStorageService.writeFileToGridFS(any[String](), any()))
         .thenReturn(Future.successful(true))
-
+      when(mockSubmissionService.generateIDsForInstruction(any()))
+        .thenReturn(Future.successful(GeneratedIDs(None, Some(DisclosureId("GBD","20200601","AAA000")))))
+      when(mockDateHelper.now).thenReturn(testDateTime)
       val submission =
         <submission>
           <fileName>my-file.xml</fileName>
           <file>
-            <test>
-              <result>Success!</result>
-            </test>
+            <DAC6_Arrangement version="First">
+              <Header>
+                <MessageRefId>GB0000000XXX</MessageRefId>
+                <Timestamp>2020-05-14T17:10:00</Timestamp>
+              </Header>
+              <ArrangementID>GBA20200601AAA000</ArrangementID>
+              <DAC6Disclosures>
+                <DisclosureImportInstruction>DAC6ADD</DisclosureImportInstruction>
+                <Disclosing></Disclosing>
+              </DAC6Disclosures>
+            </DAC6_Arrangement>
           </file>
         </submission>
 
@@ -63,14 +91,24 @@ class SubmissionControllerSpec extends SpecBase with MockitoSugar {
     "when a file is posted we try to store it and there is an error we respond with InternalServerError" in {
       when(mockStorageService.writeFileToGridFS(any[String](), any()))
         .thenReturn(Future.failed(new Exception("Boom!")))
-
+      when(mockSubmissionService.generateIDsForInstruction(any()))
+        .thenReturn(Future.successful(GeneratedIDs(None, Some(DisclosureId("GBD","20200601","AAA000")))))
+      when(mockDateHelper.now).thenReturn(testDateTime)
       val submission =
         <submission>
           <fileName>my-file.xml</fileName>
           <file>
-            <test>
-              <result>Success!</result>
-            </test>
+            <DAC6_Arrangement version="First">
+              <Header>
+                <MessageRefId>GB0000000XXX</MessageRefId>
+                <Timestamp>2020-05-14T17:10:00</Timestamp>
+              </Header>
+              <ArrangementID>GBA20200601AAA000</ArrangementID>
+              <DAC6Disclosures>
+                <DisclosureImportInstruction>DAC6ADD</DisclosureImportInstruction>
+                <Disclosing></Disclosing>
+              </DAC6Disclosures>
+            </DAC6_Arrangement>
           </file>
         </submission>
 
@@ -97,6 +135,81 @@ class SubmissionControllerSpec extends SpecBase with MockitoSugar {
      status(result) mustBe OK
      contentAsString(result) mustBe testXml.toString
    }
+
+    "when a file is posted we store it with an altered filename" in {
+      when(mockStorageService.writeFileToGridFS(any[String](), any()))
+        .thenReturn(Future.successful(true))
+      when(mockSubmissionService.generateIDsForInstruction(any()))
+        .thenReturn(
+          Future.successful(
+            GeneratedIDs(Some(ArrangementId("GBA", "20200601", "AAA000")), Some(DisclosureId("GBD","20200601","AAA000")))
+          )
+        )
+      when(mockDateHelper.now).thenReturn(testDateTime)
+
+      val submission =
+        <submission>
+          <fileName>my-file.xml</fileName>
+          <file>
+            <DAC6_Arrangement version="First">
+              <Header>
+                <MessageRefId>GB0000000XXX</MessageRefId>
+                <Timestamp>2020-05-14T17:10:00</Timestamp>
+              </Header>
+              <DAC6Disclosures>
+                <DisclosureImportInstruction>DAC6NEW</DisclosureImportInstruction>
+                <Disclosing></Disclosing>
+              </DAC6Disclosures>
+            </DAC6_Arrangement>
+          </file>
+        </submission>
+
+      val request = FakeRequest(POST, routes.SubmissionController.storeSubmission.url).withXmlBody(submission)
+      val result: Future[Result] = route(application, request).value
+
+      status(result) mustBe OK
+      val fileNameCaptor = ArgumentCaptor.forClass(classOf[String])
+      verify(mockStorageService, times(1)).writeFileToGridFS(fileNameCaptor.capture(), any())
+      fileNameCaptor.getValue mustBe "my-file.xml-GBD20200601AAA000-20200514171000"
+    }
+
+    "when a replacement file is posted we store it with an altered filename" in {
+      when(mockStorageService.writeFileToGridFS(any[String](), any()))
+        .thenReturn(Future.successful(true))
+      when(mockSubmissionService.generateIDsForInstruction(any()))
+        .thenReturn(
+          Future.successful(
+            GeneratedIDs(None, None)
+          )
+        )
+      when(mockDateHelper.now).thenReturn(testDateTime)
+
+      val submission =
+        <submission>
+          <fileName>my-file.xml</fileName>
+          <file>
+            <DAC6_Arrangement version="First">
+              <Header>
+                <MessageRefId>GB0000000XXX</MessageRefId>
+                <Timestamp>2020-05-14T17:10:00</Timestamp>
+              </Header>
+              <DAC6Disclosures>
+                <DisclosureID>GBD20200601AAA000</DisclosureID>
+                <DisclosureImportInstruction>DAC6REP</DisclosureImportInstruction>
+                <Disclosing></Disclosing>
+              </DAC6Disclosures>
+            </DAC6_Arrangement>
+          </file>
+        </submission>
+
+      val request = FakeRequest(POST, routes.SubmissionController.storeSubmission.url).withXmlBody(submission)
+      val result: Future[Result] = route(application, request).value
+
+      status(result) mustBe OK
+      val fileNameCaptor = ArgumentCaptor.forClass(classOf[String])
+      verify(mockStorageService, times(1)).writeFileToGridFS(fileNameCaptor.capture(), any())
+      fileNameCaptor.getValue mustBe "my-file.xml-GBD20200601AAA000-20200514171000"
+    }
   }
 
 }

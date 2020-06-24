@@ -1,7 +1,5 @@
 package services
 
-package services
-
 import java.io.{ByteArrayInputStream, InputStream}
 import java.nio.charset.StandardCharsets
 

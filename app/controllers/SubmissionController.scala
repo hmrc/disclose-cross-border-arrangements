@@ -19,11 +19,14 @@ package controllers
 import java.io.ByteArrayInputStream
 import java.nio.charset.StandardCharsets
 
+import helpers.DateHelper
 import javax.inject.Inject
+import models.{FileName, ImportInstruction}
 import play.api.Logger
 import play.api.libs.iteratee.Enumerator
+import play.api.libs.json.Json
 import play.api.mvc.{Action, AnyContent, ControllerComponents}
-import services.GridFSStorageService
+import services.{GridFSStorageService, SubmissionService, TransformService}
 import uk.gov.hmrc.play.bootstrap.controller.BackendController
 
 import scala.concurrent.ExecutionContext
@@ -31,22 +34,42 @@ import scala.xml.NodeSeq
 
 class SubmissionController @Inject()(
                                       cc: ControllerComponents,
-                                      storageService: GridFSStorageService
+                                      submissionService: SubmissionService,
+                                      transformService: TransformService,
+                                      storageService: GridFSStorageService,
+                                      dateHelper: DateHelper
                                     )(implicit ec: ExecutionContext)
   extends BackendController(cc) {
 
   def storeSubmission: Action[NodeSeq] = Action.async(parse.xml) {
     implicit request =>
+     {
+      //receive xml and find import instructions
       val xml = request.body
       val fileName = (xml \ "fileName").text
-      val submissionFile = (xml \ "file").mkString
+      val importInstruction = ImportInstruction((xml \\ "DisclosureImportInstruction").text)
+      val disclosureID = (xml \\ "DisclosureID").text
+       val submissionFile: NodeSeq = (xml \ "file")
+       val submissionTime = dateHelper.now
 
-      val submissionByteStream = new ByteArrayInputStream(submissionFile.getBytes)
+      for {
+        ids <- submissionService.generateIDsForInstruction(importInstruction)
 
+        //transform the file and store it
+        transformedFile = transformService.transformFileForIDs(submissionFile, ids)
+        submissionByteStream = new ByteArrayInputStream(transformedFile.mkString.getBytes)
 
-      storageService
-        .writeFileToGridFS(fileName, Enumerator.fromStream(submissionByteStream))
-        .map(_ => Ok).recover {
+        //filename altered to be as unique as possible
+        _ <- storageService.writeFileToGridFS(
+          FileName(fileName, disclosureID, ids, submissionTime).toString,
+          Enumerator.fromStream(submissionByteStream)
+        )
+        //TODO: Add audits for original and modified files
+        //TODO: Store submission details in mongo
+      } yield {
+        Ok(Json.toJson(ids))
+      }
+     } recover {
         case ex:Exception =>
           Logger.error("Error storing to GridFS", ex)
           InternalServerError

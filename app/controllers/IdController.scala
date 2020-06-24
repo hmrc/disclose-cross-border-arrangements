@@ -35,6 +35,6 @@ extends BackendController(cc) {
         case Some(true) => NoContent
         case Some(false) => NotFound("Arrangement Id does not exist")
         case None => BadRequest("invalid format")
+      }
   }
-}
 }

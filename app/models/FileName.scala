@@ -14,13 +14,14 @@
  * limitations under the License.
  */
 
-package helpers
+package models
+
+import java.text.SimpleDateFormat
 
 import org.joda.time.{DateTime, LocalDate}
 
-class DateHelper {
-
-  def today: LocalDate = LocalDate.now()
-  def now: DateTime = DateTime.now()
-
+case class FileName(fileName: String, disclosureID: String, generatedIDs: GeneratedIDs, submissionTime: DateTime) {
+  val format = new SimpleDateFormat("yyyyMMddHHmmss")
+  val disclosureIdToUse = generatedIDs.disclosureID.map(_.value).getOrElse(disclosureID)
+  override def toString: String = s"$fileName-$disclosureIdToUse-${format.format(submissionTime.toDate)}"
 }
