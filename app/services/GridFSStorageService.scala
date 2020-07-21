@@ -25,7 +25,6 @@ import reactivemongo.api.gridfs.{DefaultFileToSave, GridFS}
 import reactivemongo.bson._
 
 import scala.concurrent.{ExecutionContext, Future}
-import scala.xml.NodeSeq
 
 
 class GridFSStorageService @Inject()(mongo: ReactiveMongoComponent)(implicit ec: ExecutionContext) {

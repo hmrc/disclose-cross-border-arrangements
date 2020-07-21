@@ -17,8 +17,7 @@
 package services
 
 import base.SpecBase
-import models.{Add, ArrangementId, Delete, DisclosureId, GeneratedIDs, New, Replace}
-import org.mockito.Matchers.any
+import models._
 import org.mockito.Mockito.{reset, times, verify, when}
 import org.scalatest.BeforeAndAfterEach
 import org.scalatestplus.mockito.MockitoSugar

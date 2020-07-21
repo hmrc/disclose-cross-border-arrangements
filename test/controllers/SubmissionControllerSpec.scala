@@ -19,7 +19,7 @@ package controllers
 import base.SpecBase
 import helpers.DateHelper
 import models.{ArrangementId, DisclosureId, GeneratedIDs}
-import org.joda.time.{DateTime, LocalDate}
+import org.joda.time.DateTime
 import org.mockito.ArgumentCaptor
 import org.mockito.Matchers.any
 import org.mockito.Mockito._

@@ -18,7 +18,7 @@ package models
 
 import java.text.SimpleDateFormat
 
-import org.joda.time.{DateTime, LocalDate}
+import org.joda.time.DateTime
 
 case class FileName(fileName: String, disclosureID: String, generatedIDs: GeneratedIDs, submissionTime: DateTime) {
   val format = new SimpleDateFormat("yyyyMMddHHmmss")
