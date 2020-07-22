@@ -22,12 +22,12 @@ import java.nio.charset.StandardCharsets
 import helpers.DateHelper
 import javax.inject.Inject
 import models.{FileName, ImportInstruction}
-import play.api.Logger
+import org.slf4j.LoggerFactory
 import play.api.libs.iteratee.Enumerator
 import play.api.libs.json.Json
 import play.api.mvc.{Action, AnyContent, ControllerComponents}
 import services.{GridFSStorageService, SubmissionService, TransformService}
-import uk.gov.hmrc.play.bootstrap.controller.BackendController
+import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
 
 import scala.concurrent.ExecutionContext
 import scala.xml.NodeSeq
@@ -40,6 +40,8 @@ class SubmissionController @Inject()(
                                       dateHelper: DateHelper
                                     )(implicit ec: ExecutionContext)
   extends BackendController(cc) {
+
+  private val logger = LoggerFactory.getLogger(getClass)
 
   def storeSubmission: Action[NodeSeq] = Action.async(parse.xml) {
     implicit request =>
@@ -71,7 +73,7 @@ class SubmissionController @Inject()(
       }
      } recover {
         case ex:Exception =>
-          Logger.error("Error storing to GridFS", ex)
+          logger.error("Error storing to GridFS", ex)
           InternalServerError
       }
   }
@@ -85,7 +87,7 @@ class SubmissionController @Inject()(
         case None => NotFound
       }.recover {
         case ex:Exception =>
-          Logger.error("Error reading from GridFS", ex)
+          logger.error("Error reading from GridFS", ex)
           InternalServerError
       }
   }
