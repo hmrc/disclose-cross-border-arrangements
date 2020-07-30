@@ -6,10 +6,11 @@ import sbt._
 object AppDependencies {
 
   val compile = Seq(
-    "org.reactivemongo"       %% "play2-reactivemongo"      % "0.18.6-play26",
-    "uk.gov.hmrc"             %% "simple-reactivemongo"     % "7.30.0-play-26",
+    "org.reactivemongo"       %% "play2-reactivemongo"        % "0.18.6-play26",
+    "uk.gov.hmrc"             %% "simple-reactivemongo"       % "7.30.0-play-26",
     "uk.gov.hmrc"             %% "bootstrap-backend-play-27"  % "2.24.0",
-    "com.typesafe.play"       %% "play-iteratees"           % "2.6.1"
+    "com.typesafe.play"       %% "play-iteratees"             % "2.6.1",
+    "com.typesafe.play"       %% "play-json-joda"             % "2.9.0"
   )
 
   val test = Seq(

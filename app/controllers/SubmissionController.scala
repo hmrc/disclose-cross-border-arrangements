@@ -21,11 +21,13 @@ import java.nio.charset.StandardCharsets
 
 import helpers.DateHelper
 import javax.inject.Inject
-import models.{FileName, ImportInstruction}
+import models.{FileName, GeneratedIDs, ImportInstruction, SubmissionDetails}
+import org.joda.time.DateTime
 import org.slf4j.LoggerFactory
 import play.api.libs.iteratee.Enumerator
 import play.api.libs.json.Json
 import play.api.mvc.{Action, AnyContent, ControllerComponents}
+import repositories.SubmissionDetailsRepository
 import services.{GridFSStorageService, SubmissionService, TransformService}
 import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
 
@@ -37,7 +39,8 @@ class SubmissionController @Inject()(
                                       submissionService: SubmissionService,
                                       transformService: TransformService,
                                       storageService: GridFSStorageService,
-                                      dateHelper: DateHelper
+                                      dateHelper: DateHelper,
+                                      submissionDetailsRepository: SubmissionDetailsRepository
                                     )(implicit ec: ExecutionContext)
   extends BackendController(cc) {
 
@@ -45,33 +48,47 @@ class SubmissionController @Inject()(
 
   def storeSubmission: Action[NodeSeq] = Action.async(parse.xml) {
     implicit request =>
-     {
-      //receive xml and find import instructions
-      val xml = request.body
-      val fileName = (xml \ "fileName").text
-      val importInstruction = ImportInstruction((xml \\ "DisclosureImportInstruction").text)
-      val disclosureID = (xml \\ "DisclosureID").text
-       val submissionFile: NodeSeq = (xml \ "file")
-       val submissionTime = dateHelper.now
+      {
+        //receive xml and find import instructions
+        val xml = request.body
+        val fileName = (xml \ "fileName").text
+        val enrolmentID = (xml \ "enrolmentID").text
+        val importInstruction = ImportInstruction((xml \\ "DisclosureImportInstruction").text)
+        val disclosureID = (xml \\ "DisclosureID").text
+        val submissionFile: NodeSeq = (xml \ "file")
+        val submissionTime = dateHelper.now
+        val initialDisclosureMA = (xml \\ "InitialDisclosureMA").text.toBoolean
 
-      for {
-        ids <- submissionService.generateIDsForInstruction(importInstruction)
+        for {
+          ids <- submissionService.generateIDsForInstruction(importInstruction)
 
-        //transform the file and store it
-        transformedFile = transformService.transformFileForIDs(submissionFile, ids)
-        submissionByteStream = new ByteArrayInputStream(transformedFile.mkString.getBytes)
+          //transform the file and store it
+          transformedFile = transformService.transformFileForIDs(submissionFile, ids)
+          submissionByteStream = new ByteArrayInputStream(transformedFile.mkString.getBytes)
 
-        //filename altered to be as unique as possible
-        _ <- storageService.writeFileToGridFS(
-          FileName(fileName, disclosureID, ids, submissionTime).toString,
-          Enumerator.fromStream(submissionByteStream)
-        )
-        //TODO: Add audits for original and modified files
-        //TODO: Store submission details in mongo
-      } yield {
-        Ok(Json.toJson(ids))
-      }
-     } recover {
+          //filename altered to be as unique as possible
+          _ <- storageService.writeFileToGridFS(
+            FileName(fileName, disclosureID, ids, submissionTime).toString,
+            Enumerator.fromStream(submissionByteStream)
+          )
+          //TODO: Add audits for original and modified files
+        } yield {
+
+          val submissionDetails = buildSubmissionDetails(
+            xml = xml,
+            ids = ids,
+            fileName = fileName,
+            enrolmentID = enrolmentID,
+            importInstruction = importInstruction,
+            disclosureID = disclosureID,
+            submissionTime = submissionTime,
+            initialDisclosureMA = initialDisclosureMA)
+
+          submissionDetailsRepository.storeSubmissionDetails(submissionDetails)
+
+          Ok(Json.toJson(ids))
+        }
+      } recover {
         case ex:Exception =>
           logger.error("Error storing to GridFS", ex)
           InternalServerError
@@ -90,6 +107,38 @@ class SubmissionController @Inject()(
           logger.error("Error reading from GridFS", ex)
           InternalServerError
       }
+  }
+
+  private def buildSubmissionDetails(xml: NodeSeq,
+                                     ids: GeneratedIDs,
+                                     fileName: String,
+                                     enrolmentID: String,
+                                     importInstruction: ImportInstruction,
+                                     disclosureID: String,
+                                     submissionTime: DateTime,
+                                     initialDisclosureMA: Boolean): SubmissionDetails = {
+
+    val arrID = if (ids.arrangementID.isDefined) {
+      Some(ids.arrangementID.get.value)
+    } else {
+      Some((xml \\ "ArrangementID").text)
+    }
+
+    val discID = if (ids.disclosureID.isDefined) {
+      Some(ids.disclosureID.get.value)
+    } else {
+      Some(disclosureID)
+    }
+
+    SubmissionDetails(
+      enrolmentID = enrolmentID,
+      submissionTime = submissionTime,
+      fileName = fileName,
+      arrangementID = arrID,
+      disclosureID = discID,
+      importInstruction = importInstruction.toString,
+      initialDisclosureMA = initialDisclosureMA
+    )
   }
 
 }
