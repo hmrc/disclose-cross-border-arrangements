@@ -118,16 +118,14 @@ class SubmissionController @Inject()(
                                      submissionTime: DateTime,
                                      initialDisclosureMA: Boolean): SubmissionDetails = {
 
-    val arrID = if (ids.arrangementID.isDefined) {
-      Some(ids.arrangementID.get.value)
-    } else {
-      Some((xml \\ "ArrangementID").text)
+    val arrID = Option {
+      ids.arrangementID.map(_.value)
+        .getOrElse((xml \\ "ArrangementID").text)
     }
 
-    val discID = if (ids.disclosureID.isDefined) {
-      Some(ids.disclosureID.get.value)
-    } else {
-      Some(disclosureID)
+    val discID = Option {
+      ids.disclosureID.map(_.value)
+        .getOrElse(disclosureID)
     }
 
     SubmissionDetails(
