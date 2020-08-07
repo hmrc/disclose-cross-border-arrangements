@@ -31,4 +31,14 @@ case class SubmissionDetails(enrolmentID: String,
 
 object SubmissionDetails {
   implicit val format: OFormat[SubmissionDetails] = Json.format[SubmissionDetails]
+  implicit val writes = Json.writes[SubmissionDetails]
+}
+
+case class SubmissionHistory(submissionDetails: List[SubmissionDetails])
+
+object SubmissionHistory {
+  implicit val format: OFormat[SubmissionHistory] = Json.format[SubmissionHistory]
+
+  implicit val writes = Json.writes[SubmissionHistory]
+
 }
