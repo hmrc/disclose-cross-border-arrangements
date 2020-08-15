@@ -5,3 +5,4 @@ GET        /verify-arrangement-id/:arrangementId    controllers.IdController.ver
 POST       /submit                                  controllers.SubmissionController.storeSubmission
 
 GET        /history/count/:enrolmentId              controllers.HistoryController.noOfPreviousSubmissions(enrolmentId: String)
+GET        /history/submissions/:enrolmentId        controllers.HistoryController.submissionDetails(enrolmentId: String)

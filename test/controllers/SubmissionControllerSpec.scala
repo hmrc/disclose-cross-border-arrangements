@@ -16,10 +16,11 @@
 
 package controllers
 
+import java.time.LocalDateTime
+
 import base.SpecBase
 import helpers.DateHelper
 import models.{ArrangementId, DisclosureId, GeneratedIDs, SubmissionDetails}
-import org.joda.time.DateTime
 import org.mockito.Matchers.any
 import org.mockito.Mockito._
 import org.mockito.{ArgumentCaptor, Matchers}
@@ -49,7 +50,7 @@ class SubmissionControllerSpec extends SpecBase
 
   "submission controller" - {
 
-    val testDateTime = new DateTime(2020,5,14,17,10,0)
+    val testDateTime = LocalDateTime.of(2020,5,14,17,10,0)
     val submissionDetails: SubmissionDetails = SubmissionDetails(
       enrolmentID = "enrolmentID",
       submissionTime = testDateTime,

@@ -17,6 +17,8 @@
 package controllers
 
 import javax.inject.Inject
+import models.SubmissionHistory
+import play.api.libs.json.Json
 import play.api.mvc.{Action, AnyContent, ControllerComponents}
 import repositories.SubmissionDetailsRepository
 import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
@@ -33,5 +35,18 @@ class HistoryController @Inject()(
      submissionDetailsRepository
       .countNoOfPreviousSubmissions(enrolmentId)
       .map(no => Ok(s"$no"))
+  }
+
+  def submissionDetails(enrolmentId: String): Action[AnyContent] = Action.async {
+    implicit request =>
+      submissionDetailsRepository
+        .retrieveSubmissionHistory(enrolmentId)
+        .map {
+          details =>
+            Ok(Json.toJson(SubmissionHistory(details)))
+        }.recover {
+          case e =>
+            InternalServerError(s"Failed with the following error: $e")
+        }
   }
 }

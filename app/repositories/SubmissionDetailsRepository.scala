@@ -35,13 +35,14 @@ class SubmissionDetailsRepository @Inject()(mongo: ReactiveMongoApi)
   private def submissionDetailsCollection: Future[JSONCollection] =
     mongo.database.map(_.collection[JSONCollection](collectionName))
 
-  //TODO: Not guaranteed to be unique you could replace a file multiple times
+  //TODO: Not guaranteed to be unique - you could replace a file multiple times
   def getSubmissionDetails(disclosureID: String): Future[Option[SubmissionDetails]] =
     submissionDetailsCollection
       .flatMap(_.find(Json.obj("disclosureID" -> disclosureID), None)
         .one[SubmissionDetails]
       )
 
+  //TODO: This should have optional paging to support many submissions
   def retrieveSubmissionHistory(enrolmentID: String): Future[List[SubmissionDetails]] = {
     val maxDocs = 10000
     val selector = Json.obj("enrolmentID" -> enrolmentID)
