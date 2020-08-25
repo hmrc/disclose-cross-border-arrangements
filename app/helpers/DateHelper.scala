@@ -16,11 +16,12 @@
 
 package helpers
 
-import org.joda.time.{DateTime, LocalDate}
+import java.time.{LocalDate, LocalDateTime}
+
 
 class DateHelper {
 
   def today: LocalDate = LocalDate.now()
-  def now: DateTime = DateTime.now()
+  def now: LocalDateTime = LocalDateTime.now()
 
 }

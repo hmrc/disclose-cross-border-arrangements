@@ -16,13 +16,14 @@
 
 package models
 
-import org.joda.time.DateTime
+import java.time.LocalDateTime
+
 import play.api.libs.json.{Json, OFormat}
-import play.api.libs.json.JodaWrites._
-import play.api.libs.json.JodaReads._
+
+import scala.xml.NodeSeq
 
 case class SubmissionDetails(enrolmentID: String,
-                             submissionTime: DateTime,
+                             submissionTime: LocalDateTime,
                              fileName: String,
                              arrangementID: Option[String],
                              disclosureID: Option[String],
@@ -30,6 +31,37 @@ case class SubmissionDetails(enrolmentID: String,
                              initialDisclosureMA: Boolean)
 
 object SubmissionDetails {
+
+  def build(xml: NodeSeq,
+            ids: GeneratedIDs,
+            fileName: String,
+            enrolmentID: String,
+            importInstruction: ImportInstruction,
+            disclosureID: String,
+            submissionTime: LocalDateTime,
+            initialDisclosureMA: Boolean): SubmissionDetails = {
+
+    val arrID = Option {
+      ids.arrangementID.map(_.value)
+        .getOrElse((xml \\ "ArrangementID").text)
+    }
+
+    val discID = Option {
+      ids.disclosureID.map(_.value)
+        .getOrElse(disclosureID)
+    }
+
+    SubmissionDetails(
+      enrolmentID = enrolmentID,
+      submissionTime = submissionTime,
+      fileName = fileName,
+      arrangementID = arrID,
+      disclosureID = discID,
+      importInstruction = importInstruction.toString,
+      initialDisclosureMA = initialDisclosureMA
+    )
+  }
+
   implicit val format: OFormat[SubmissionDetails] = Json.format[SubmissionDetails]
   implicit val writes = Json.writes[SubmissionDetails]
 }

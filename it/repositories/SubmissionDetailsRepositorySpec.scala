@@ -1,7 +1,9 @@
 package repositories
 
+
+import java.time.LocalDateTime
+
 import models.SubmissionDetails
-import org.joda.time.DateTime
 import org.scalatest.concurrent.{IntegrationPatience, ScalaFutures}
 import org.scalatest.{FreeSpec, MustMatchers}
 import play.api.Application
@@ -18,7 +20,7 @@ class SubmissionDetailsRepositorySpec
 
     val submissionDetails = SubmissionDetails(
       enrolmentID = "enrolmentID",
-      submissionTime = DateTime.now(),
+      submissionTime = LocalDateTime.now(),
       fileName = "fileName.xml",
       arrangementID = Some("GBA20200601AAA000"),
       disclosureID = Some("GBD20200601AAA000"),
@@ -43,7 +45,7 @@ class SubmissionDetailsRepositorySpec
     }
 
     "must retrieve submission details history - latest submissions first" in {
-      val olderSubmissionDetails = submissionDetails.copy(fileName = "another-file.xml", submissionTime = DateTime.now().minusDays(1))
+      val olderSubmissionDetails = submissionDetails.copy(fileName = "another-file.xml", submissionTime = LocalDateTime.now().minusDays(1))
       val diffSubmissionDetails = submissionDetails.copy(enrolmentID = "diffEnrolmentID", fileName = "diff-file.xml")
       val app: Application = new GuiceApplicationBuilder().build()
       val repo: SubmissionDetailsRepository = app.injector.instanceOf[SubmissionDetailsRepository]
@@ -57,6 +59,35 @@ class SubmissionDetailsRepositorySpec
 
         whenReady(repo.retrieveSubmissionHistory("enrolmentID")) {
           _ mustEqual List(submissionDetails, olderSubmissionDetails)
+        }
+      }
+    }
+
+    "must correctly count submission details" in {
+      val app: Application = new GuiceApplicationBuilder().build()
+      val repo: SubmissionDetailsRepository = app.injector.instanceOf[SubmissionDetailsRepository]
+
+      running(app) {
+
+        database.flatMap(_.drop()).futureValue
+        await(repo.storeSubmissionDetails(submissionDetails))
+
+        whenReady(repo.countNoOfPreviousSubmissions("enrolmentID")) {
+          _ mustEqual 1
+        }
+      }
+    }
+
+    "must correctly return a zero count when user has not submitted" in {
+      val app: Application = new GuiceApplicationBuilder().build()
+      val repo: SubmissionDetailsRepository = app.injector.instanceOf[SubmissionDetailsRepository]
+
+      running(app) {
+
+        database.flatMap(_.drop()).futureValue
+
+        whenReady(repo.countNoOfPreviousSubmissions("enrolmentID")) {
+          _ mustEqual 0
         }
       }
     }

@@ -21,8 +21,7 @@ import java.nio.charset.StandardCharsets
 
 import helpers.DateHelper
 import javax.inject.Inject
-import models.{FileName, GeneratedIDs, ImportInstruction, SubmissionDetails, SubmissionHistory}
-import org.joda.time.DateTime
+import models.{FileName, ImportInstruction, SubmissionDetails, SubmissionHistory}
 import org.slf4j.LoggerFactory
 import play.api.http.Writeable
 import play.api.libs.iteratee.Enumerator
@@ -75,7 +74,7 @@ class SubmissionController @Inject()(
           //TODO: Add audits for original and modified files
         } yield {
 
-          val submissionDetails = buildSubmissionDetails(
+          val submissionDetails = SubmissionDetails.build(
             xml = xml,
             ids = ids,
             fileName = fileName,
@@ -121,36 +120,6 @@ class SubmissionController @Inject()(
         logger.error("Error reading from GridFS", ex)
       InternalServerError
       }
-  }
-
-  private def buildSubmissionDetails(xml: NodeSeq,
-                                     ids: GeneratedIDs,
-                                     fileName: String,
-                                     enrolmentID: String,
-                                     importInstruction: ImportInstruction,
-                                     disclosureID: String,
-                                     submissionTime: DateTime,
-                                     initialDisclosureMA: Boolean): SubmissionDetails = {
-
-    val arrID = Option {
-      ids.arrangementID.map(_.value)
-        .getOrElse((xml \\ "ArrangementID").text)
-    }
-
-    val discID = Option {
-      ids.disclosureID.map(_.value)
-        .getOrElse(disclosureID)
-    }
-
-    SubmissionDetails(
-      enrolmentID = enrolmentID,
-      submissionTime = submissionTime,
-      fileName = fileName,
-      arrangementID = arrID,
-      disclosureID = discID,
-      importInstruction = importInstruction.toString,
-      initialDisclosureMA = initialDisclosureMA
-    )
   }
 
 }

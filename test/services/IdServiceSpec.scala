@@ -16,10 +16,11 @@
 
 package services
 
+import java.time.LocalDate
+
 import base.SpecBase
 import helpers.{DateHelper, SuffixHelper}
 import models.{ArrangementId, DisclosureId}
-import org.joda.time.LocalDate
 import org.mockito.Matchers.any
 import org.mockito.Mockito._
 import org.mockito.Mockito.{times, verify, when}
@@ -42,7 +43,7 @@ class IdServiceSpec extends SpecBase
 
   val service = new IdService(mockDateHelper, mockSuffixHelper, mockArrangementIdRepository,
     mockDisclosureIdRepository)
-  val testDate = new LocalDate(2020, 6, 1)
+  val testDate = LocalDate.of(2020, 6, 1)
 
   val newSuffix = "A1B2C3"
   when(mockDateHelper.today).thenReturn(testDate)

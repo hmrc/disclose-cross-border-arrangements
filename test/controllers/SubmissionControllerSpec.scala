@@ -16,10 +16,11 @@
 
 package controllers
 
+import java.time.LocalDateTime
+
 import base.SpecBase
 import helpers.DateHelper
 import models.{ArrangementId, DisclosureId, GeneratedIDs, SubmissionDetails, SubmissionHistory}
-import org.joda.time.DateTime
 import org.mockito.Matchers.any
 import org.mockito.Mockito._
 import org.mockito.{ArgumentCaptor, Matchers}
@@ -48,15 +49,17 @@ class SubmissionControllerSpec extends SpecBase
     reset(mockStorageService, mockSubmissionService, mockSubmissionDetailsRepository)
   }
 
-  val testDateTime = new DateTime(2020, 5, 14, 17, 10, 0)
-  val submissionDetails: SubmissionDetails = SubmissionDetails(
-    enrolmentID = "enrolmentID",
-    submissionTime = testDateTime,
-    fileName = "my-file.xml",
-    arrangementID = Some("GBA20200601AAA000"),
-    disclosureID = Some("GBD20200601AAA000"),
-    importInstruction = "Add",
-    initialDisclosureMA = false)
+  "submission controller" - {
+
+    val testDateTime = LocalDateTime.of(2020,5,14,17,10,0)
+    val submissionDetails: SubmissionDetails = SubmissionDetails(
+      enrolmentID = "enrolmentID",
+      submissionTime = testDateTime,
+      fileName = "my-file.xml",
+      arrangementID = Some("GBA20200601AAA000"),
+      disclosureID = Some("GBD20200601AAA000"),
+      importInstruction = "Add",
+      initialDisclosureMA = false)
 
   val application = applicationBuilder()
     .overrides(
@@ -280,7 +283,7 @@ class SubmissionControllerSpec extends SpecBase
 
     }
 
-
+  }
 
     }
 
