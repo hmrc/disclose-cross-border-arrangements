@@ -16,21 +16,19 @@
 
 package services
 import base.SpecBase
+import org.mockito.ArgumentCaptor
+import org.mockito.Matchers.any
+import org.mockito.Mockito.{times, verify, _}
+import org.scalatestplus.mockito.MockitoSugar
+import play.api.inject
+import play.api.inject.guice.GuiceApplicationBuilder
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.play.audit.http.connector.AuditConnector
-import org.mockito.Matchers.{eq => eqTo, _}
-import org.mockito.Matchers.any
-import org.mockito.Mockito.{reset, times, verify}
-import org.scalacheck.Arbitrary.arbitrary
-import org.scalatestplus.scalacheck.ScalaCheckPropertyChecks._
+import uk.gov.hmrc.play.audit.model.DataEvent
 
-import scala.xml.NodeSeq
+import scala.concurrent.ExecutionContext
 
-class AuditServiceSpec extends SpecBase {
-
-  implicit val ec = scala.concurrent.ExecutionContext.Implicits.global
-  val auditConnector = mock[AuditConnector]
-  val auditService = new AuditService(auditConnector)(ec)
+class AuditServiceSpec extends SpecBase with MockitoSugar {
 
   val xml =
     <DAC6_Arrangement version="First" xmlns="urn:ukdac6:v0.1">
@@ -44,24 +42,36 @@ class AuditServiceSpec extends SpecBase {
       </DAC6Disclosures>
     </DAC6_Arrangement>
 
-  "AuditService.submissionAudit" - {
-    "must generate correct payload for disclosure submission audit" in {
 
-      forAll(xml, xml) {
-        (submissionFile, transformedFile) =>
-          reset(auditConnector)
+   val auditType = "disclosureFileSubmission"
 
-          auditService.submissionAudit(submissionFile, transformedFile)
+      "Audit service must" - {
+        "send audit information with the correct value" in {
 
-          val expected = Map(
-            "submissionFile" -> submissionFile,
-            "transformedFile" -> transformedFile
-          )
+          val auditConnector =  mock[AuditConnector]
+
+          val app = new GuiceApplicationBuilder()
+            .overrides(
+              inject.bind[AuditConnector].toInstance(auditConnector)
+            )
+            .build()
+
+          val auditService = app.injector.instanceOf[AuditService]
+
+          val argumentCaptorDataEvent: ArgumentCaptor[DataEvent] = ArgumentCaptor.forClass(classOf[DataEvent])
+
+          when(auditConnector.sendExplicitAudit(auditType, any[DataEvent])(any[HeaderCarrier], any[ExecutionContext], any()))
+            .thenReturn()
+
+
+          auditService.submissionAudit(xml, xml)
+
           verify(auditConnector, times(1))
-            .sendExplicitAudit(eqTo("discloseCrossBorderArrangement"), eqTo(expected))(any(),any(), any())
+            .sendExplicitAudit(auditType, argumentCaptorDataEvent.capture())(any[HeaderCarrier], any[ExecutionContext], any())
 
-      }
+          assert(argumentCaptorDataEvent.getValue.detail == (xml, xml))
+        }
     }
-  }
 }
+
 
