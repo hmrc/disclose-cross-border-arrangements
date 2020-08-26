@@ -35,6 +35,9 @@ class IdService @Inject()(val dateHelper: DateHelper,
 
   val arrangementIdRegEx = "[A-Z]{2}[A]([2]\\d{3}(0[1-9]|1[0-2])(0[1-9]|[12]\\d|3[01]))([A-Z0-9]{6})"
 
+  val nonUkPrefixes = List("ATA", "BEA", "BGA", "CYA", "CZA", "DKA", "EEA", "FIA", "FRA", "DEA", "GRA", "HUA", "HRA",
+                           "IEA", "ITA", "LVA", "LTA", "LUA", "MTA", "NLA", "PLA", "PTA", "ROA", "SKA", "SIA", "ESA", "SEA")
+
   def generateArrangementId(): Future[ArrangementId] = {
 
     val newArrangementId =  ArrangementId(dateString = date, suffix = suffixHelper.generateSuffix())
@@ -58,6 +61,7 @@ class IdService @Inject()(val dateHelper: DateHelper,
   def verifyArrangementId(suppliedArrangementId: String): Future[Option[Boolean]] =
 
     createArrangementIdFromSuppliedString(suppliedArrangementId) match {
+      case Some(validArrangementId) if nonUkPrefixes.contains(validArrangementId.prefix) =>  Future(Some(true))
       case Some(validArrangementId) => arrangementIdRepository.doesArrangementIdExist(validArrangementId).map(
                                        result => Some(result))
       case None => Future(None)

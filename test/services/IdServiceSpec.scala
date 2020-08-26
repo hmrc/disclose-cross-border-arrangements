@@ -140,6 +140,20 @@ class IdServiceSpec extends SpecBase
 
       }
 
+      "must return true for nonuk arrangment id in correct format" in {
+
+        val nonUkCodes = List("AT", "BE", "BG", "CY", "CZ", "DK", "EE", "FI", "FR", "DE", "GR", "HU", "HR", "IE", "IT",
+          "LV", "LT", "LU", "MT", "NL", "PL", "PT", "RO", "SK", "SI", "ES", "SE")
+
+        nonUkCodes.foreach {
+          code => {
+            val idAsString = s"${code}A" + expectedDateString + newSuffix
+            service.verifyArrangementId(idAsString).futureValue mustBe Some(true)
+
+            verify(mockArrangementIdRepository, times(0)).doesArrangementIdExist(any())
+          }
+        }
+      }
       "must return false arrangementId if arrangement id is in the correct format but does not exist" in {
         when(mockArrangementIdRepository.doesArrangementIdExist(any())).thenReturn(Future.successful(false))
 
