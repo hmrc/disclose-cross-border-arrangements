@@ -74,8 +74,6 @@ class SubmissionController @Inject()(
 
          _ =  auditService.submissionAudit(submissionFile, transformedFile)
 
-         _ =  println("*******************" + submissionFile.mkString("_"))
-
         } yield {
 
           val submissionDetails = SubmissionDetails.build(

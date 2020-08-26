@@ -66,7 +66,8 @@ class AuditServiceSpec extends SpecBase with MockitoSugar {
           verify(auditConnector, times(1))
             .sendExplicitAudit(any[String], argumentCaptorData.capture())(any[HeaderCarrier], any[ExecutionContext])
 
-          assert(argumentCaptorData.getValue == ???)
+          argumentCaptorData.getValue mustBe Map("submissionFile" -> xml.toString, "transformedFile" -> xml.toString)
+
         }
     }
 }
