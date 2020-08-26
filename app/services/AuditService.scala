@@ -33,7 +33,7 @@ class AuditService @Inject()(auditConnector: AuditConnector)(implicit ec: Execut
 
   def submissionAudit(submissionFile: NodeSeq, transformedFile: NodeSeq)(implicit hc: HeaderCarrier): Unit = {
 
-    val auditMap = (
+    val auditMap: Map[String, String] = (
       withSubmissionFile(submissionFile) andThen
         withTransformedFile(transformedFile)
       )(emptyMap)

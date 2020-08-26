@@ -24,7 +24,6 @@ import play.api.inject
 import play.api.inject.guice.GuiceApplicationBuilder
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.play.audit.http.connector.AuditConnector
-import uk.gov.hmrc.play.audit.model.DataEvent
 
 import scala.concurrent.ExecutionContext
 
@@ -58,18 +57,16 @@ class AuditServiceSpec extends SpecBase with MockitoSugar {
 
           val auditService = app.injector.instanceOf[AuditService]
 
-          val argumentCaptorDataEvent: ArgumentCaptor[DataEvent] = ArgumentCaptor.forClass(classOf[DataEvent])
+          val argumentCaptorData: ArgumentCaptor[Map[String, String]] = ArgumentCaptor.forClass(classOf[Map[String, String]])
 
-          when(auditConnector.sendExplicitAudit(auditType, any[DataEvent])(any[HeaderCarrier], any[ExecutionContext], any()))
-            .thenReturn()
-
+          doNothing().when(auditConnector).sendExplicitAudit(any[String], any[Map[String, String]])(any[HeaderCarrier], any[ExecutionContext])
 
           auditService.submissionAudit(xml, xml)
 
           verify(auditConnector, times(1))
-            .sendExplicitAudit(auditType, argumentCaptorDataEvent.capture())(any[HeaderCarrier], any[ExecutionContext], any())
+            .sendExplicitAudit(any[String], argumentCaptorData.capture())(any[HeaderCarrier], any[ExecutionContext])
 
-          assert(argumentCaptorDataEvent.getValue.detail == (xml, xml))
+          assert(argumentCaptorData.getValue == ???)
         }
     }
 }
