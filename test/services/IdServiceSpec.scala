@@ -154,6 +154,16 @@ class IdServiceSpec extends SpecBase
           }
         }
       }
+
+      "must false for uk suffix that is not a valid prefix" in {
+
+            val idAsString = s"ZZA" + expectedDateString + newSuffix
+            service.verifyArrangementId(idAsString).futureValue mustBe None
+
+            verify(mockArrangementIdRepository, times(0)).doesArrangementIdExist(any())
+
+
+      }
       "must return false arrangementId if arrangement id is in the correct format but does not exist" in {
         when(mockArrangementIdRepository.doesArrangementIdExist(any())).thenReturn(Future.successful(false))
 

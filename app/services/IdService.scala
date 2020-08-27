@@ -62,9 +62,9 @@ class IdService @Inject()(val dateHelper: DateHelper,
 
     createArrangementIdFromSuppliedString(suppliedArrangementId) match {
       case Some(validArrangementId) if nonUkPrefixes.contains(validArrangementId.prefix) =>  Future(Some(true))
-      case Some(validArrangementId) => arrangementIdRepository.doesArrangementIdExist(validArrangementId).map(
+      case Some(validArrangementId) if validArrangementId.prefix.equals("GBA") => arrangementIdRepository.doesArrangementIdExist(validArrangementId).map(
                                        result => Some(result))
-      case None => Future(None)
+      case _ => Future(None)
     }
 
 
