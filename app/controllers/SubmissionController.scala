@@ -27,7 +27,7 @@ import play.api.libs.iteratee.Enumerator
 import play.api.libs.json.Json
 import play.api.mvc.{Action, AnyContent, ControllerComponents}
 import repositories.SubmissionDetailsRepository
-import services.{GridFSStorageService, SubmissionService, TransformService}
+import services.{AuditService, GridFSStorageService, SubmissionService, TransformService}
 import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
 
 import scala.concurrent.ExecutionContext
@@ -39,7 +39,8 @@ class SubmissionController @Inject()(
                                       transformService: TransformService,
                                       storageService: GridFSStorageService,
                                       dateHelper: DateHelper,
-                                      submissionDetailsRepository: SubmissionDetailsRepository
+                                      submissionDetailsRepository: SubmissionDetailsRepository,
+                                      auditService: AuditService
                                     )(implicit ec: ExecutionContext)
   extends BackendController(cc) {
 
@@ -70,7 +71,9 @@ class SubmissionController @Inject()(
             FileName(fileName, disclosureID, ids, submissionTime).toString,
             Enumerator.fromStream(submissionByteStream)
           )
-          //TODO: Add audits for original and modified files
+
+         _ =  auditService.submissionAudit(submissionFile, transformedFile)
+
         } yield {
 
           val submissionDetails = SubmissionDetails.build(
