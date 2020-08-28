@@ -66,7 +66,7 @@ object SubmissionDetails {
   implicit val writes = Json.writes[SubmissionDetails]
 }
 
-case class SubmissionHistory(submissionDetails: List[SubmissionDetails])
+case class SubmissionHistory(details: Seq[SubmissionDetails])
 
 object SubmissionHistory {
   implicit val format: OFormat[SubmissionHistory] = Json.format[SubmissionHistory]
