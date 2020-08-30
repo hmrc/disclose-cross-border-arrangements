@@ -33,30 +33,36 @@ class DisclosureIdRepository @Inject()(mongo: ReactiveMongoApi
 
   private val disclosureIdCollectionName: String = "disclosure-id"
 
-  private def disclosureIdCollection: Future[JSONCollection] =
-    mongo.database.map(_.collection[JSONCollection](disclosureIdCollectionName))
-
-  private val dateIndex = Index(
+  private val dateIndex = IndexUtils.index(
     key     = Seq("dateString" -> IndexType.Ascending),
-    name    = Some("disclosure-id-date-index")
+    name    = Some("disclosure-id-date-index"),
+    expireAfterSeconds = None
   )
 
-  val started: Future[Unit] =
-    disclosureIdCollection.flatMap {
-      _.indexesManager.ensure(dateIndex)
-    }.map(_ => ())
+  lazy val ensureIndex: Future[Unit] =
+    for {
+      collection <- mongo.database.map(_.collection[JSONCollection](disclosureIdCollectionName))
+      _ <- collection.indexesManager.ensure(dateIndex)
+    } yield ()
 
+  private def disclosureIdCollection: Future[JSONCollection] =
+    for {
+      _ <- ensureIndex
+      collection <- mongo.database.map(_.collection[JSONCollection](disclosureIdCollectionName))
+    } yield collection
 
-  def doesDisclosureIdExist(disclosureId: DisclosureId):Future[Boolean] = {
+  def doesDisclosureIdExist(disclosureId: DisclosureId): Future[Boolean] = {
+    val selector = Json.obj(
+      "dateString" -> disclosureId.dateString,
+      "suffix" -> disclosureId.suffix
+    )
+
     disclosureIdCollection.flatMap(
-      _.find(Json.obj("dateString" -> disclosureId.dateString, "suffix" -> disclosureId.suffix), None).one[DisclosureId]).map{
-      case None => false
-      case _ => true
-    }
+      _.find[JsObject, DisclosureId](selector, None).one[DisclosureId]
+    ) map (_.isDefined)
   }
 
-  def storeDisclosureId(disclosureId: DisclosureId): Future[DisclosureId] = {
-
+  def storeDisclosureId(disclosureId: DisclosureId): Future[DisclosureId] =
     disclosureIdCollection.flatMap {
       _.insert(ordered = false)
         .one(disclosureId).map {
@@ -65,6 +71,5 @@ class DisclosureIdRepository @Inject()(mongo: ReactiveMongoApi
           disclosureId
       }
     }
-  }
-}
 
+}
