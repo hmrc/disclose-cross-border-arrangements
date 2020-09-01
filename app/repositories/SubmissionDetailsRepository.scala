@@ -32,8 +32,7 @@ class SubmissionDetailsRepository @Inject()(mongo: ReactiveMongoApi)
                                            (implicit ec: ExecutionContext) {
 
   private val collectionName: String = "submission-details"
-  private val ttlForDetails: Int = 300
-  //private val ttlForDetails: Int = 189341712
+  private val ttlForDetails: Int = 189341712
   //6 years - using 31556952 seconds for average year
 
   val ttlIndex = IndexUtils.index(
