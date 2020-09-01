@@ -19,6 +19,7 @@ package models
 import java.time.LocalDateTime
 
 import play.api.libs.json.{Json, OFormat}
+import repositories.MongoDateTimeFormats
 
 import scala.xml.NodeSeq
 
@@ -36,7 +37,7 @@ case class SubmissionDetails(enrolmentID: String,
                              importInstruction: String,
                              initialDisclosureMA: Boolean)
 
-object SubmissionDetails {
+object SubmissionDetails extends MongoDateTimeFormats {
 
   def build(xml: NodeSeq,
             ids: GeneratedIDs,

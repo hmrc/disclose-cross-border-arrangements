@@ -21,7 +21,8 @@ import models.SubmissionDetails
 import play.api.libs.json.Json
 import play.modules.reactivemongo.ReactiveMongoApi
 import reactivemongo.api.Cursor
-import reactivemongo.api.ReadConcern.{Available, Local}
+import reactivemongo.api.ReadConcern.Local
+import reactivemongo.api.indexes.IndexType
 import reactivemongo.play.json.ImplicitBSONHandlers.JsObjectDocumentWriter
 import reactivemongo.play.json.collection.JSONCollection
 
@@ -31,9 +32,27 @@ class SubmissionDetailsRepository @Inject()(mongo: ReactiveMongoApi)
                                            (implicit ec: ExecutionContext) {
 
   private val collectionName: String = "submission-details"
+  private val ttlForDetails: Int = 189341712
+  //6 years - using 31556952 seconds for average year
+
+  val ttlIndex = IndexUtils.index(
+    key = Seq("submissionTime" -> IndexType.Ascending),
+    name = Some("submission-time-ttl-index"),
+    expireAfterSeconds = Some(ttlForDetails)
+  )
+
+  lazy val ensureIndexes: Future[Unit] =
+  for {
+      collection <- mongo.database.map(_.collection[JSONCollection](collectionName))
+      _ <- collection.indexesManager.ensure(ttlIndex)
+    } yield ()
 
   private def submissionDetailsCollection: Future[JSONCollection] =
-    mongo.database.map(_.collection[JSONCollection](collectionName))
+    for {
+      _ <- ensureIndexes
+      collection <- mongo.database.map(_.collection[JSONCollection](collectionName))
+    } yield collection
+
 
   //TODO: Not guaranteed to be unique - you could replace a file multiple times
   def getSubmissionDetails(disclosureID: String): Future[Option[SubmissionDetails]] =
