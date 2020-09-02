@@ -17,17 +17,15 @@
 package controllers
 
 import java.io.ByteArrayInputStream
-import java.nio.charset.StandardCharsets
 
 import helpers.DateHelper
 import javax.inject.Inject
-import models.{FileName, ImportInstruction, SubmissionDetails}
+import models.{ImportInstruction, SubmissionDetails}
 import org.slf4j.LoggerFactory
-import play.api.libs.iteratee.Enumerator
 import play.api.libs.json.Json
-import play.api.mvc.{Action, AnyContent, ControllerComponents}
+import play.api.mvc.{Action, ControllerComponents}
 import repositories.SubmissionDetailsRepository
-import services.{AuditService, GridFSStorageService, SubmissionService, TransformService}
+import services.{AuditService, SubmissionService, TransformService}
 import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
 
 import scala.concurrent.ExecutionContext
@@ -37,7 +35,6 @@ class SubmissionController @Inject()(
                                       cc: ControllerComponents,
                                       submissionService: SubmissionService,
                                       transformService: TransformService,
-                                      storageService: GridFSStorageService,
                                       dateHelper: DateHelper,
                                       submissionDetailsRepository: SubmissionDetailsRepository,
                                       auditService: AuditService
@@ -67,10 +64,11 @@ class SubmissionController @Inject()(
           submissionByteStream = new ByteArrayInputStream(transformedFile.mkString.getBytes)
 
           //filename altered to be as unique as possible
-          _ <- storageService.writeFileToGridFS(
+          //TODO: Removed gridFS submission - needs replacing with HOD submission
+         /* _ <- storageService.writeFileToGridFS(
             FileName(fileName, disclosureID, ids, submissionTime).toString,
             Enumerator.fromStream(submissionByteStream)
-          )
+          )*/
 
          _ =  auditService.submissionAudit(submissionFile, transformedFile)
 
@@ -93,20 +91,6 @@ class SubmissionController @Inject()(
       } recover {
         case ex:Exception =>
           logger.error("Error storing to GridFS", ex)
-          InternalServerError
-      }
-  }
-
-  def readSubmissionFromStore(fileName: String): Action[AnyContent] = Action.async {
-    implicit request =>
-
-      storageService
-        .readFileFromGridFS(fileName).map {
-        case Some(bytes) => Ok(new String(bytes, StandardCharsets.UTF_8))
-        case None => NotFound
-      }.recover {
-        case ex:Exception =>
-          logger.error("Error reading from GridFS", ex)
           InternalServerError
       }
   }
