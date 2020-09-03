@@ -17,13 +17,16 @@
 package controllers
 
 import javax.inject.Inject
+import play.api.libs.json.Json
 import play.api.mvc.{Action, AnyContent, ControllerComponents}
+import repositories.SubmissionDetailsRepository
 import services.IdService
 import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
 
 import scala.concurrent.ExecutionContext
 
 class IdController @Inject()(idService: IdService,
+                            submissionDetailsRepository: SubmissionDetailsRepository,
                              cc: ControllerComponents)
                             (implicit executionContext: ExecutionContext)
 extends BackendController(cc) {
@@ -36,5 +39,12 @@ extends BackendController(cc) {
         case Some(false) => NotFound("Arrangement Id does not exist")
         case None => BadRequest("invalid format")
       }
+  }
+
+  def retrieveFirstDisclosure(arrangementId: String): Action[AnyContent] = Action.async { implicit request =>
+    submissionDetailsRepository.retrieveFirstDisclosureForArrangementId(arrangementId).map {
+      case Some(submissionDetails) => Ok(Json.toJson(submissionDetails))
+      case None => NotFound(s"No first disclosure found for $arrangementId")
+    }
   }
 }
