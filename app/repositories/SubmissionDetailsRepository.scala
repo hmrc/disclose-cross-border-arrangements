@@ -43,26 +43,43 @@ class SubmissionDetailsRepository @Inject()(mongo: ReactiveMongoApi)
       )
 
 
-  def retrieveFirstDisclosureForArrangementId(arrangementID: String): Future[Option[SubmissionDetails]] = {
+  def retrieveFirstOrReplacedDisclosureForArrangementId(arrangementID: String, disclosureID: String): Future[Option[SubmissionDetails]] = {
     val selector = Json.obj(
       "$or" -> Json.arr(
         Json.obj(
-          {"arrangementID" -> arrangementID},
-          {"importInstruction" -> "Replace"},
-          {"initialDisclosureMA" -> false}),
+          "arrangementID" -> arrangementID,
+          "disclosureID" -> disclosureID,
+          "importInstruction" -> "Replace",
+          "initialDisclosureMA" -> false),
         Json.obj(
-          {"arrangementID" -> arrangementID},
-          {"initialDisclosureMA" -> true})
+          "arrangementID" -> arrangementID,
+          "importInstruction" -> "New",
+          "initialDisclosureMA" -> true)
       )
     )
-    val sortBy = Json.obj("submissionTime" -> -1)
+    val sortByLatestSubmission = Json.obj("submissionTime" -> -1)
 
     submissionDetailsCollection
       .flatMap(
         _.find(selector, None)
-          .sort(sortBy)
+          .sort(sortByLatestSubmission)
           .one[SubmissionDetails]
       )
+  }
+
+  def retrieveFirstDisclosureForArrangementId(arrangementID: String): Future[Option[SubmissionDetails]] = {
+    val selector = Json.obj(
+      "arrangementID" -> arrangementID,
+      "importInstruction" -> "New",
+      "initialDisclosureMA" -> true
+    )
+    val sortByOldestSubmission = Json.obj("submissionTime" -> 1)
+
+    submissionDetailsCollection.flatMap(
+      _.find(selector, None)
+        .sort(sortByOldestSubmission)
+        .one[SubmissionDetails]
+    )
   }
 
   //TODO: This should have optional paging to support many submissions
