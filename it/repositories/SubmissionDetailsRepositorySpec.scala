@@ -30,9 +30,9 @@ class SubmissionDetailsRepositorySpec
     "must get submission details" in {
 
       val app: Application = new GuiceApplicationBuilder().build()
-      val repo: SubmissionDetailsRepository = app.injector.instanceOf[SubmissionDetailsRepository]
 
       running(app) {
+        val repo: SubmissionDetailsRepository = app.injector.instanceOf[SubmissionDetailsRepository]
 
         database.flatMap(_.drop()).futureValue
         await(repo.storeSubmissionDetails(submissionDetails))
@@ -48,9 +48,9 @@ class SubmissionDetailsRepositorySpec
       val olderSubmissionDetails = submissionDetails.copy(fileName = "another-file.xml", submissionTime = LocalDateTime.now().minusDays(1))
       val diffSubmissionDetails = submissionDetails.copy(enrolmentID = "diffEnrolmentID", fileName = "diff-file.xml")
       val app: Application = new GuiceApplicationBuilder().build()
-      val repo: SubmissionDetailsRepository = app.injector.instanceOf[SubmissionDetailsRepository]
 
       running(app) {
+        val repo: SubmissionDetailsRepository = app.injector.instanceOf[SubmissionDetailsRepository]
 
         database.flatMap(_.drop()).futureValue
         await(repo.storeSubmissionDetails(olderSubmissionDetails))
@@ -65,9 +65,9 @@ class SubmissionDetailsRepositorySpec
 
     "must correctly count submission details" in {
       val app: Application = new GuiceApplicationBuilder().build()
-      val repo: SubmissionDetailsRepository = app.injector.instanceOf[SubmissionDetailsRepository]
 
       running(app) {
+        val repo: SubmissionDetailsRepository = app.injector.instanceOf[SubmissionDetailsRepository]
 
         database.flatMap(_.drop()).futureValue
         await(repo.storeSubmissionDetails(submissionDetails))
@@ -80,9 +80,9 @@ class SubmissionDetailsRepositorySpec
 
     "must correctly return a zero count when user has not submitted" in {
       val app: Application = new GuiceApplicationBuilder().build()
-      val repo: SubmissionDetailsRepository = app.injector.instanceOf[SubmissionDetailsRepository]
 
       running(app) {
+        val repo: SubmissionDetailsRepository = app.injector.instanceOf[SubmissionDetailsRepository]
 
         database.flatMap(_.drop()).futureValue
 
@@ -94,9 +94,9 @@ class SubmissionDetailsRepositorySpec
 
     "must store submission details" in {
       val app: Application = new GuiceApplicationBuilder().build()
-      val repo: SubmissionDetailsRepository = app.injector.instanceOf[SubmissionDetailsRepository]
 
       running(app) {
+        val repo: SubmissionDetailsRepository = app.injector.instanceOf[SubmissionDetailsRepository]
 
         database.flatMap(_.drop()).futureValue
 

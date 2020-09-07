@@ -21,14 +21,14 @@ import java.nio.charset.StandardCharsets
 
 import helpers.DateHelper
 import javax.inject.Inject
-import models.{FileName, ImportInstruction, SubmissionDetails, SubmissionHistory}
+import models.{ImportInstruction, SubmissionDetails, SubmissionHistory}
 import org.slf4j.LoggerFactory
 import play.api.http.Writeable
 import play.api.libs.iteratee.Enumerator
 import play.api.libs.json.Json
 import play.api.mvc.{Action, AnyContent, ControllerComponents}
 import repositories.SubmissionDetailsRepository
-import services.{GridFSStorageService, SubmissionService, TransformService}
+import services.{AuditService, SubmissionService, TransformService}
 import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
 
 import scala.concurrent.ExecutionContext
@@ -38,9 +38,9 @@ class SubmissionController @Inject()(
                                       cc: ControllerComponents,
                                       submissionService: SubmissionService,
                                       transformService: TransformService,
-                                      storageService: GridFSStorageService,
                                       dateHelper: DateHelper,
-                                      submissionDetailsRepository: SubmissionDetailsRepository
+                                      submissionDetailsRepository: SubmissionDetailsRepository,
+                                      auditService: AuditService
                                     )(implicit ec: ExecutionContext)
   extends BackendController(cc) {
 
@@ -67,11 +67,14 @@ class SubmissionController @Inject()(
           submissionByteStream = new ByteArrayInputStream(transformedFile.mkString.getBytes)
 
           //filename altered to be as unique as possible
-          _ <- storageService.writeFileToGridFS(
+          //TODO: Removed gridFS submission - needs replacing with HOD submission
+         /* _ <- storageService.writeFileToGridFS(
             FileName(fileName, disclosureID, ids, submissionTime).toString,
             Enumerator.fromStream(submissionByteStream)
-          )
-          //TODO: Add audits for original and modified files
+          )*/
+
+         _ =  auditService.submissionAudit(submissionFile, transformedFile)
+
         } yield {
 
           val submissionDetails = SubmissionDetails.build(
@@ -95,19 +98,6 @@ class SubmissionController @Inject()(
       }
   }
 
-  def readSubmissionFromStore(fileName: String): Action[AnyContent] = Action.async {
-    implicit request =>
-
-      storageService
-        .readFileFromGridFS(fileName).map {
-        case Some(bytes) => Ok(new String(bytes, StandardCharsets.UTF_8))
-        case None => NotFound
-      }.recover {
-        case ex:Exception =>
-          logger.error("Error reading from GridFS", ex)
-          InternalServerError
-      }
-  }
   def getHistory(enrolmentId: String): Action[AnyContent] = Action.async {
     implicit request =>
 
