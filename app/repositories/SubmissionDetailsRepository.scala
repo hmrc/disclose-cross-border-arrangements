@@ -43,7 +43,7 @@ class SubmissionDetailsRepository @Inject()(mongo: ReactiveMongoApi)
       )
 
 
-  def retrieveFirstOrReplacedDisclosureForArrangementId(arrangementID: String, disclosureID: String): Future[Option[SubmissionDetails]] = {
+  def retrieveFirstOrReplacedDisclosureForArrangementId(arrangementID: String, disclosureID: String = ""): Future[Option[SubmissionDetails]] = {
     val selector = Json.obj(
       "$or" -> Json.arr(
         Json.obj(

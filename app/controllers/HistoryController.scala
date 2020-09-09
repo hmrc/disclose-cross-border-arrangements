@@ -53,13 +53,13 @@ class HistoryController @Inject()(
   def retrieveFirstDisclosure(arrangementId: String): Action[AnyContent] = Action.async {
     implicit request =>
       submissionDetailsRepository.retrieveFirstDisclosureForArrangementId(arrangementId).flatMap {
-        case Some(value) =>
+        case Some(value) if value.disclosureID.isDefined =>
           submissionDetailsRepository.retrieveFirstOrReplacedDisclosureForArrangementId(arrangementId, value.disclosureID.get).map {
-            case Some(submissionDetails) => Ok(Json.toJson(submissionDetails))
-            case None => NotFound(s"No first disclosure found for $arrangementId")
+            submissionDetails =>
+              Ok(Json.toJson(submissionDetails.get))
           }
         case None =>
-          submissionDetailsRepository.retrieveFirstOrReplacedDisclosureForArrangementId(arrangementId, "").map {
+          submissionDetailsRepository.retrieveFirstOrReplacedDisclosureForArrangementId(arrangementId).map {
             case Some(submissionDetails) => Ok(Json.toJson(submissionDetails))
             case None => NotFound(s"No first disclosure found for $arrangementId")
           }
