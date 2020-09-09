@@ -22,12 +22,6 @@ import play.api.libs.json.{Json, OFormat}
 
 import scala.xml.NodeSeq
 
-case class SubmissionHistory(details: Seq[SubmissionDetails])
-
-object SubmissionHistory {
-  implicit val format: OFormat[SubmissionHistory] = Json.format[SubmissionHistory]
-}
-
 case class SubmissionDetails(enrolmentID: String,
                              submissionTime: LocalDateTime,
                              fileName: String,
@@ -69,4 +63,14 @@ object SubmissionDetails {
   }
 
   implicit val format: OFormat[SubmissionDetails] = Json.format[SubmissionDetails]
+  implicit val writes = Json.writes[SubmissionDetails]
+}
+
+case class SubmissionHistory(details: Seq[SubmissionDetails])
+
+object SubmissionHistory {
+  implicit val format: OFormat[SubmissionHistory] = Json.format[SubmissionHistory]
+
+  implicit val writes = Json.writes[SubmissionHistory]
+
 }

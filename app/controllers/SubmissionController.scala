@@ -17,13 +17,16 @@
 package controllers
 
 import java.io.ByteArrayInputStream
+import java.nio.charset.StandardCharsets
 
 import helpers.DateHelper
 import javax.inject.Inject
-import models.{ImportInstruction, SubmissionDetails}
+import models.{ImportInstruction, SubmissionDetails, SubmissionHistory}
 import org.slf4j.LoggerFactory
+import play.api.http.Writeable
+import play.api.libs.iteratee.Enumerator
 import play.api.libs.json.Json
-import play.api.mvc.{Action, ControllerComponents}
+import play.api.mvc.{Action, AnyContent, ControllerComponents}
 import repositories.SubmissionDetailsRepository
 import services.{AuditService, SubmissionService, TransformService}
 import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
@@ -92,6 +95,20 @@ class SubmissionController @Inject()(
         case ex:Exception =>
           logger.error("Error storing to GridFS", ex)
           InternalServerError
+      }
+  }
+
+  def getHistory(enrolmentId: String): Action[AnyContent] = Action.async {
+    implicit request =>
+
+      submissionDetailsRepository.retrieveSubmissionHistory(enrolmentId).map(
+        history =>
+          Ok(Json.toJson(SubmissionHistory(history)))
+      ).recover {
+
+    case ex:Exception =>
+        logger.error("Error reading from GridFS", ex)
+      InternalServerError
       }
   }
 
