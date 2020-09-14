@@ -49,4 +49,20 @@ class HistoryController @Inject()(
             InternalServerError(s"Failed with the following error: $e")
         }
   }
+
+  def retrieveFirstDisclosure(arrangementId: String): Action[AnyContent] = Action.async {
+    implicit request =>
+      submissionDetailsRepository.retrieveFirstDisclosureForArrangementId(arrangementId).flatMap {
+        case Some(value) if value.disclosureID.isDefined =>
+          submissionDetailsRepository.retrieveFirstOrReplacedDisclosureForArrangementId(arrangementId, value.disclosureID.get).map {
+            case Some(submissionDetails) => Ok(Json.toJson(submissionDetails))
+            case None => NotFound(s"No first disclosure found for $arrangementId")
+          }
+        case _ =>
+          submissionDetailsRepository.retrieveFirstOrReplacedDisclosureForArrangementId(arrangementId).map {
+            case Some(submissionDetails) => Ok(Json.toJson(submissionDetails))
+            case None => NotFound(s"No first disclosure found for $arrangementId")
+          }
+      }
+  }
 }

@@ -16,27 +16,29 @@
 
 package controllers
 
+import java.time.LocalDateTime
+
 import base.SpecBase
 import generators.ModelGenerators
 import models.{SubmissionDetails, SubmissionHistory}
+import org.mockito.Matchers._
+import org.mockito.Mockito._
 import org.scalatestplus.scalacheck.ScalaCheckPropertyChecks
 import play.api.inject.bind
 import play.api.libs.json.Json
 import play.api.test.FakeRequest
-import play.api.test.Helpers.{GET, contentAsJson, route, running, status}
+import play.api.test.Helpers.{GET, contentAsJson, route, running, status, _}
 import repositories.SubmissionDetailsRepository
-import org.mockito.Matchers._
-import org.mockito.Mockito._
-import play.api.test.Helpers._
 
 import scala.concurrent.Future
 
 class HistoryControllerSpec extends SpecBase
   with ScalaCheckPropertyChecks with ModelGenerators {
 
+  val mockSubmissionDetailsRepository: SubmissionDetailsRepository = mock[SubmissionDetailsRepository]
+
   "submissionDetails" - {
     "must return ok with submission details" in {
-      val mockSubmissionDetailsRepository = mock[SubmissionDetailsRepository]
 
       val application =
         applicationBuilder
@@ -60,7 +62,6 @@ class HistoryControllerSpec extends SpecBase
     }
 
     "must return Internal Service Error when there is a problem fetching results" in {
-      val mockSubmissionDetailsRepository = mock[SubmissionDetailsRepository]
 
       val application =
         applicationBuilder
@@ -77,6 +78,98 @@ class HistoryControllerSpec extends SpecBase
 
             status(result) mustEqual INTERNAL_SERVER_ERROR
         }
+    }
+  }
+
+  "retrieveFirstDisclosure" - {
+
+    val arrangementID = "GBA20200904AAAAAA"
+    val disclosureID = "GBD20200904AAAAAA"
+    val initialSubmissionDetails =
+      SubmissionDetails(
+        enrolmentID = "enrolmentID",
+        submissionTime = LocalDateTime.now(),
+        fileName = "fileName.xml",
+        arrangementID = Some(arrangementID),
+        disclosureID = Some(disclosureID),
+        importInstruction = "New",
+        initialDisclosureMA = true
+      )
+
+    "must return a NOT_FOUND if there is no first disclosure" in {
+
+      val application =
+        applicationBuilder
+          .overrides(bind[SubmissionDetailsRepository].toInstance(mockSubmissionDetailsRepository))
+          .build()
+
+      running(application) {
+        when(mockSubmissionDetailsRepository.retrieveFirstDisclosureForArrangementId(""))
+          .thenReturn(Future.successful(None))
+        when(mockSubmissionDetailsRepository.retrieveFirstOrReplacedDisclosureForArrangementId(""))
+          .thenReturn(Future.successful(None))
+
+        val request = FakeRequest(GET, routes.HistoryController.retrieveFirstDisclosure("").url)
+
+        val result = route(application, request).value
+
+        status(result) mustEqual NOT_FOUND
+      }
+    }
+
+    "must return an OK if there is a first disclosure available for the given arrangement ID" in {
+
+      val application =
+        applicationBuilder
+          .overrides(bind[SubmissionDetailsRepository].toInstance(mockSubmissionDetailsRepository))
+          .build()
+
+      running(application) {
+        when(mockSubmissionDetailsRepository.retrieveFirstDisclosureForArrangementId(arrangementID))
+          .thenReturn(Future.successful(None))
+        when(mockSubmissionDetailsRepository.retrieveFirstOrReplacedDisclosureForArrangementId(arrangementID))
+          .thenReturn(Future.successful(Some(initialSubmissionDetails)))
+
+        val request = FakeRequest(GET, routes.HistoryController.retrieveFirstDisclosure(arrangementID).url)
+
+        val result = route(application, request).value
+
+        status(result) mustEqual OK
+        contentAsJson(result) mustEqual Json.toJson(initialSubmissionDetails)
+      }
+    }
+
+    "must return an OK if there is a replaced first disclosure available for the given arrangement ID" in {
+
+      val application =
+        applicationBuilder
+          .overrides(bind[SubmissionDetailsRepository].toInstance(mockSubmissionDetailsRepository))
+          .build()
+
+      val submissionDetails =
+        SubmissionDetails(
+          enrolmentID = "enrolmentID",
+          submissionTime = LocalDateTime.now().plusDays(1),
+          fileName = "fileName.xml",
+          arrangementID = Some(arrangementID),
+          disclosureID = Some(disclosureID),
+          importInstruction = "Replace",
+          initialDisclosureMA = false
+        )
+
+      running(application) {
+        when(mockSubmissionDetailsRepository.retrieveFirstDisclosureForArrangementId(arrangementID))
+          .thenReturn(Future.successful(Some(initialSubmissionDetails)))
+        when(mockSubmissionDetailsRepository.retrieveFirstOrReplacedDisclosureForArrangementId(arrangementID, disclosureID))
+          .thenReturn(Future.successful(Some(submissionDetails)))
+
+        val request = FakeRequest(GET, routes.HistoryController.retrieveFirstDisclosure(arrangementID).url)
+
+        val result = route(application, request).value
+
+        status(result) mustEqual OK
+        contentAsJson(result) mustEqual Json.toJson(submissionDetails)
+      }
     }
   }
 

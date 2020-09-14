@@ -18,13 +18,16 @@ class SubmissionDetailsRepositorySpec
 
   "SubmissionDetailsRepository" - {
 
+    val arrangementID = "GBA20200904AAAAAA"
+    val disclosureID = "GBD20200601AAA000"
+
     val submissionDetails = SubmissionDetails(
       enrolmentID = "enrolmentID",
       submissionTime = LocalDateTime.now(),
       fileName = "fileName.xml",
-      arrangementID = Some("GBA20200601AAA000"),
-      disclosureID = Some("GBD20200601AAA000"),
-      importInstruction = "DAC6ADD",
+      arrangementID = Some(arrangementID),
+      disclosureID = Some(disclosureID),
+      importInstruction = "Add",
       initialDisclosureMA = false)
 
     "must get submission details" in {
@@ -37,10 +40,74 @@ class SubmissionDetailsRepositorySpec
         database.flatMap(_.drop()).futureValue
         await(repo.storeSubmissionDetails(submissionDetails))
 
-        whenReady(repo.getSubmissionDetails("GBD20200601AAA000")) {
+        whenReady(repo.getSubmissionDetails(disclosureID)) {
           _ mustBe Some(submissionDetails)
         }
 
+      }
+    }
+
+    "must retrieve submission details for the replaced first disclosure for arrangement ID" in {
+      val firstSubmissionDetails = submissionDetails.copy(importInstruction = "New", initialDisclosureMA = true)
+      val secondSubmissionDetails = submissionDetails.copy(submissionTime = LocalDateTime.now().plusDays(1), importInstruction = "Replace", initialDisclosureMA = false)
+      val app: Application = new GuiceApplicationBuilder().build()
+
+      running(app) {
+        val repo: SubmissionDetailsRepository = app.injector.instanceOf[SubmissionDetailsRepository]
+
+        database.flatMap(_.drop()).futureValue
+        await(repo.storeSubmissionDetails(firstSubmissionDetails))
+        await(repo.storeSubmissionDetails(secondSubmissionDetails))
+
+        whenReady(repo.retrieveFirstOrReplacedDisclosureForArrangementId(arrangementID, disclosureID)) {
+          _ mustBe Some(secondSubmissionDetails)
+        }
+      }
+    }
+
+    "must return None if there is no first or replaced disclosure for arrangement ID" in {
+      val app: Application = new GuiceApplicationBuilder().build()
+
+      running(app) {
+        val repo: SubmissionDetailsRepository = app.injector.instanceOf[SubmissionDetailsRepository]
+
+        database.flatMap(_.drop()).futureValue
+
+        whenReady(repo.retrieveFirstOrReplacedDisclosureForArrangementId(arrangementID, disclosureID)) {
+          _ mustBe None
+        }
+      }
+    }
+
+    "must retrieve submission details for the first disclosure for arrangement ID" in {
+      val firstSubmissionDetails = submissionDetails.copy(importInstruction = "New", initialDisclosureMA = true)
+      val secondSubmissionDetails = submissionDetails.copy(submissionTime = LocalDateTime.now().plusDays(1), initialDisclosureMA = false)
+      val app: Application = new GuiceApplicationBuilder().build()
+
+      running(app) {
+        val repo: SubmissionDetailsRepository = app.injector.instanceOf[SubmissionDetailsRepository]
+
+        database.flatMap(_.drop()).futureValue
+        await(repo.storeSubmissionDetails(firstSubmissionDetails))
+        await(repo.storeSubmissionDetails(secondSubmissionDetails))
+
+        whenReady(repo.retrieveFirstDisclosureForArrangementId(arrangementID)) {
+          _ mustBe Some(firstSubmissionDetails)
+        }
+      }
+    }
+
+    "must return None if there is no first disclosure for arrangement ID" in {
+      val app: Application = new GuiceApplicationBuilder().build()
+
+      running(app) {
+        val repo: SubmissionDetailsRepository = app.injector.instanceOf[SubmissionDetailsRepository]
+
+        database.flatMap(_.drop()).futureValue
+
+        whenReady(repo.retrieveFirstDisclosureForArrangementId(arrangementID)) {
+          _ mustBe None
+        }
       }
     }
 

@@ -1,9 +1,10 @@
 # microservice specific routes
 
-GET        /verify-arrangement-id/:arrangementId    controllers.IdController.verifyArrangementId(arrangementId: String)
+GET        /verify-arrangement-id/:arrangementId        controllers.IdController.verifyArrangementId(arrangementId: String)
 
-POST       /submit     controllers.SubmissionController.storeSubmission
-GET       /get-history/:enrolmentId    controllers.SubmissionController.getHistory(enrolmentId: String)
+POST       /submit                                      controllers.SubmissionController.storeSubmission
+GET       /get-history/:enrolmentId                     controllers.SubmissionController.getHistory(enrolmentId: String)
 
-GET        /history/count/:enrolmentId              controllers.HistoryController.noOfPreviousSubmissions(enrolmentId: String)
-GET        /history/submissions/:enrolmentId        controllers.HistoryController.submissionDetails(enrolmentId: String)
+GET        /history/count/:enrolmentId                  controllers.HistoryController.noOfPreviousSubmissions(enrolmentId: String)
+GET        /history/submissions/:enrolmentId            controllers.HistoryController.submissionDetails(enrolmentId: String)
+GET        /history/first-disclosure/:arrangementId     controllers.HistoryController.retrieveFirstDisclosure(arrangementId: String)
