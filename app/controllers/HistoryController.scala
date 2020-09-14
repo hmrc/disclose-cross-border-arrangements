@@ -58,7 +58,7 @@ class HistoryController @Inject()(
             case Some(submissionDetails) => Ok(Json.toJson(submissionDetails))
             case None => NotFound(s"No first disclosure found for $arrangementId")
           }
-        case None =>
+        case _ =>
           submissionDetailsRepository.retrieveFirstOrReplacedDisclosureForArrangementId(arrangementId).map {
             case Some(submissionDetails) => Ok(Json.toJson(submissionDetails))
             case None => NotFound(s"No first disclosure found for $arrangementId")
