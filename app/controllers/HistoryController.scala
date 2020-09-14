@@ -55,8 +55,8 @@ class HistoryController @Inject()(
       submissionDetailsRepository.retrieveFirstDisclosureForArrangementId(arrangementId).flatMap {
         case Some(value) if value.disclosureID.isDefined =>
           submissionDetailsRepository.retrieveFirstOrReplacedDisclosureForArrangementId(arrangementId, value.disclosureID.get).map {
-            submissionDetails =>
-              Ok(Json.toJson(submissionDetails.get))
+            case Some(submissionDetails) => Ok(Json.toJson(submissionDetails))
+            case None => NotFound(s"No first disclosure found for $arrangementId")
           }
         case None =>
           submissionDetailsRepository.retrieveFirstOrReplacedDisclosureForArrangementId(arrangementId).map {
