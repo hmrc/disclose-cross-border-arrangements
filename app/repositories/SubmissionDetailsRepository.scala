@@ -126,7 +126,7 @@ class SubmissionDetailsRepository @Inject()(mongo: ReactiveMongoApi)
       )
     )
 
-    val maxDocs = 10000
+    val maxDocs = 50
     val sortByLatestSubmission = Json.obj("submissionTime" -> -1)
 
     submissionDetailsCollection.flatMap(

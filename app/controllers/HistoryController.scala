@@ -73,7 +73,6 @@ class HistoryController @Inject()(
           Ok(Json.toJson(SubmissionHistory(searchResult)))
       }.recover {
         case _ =>
-          //TODO Add logger
           NotFound(s"Unable to retrieve a list of disclosures for search criteria")
       }
   }
