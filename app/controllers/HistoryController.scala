@@ -65,4 +65,15 @@ class HistoryController @Inject()(
           }
       }
   }
+
+  def searchSubmissions(searchCriteria: String): Action[AnyContent] = Action.async {
+    implicit request =>
+      submissionDetailsRepository.searchSubmissions(searchCriteria).map {
+        searchResult =>
+          Ok(Json.toJson(SubmissionHistory(searchResult)))
+      }.recover {
+        case _ =>
+          NotFound(s"Unable to retrieve a list of disclosures for search criteria")
+      }
+  }
 }

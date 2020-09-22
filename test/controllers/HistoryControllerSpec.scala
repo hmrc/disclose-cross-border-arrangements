@@ -37,6 +37,19 @@ class HistoryControllerSpec extends SpecBase
 
   val mockSubmissionDetailsRepository: SubmissionDetailsRepository = mock[SubmissionDetailsRepository]
 
+  val arrangementID = "GBA20200904AAAAAA"
+  val disclosureID = "GBD20200904AAAAAA"
+  val initialSubmissionDetails: SubmissionDetails =
+    SubmissionDetails(
+      enrolmentID = "enrolmentID",
+      submissionTime = LocalDateTime.now(),
+      fileName = "fileName.xml",
+      arrangementID = Some(arrangementID),
+      disclosureID = Some(disclosureID),
+      importInstruction = "New",
+      initialDisclosureMA = true
+    )
+
   "submissionDetails" - {
     "must return ok with submission details" in {
 
@@ -82,19 +95,6 @@ class HistoryControllerSpec extends SpecBase
   }
 
   "retrieveFirstDisclosure" - {
-
-    val arrangementID = "GBA20200904AAAAAA"
-    val disclosureID = "GBD20200904AAAAAA"
-    val initialSubmissionDetails =
-      SubmissionDetails(
-        enrolmentID = "enrolmentID",
-        submissionTime = LocalDateTime.now(),
-        fileName = "fileName.xml",
-        arrangementID = Some(arrangementID),
-        disclosureID = Some(disclosureID),
-        importInstruction = "New",
-        initialDisclosureMA = true
-      )
 
     "must return a NOT_FOUND if there is no first disclosure" in {
 
@@ -171,6 +171,49 @@ class HistoryControllerSpec extends SpecBase
         contentAsJson(result) mustEqual Json.toJson(submissionDetails)
       }
     }
+  }
+
+  "searchSubmissions" - {
+    "must return an OK with the submission history if the search has found submissions" in {
+      val search = "fileName"
+      val submissionDetailsList = List(initialSubmissionDetails)
+      val application =
+        applicationBuilder
+          .overrides(bind[SubmissionDetailsRepository].toInstance(mockSubmissionDetailsRepository))
+          .build()
+
+      running(application) {
+        when(mockSubmissionDetailsRepository.searchSubmissions(search))
+          .thenReturn(Future.successful(submissionDetailsList))
+
+        val request = FakeRequest(GET, routes.HistoryController.searchSubmissions(search).url)
+
+        val result = route(application, request).value
+
+        status(result) mustEqual OK
+        contentAsJson(result) mustEqual Json.toJson(SubmissionHistory(submissionDetailsList))
+      }
+    }
+
+    "must return a NOT_FOUND if mongo fails" in {
+      val search = "fileName"
+      val application =
+        applicationBuilder
+          .overrides(bind[SubmissionDetailsRepository].toInstance(mockSubmissionDetailsRepository))
+          .build()
+
+      running(application) {
+        when(mockSubmissionDetailsRepository.searchSubmissions(search))
+          .thenReturn(Future.failed(new Exception("")))
+
+        val request = FakeRequest(GET, routes.HistoryController.searchSubmissions(search).url)
+
+        val result = route(application, request).value
+
+        status(result) mustEqual NOT_FOUND
+      }
+    }
+
   }
 
 }
