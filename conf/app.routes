@@ -8,4 +8,5 @@ GET       /get-history/:enrolmentId                     controllers.SubmissionCo
 GET        /history/count/:enrolmentId                  controllers.HistoryController.noOfPreviousSubmissions(enrolmentId: String)
 GET        /history/submissions/:enrolmentId            controllers.HistoryController.submissionDetails(enrolmentId: String)
 GET        /history/first-disclosure/:arrangementId     controllers.HistoryController.retrieveFirstDisclosure(arrangementId: String)
-GET        /history/search-submissions/:searchCriteria  controllers.HistoryController.searchSubmissions(searchCriteria: String)
+
+POST       /subscription/display-subscription            controllers.SubscriptionController.displaySubscriptionDetails
