@@ -17,7 +17,7 @@
 package services
 
 import javax.inject.Inject
-import models.GeneratedIDs
+import models.{ContactInformation, GeneratedIDs, Individual, Organisation, SubmissionMetaData, SubscriptionDetails}
 
 import scala.xml.{Elem, Node, NodeSeq}
 import scala.xml.transform.{RewriteRule, RuleTransformer}
@@ -42,4 +42,71 @@ class TransformService @Inject()() {
       }
     }
 
+  def addSubscriptionDetailsToSubmission(
+                                          submissionFile: NodeSeq,
+                                          subscriptionDetails: SubscriptionDetails,
+                                          metaData: SubmissionMetaData
+                                        ): NodeSeq = {
+    <DAC6UKSubmissionInboundRequest>
+      <requestCommon>
+        <receiptDate>{metaData.submissionTime}</receiptDate>
+        <regime>DAC</regime>
+        <conversationID>{metaData.conversationID}</conversationID>
+        <schemaVersion>1.0.0</schemaVersion>
+      </requestCommon>
+      <requestDetail>
+        {submissionFile}
+      </requestDetail>
+      <requestAdditionalDetail>
+        {transformSubscriptionDetails(subscriptionDetails, metaData.fileName)}
+      </requestAdditionalDetail>
+    </DAC6UKSubmissionInboundRequest>
+  }
+
+  def transformSubscriptionDetails(
+                                    subscriptionDetails: SubscriptionDetails,
+                                    fileName: Option[String]
+                                  ): NodeSeq = {
+    Seq(
+        fileName.map(name => <fileName>{name}</fileName>),
+        Some(<subscriptionID>{subscriptionDetails.subscriptionID}</subscriptionID>),
+        subscriptionDetails.tradingName.map(tradingName =>  <tradingName>{tradingName}</tradingName>),
+        Some(<isGBUser>{subscriptionDetails.isGBUser}</isGBUser>),
+        Some(<primaryContact>
+          {transformContactInformation(subscriptionDetails.primaryContact)}
+        </primaryContact>),
+        subscriptionDetails.secondaryContact.map(sc => <secondaryContact>
+          {transformContactInformation(sc)}
+        </secondaryContact>)
+    ).filter(_.isDefined).map(_.get)
+  }
+
+  def transformContactInformation(
+                                  contactInformation: ContactInformation
+                                 ): NodeSeq = {
+    Seq(
+      contactInformation.phone.map(phone => <phoneNumber>{phone}</phoneNumber>),
+      contactInformation.mobile.map(mobile => <mobileNumber>{mobile}</mobileNumber>),
+      Some(<emailAddress>{contactInformation.email}</emailAddress>),
+      Some(contactInformation.name match {
+        case individual: Individual =>
+          <individualDetails>
+            {transformIndividual(individual)}
+          </individualDetails>
+        case organisation: Organisation =>
+          <organisationDetails>
+            <organisationName>{organisation.organisationName}</organisationName>
+          </organisationDetails>
+      })
+    ).filter(_.isDefined).map(_.get)
+
+  }
+
+  def transformIndividual(individual: Individual): NodeSeq = {
+    Seq(
+      Some(<firstName>{individual.firstName}</firstName>),
+      individual.middleName.map(middle => <middleName>{middle}</middleName>),
+      Some(<lastName>{individual.lastName}</lastName>)
+    ).filter(_.isDefined).map(_.get)
+  }
 }

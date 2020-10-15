@@ -16,19 +16,14 @@
 
 package controllers
 
-import java.io.ByteArrayInputStream
-import java.nio.charset.StandardCharsets
-
 import helpers.DateHelper
 import javax.inject.Inject
-import models.{ImportInstruction, SubmissionDetails, SubmissionHistory}
+import models.{ImportInstruction, SubmissionDetails, SubmissionHistory, SubmissionMetaData}
 import org.slf4j.LoggerFactory
-import play.api.http.Writeable
-import play.api.libs.iteratee.Enumerator
 import play.api.libs.json.Json
 import play.api.mvc.{Action, AnyContent, ControllerComponents}
 import repositories.SubmissionDetailsRepository
-import services.{AuditService, SubmissionService, TransformService}
+import services.{AuditService, ContactService, SubmissionService, TransformService}
 import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
 
 import scala.concurrent.ExecutionContext
@@ -38,6 +33,7 @@ class SubmissionController @Inject()(
                                       cc: ControllerComponents,
                                       submissionService: SubmissionService,
                                       transformService: TransformService,
+                                      contactService: ContactService,
                                       dateHelper: DateHelper,
                                       submissionDetailsRepository: SubmissionDetailsRepository,
                                       auditService: AuditService
@@ -59,21 +55,28 @@ class SubmissionController @Inject()(
         val submissionTime = dateHelper.now
         val initialDisclosureMA = (xml \\ "InitialDisclosureMA").text.toBoolean
 
+        val conversationID = "" //TODO: Generate UUID
+
+        val submissionMetaData = SubmissionMetaData.build(submissionTime, conversationID, fileName)
+
         for {
           ids <- submissionService.generateIDsForInstruction(importInstruction)
 
-          //transform the file and store it
+          //transform the file and add ids
           transformedFile = transformService.transformFileForIDs(submissionFile, ids)
-          submissionByteStream = new ByteArrayInputStream(transformedFile.mkString.getBytes)
 
-          //filename altered to be as unique as possible
-          //TODO: Removed gridFS submission - needs replacing with HOD submission
-         /* _ <- storageService.writeFileToGridFS(
-            FileName(fileName, disclosureID, ids, submissionTime).toString,
-            Enumerator.fromStream(submissionByteStream)
-          )*/
+          //get subscription data from SOMEWHERE (could be cache could be from HOD)
+          subscriptionData <- contactService.getLatestContacts()
 
-         _ =  auditService.submissionAudit(submissionFile, transformedFile)
+          //wrap data around the file to create submission payload
+          submission = transformService.addSubscriptionDetailsToSubmission(submissionFile, subscriptionData, submissionMetaData)
+
+          //validate the payload
+          //TODO
+          //submit to the backend
+          //TODO
+
+          _ =  auditService.submissionAudit(submissionFile, transformedFile)
 
         } yield {
 

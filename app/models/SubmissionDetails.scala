@@ -16,11 +16,29 @@
 
 package models
 
-import java.time.LocalDateTime
+import java.time.{Instant, LocalDateTime, OffsetDateTime, ZoneId, ZoneOffset}
+import java.time.format.DateTimeFormatter
 
 import play.api.libs.json.{Json, OFormat}
 
 import scala.xml.NodeSeq
+
+case class SubmissionMetaData(submissionTime: String,
+                              conversationID: String,
+                              fileName: Option[String])
+
+object SubmissionMetaData {
+  val dateTimeFormat: DateTimeFormatter = DateTimeFormatter.ISO_INSTANT
+
+  def build(submissionTime: LocalDateTime,
+            conversationID: String,
+            fileName: String): SubmissionMetaData =
+    SubmissionMetaData(
+      dateTimeFormat.format(submissionTime.toInstant(OffsetDateTime.now().getOffset)),
+      conversationID,
+      Option(fileName)
+    )
+}
 
 case class SubmissionDetails(enrolmentID: String,
                              submissionTime: LocalDateTime,
@@ -72,5 +90,4 @@ object SubmissionHistory {
   implicit val format: OFormat[SubmissionHistory] = Json.format[SubmissionHistory]
 
   implicit val writes = Json.writes[SubmissionHistory]
-
 }
