@@ -25,6 +25,7 @@ object RequestParameter {
 }
 
 case class RequestCommon(regime: String,
+                         conversationID: Option[String],
                          receiptDate: String,
                          acknowledgementReference: String,
                          originatingSystem: String,

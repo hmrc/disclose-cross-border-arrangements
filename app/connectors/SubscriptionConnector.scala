@@ -34,20 +34,22 @@ class SubscriptionConnector @Inject()(val config: AppConfig, val http: HttpClien
                                (implicit hc: HeaderCarrier, ec: ExecutionContext): Future[HttpResponse] = {
 
     val displaySubscriptionUrl = s"${config.registrationUrl}/dac6/dct04/v1"
+    val conversationID = subscriptionForDACRequest.displaySubscriptionForDACRequest.requestCommon.conversationID.getOrElse("")
 
     val newHeaders = hc
       .copy(authorization = Some(Authorization(s"Bearer ${config.bearerToken}")))
-      .withExtraHeaders(addHeaders(): _*)
+      .withExtraHeaders(addHeaders(conversationID): _*)
 
     http.POST[DisplaySubscriptionForDACRequest, HttpResponse](displaySubscriptionUrl, subscriptionForDACRequest)(wts =
       DisplaySubscriptionForDACRequest.format, rds = httpReads, hc = newHeaders, ec = ec)
   }
 
-  private def addHeaders()(implicit headerCarrier: HeaderCarrier): Seq[(String,String)] = {
+  private def addHeaders(conversationID: String)(implicit headerCarrier: HeaderCarrier): Seq[(String,String)] = {
 
     //HTTP-date format defined by RFC 7231 e.g. Fri, 01 Aug 2020 15:51:38 GMT+1
     val formatter = DateTimeFormatter.ofPattern("EEE, dd MMM yyyy HH:mm:ss O")
 
+    //x-conversation-id must match conversationID in RequestCommon otherwise EIS will throw a 400 Bad Request
     Seq(
       "date" -> ZonedDateTime.now().format(formatter),
       "x-correlation-id" -> {
@@ -55,11 +57,7 @@ class SubscriptionConnector @Inject()(val config: AppConfig, val http: HttpClien
           .map(_.value)
           .getOrElse(UUID.randomUUID().toString)
       },
-      "x-conversation-id" -> {
-        headerCarrier.requestId
-          .map(_.value)
-          .getOrElse(UUID.randomUUID().toString)
-      },
+      "x-conversation-id" -> conversationID,
       "x-forwarded-host" -> "mdtp",
       "content-type"    -> "application/json",
       "accept"          -> "application/json"

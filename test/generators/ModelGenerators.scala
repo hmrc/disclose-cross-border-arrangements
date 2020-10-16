@@ -56,7 +56,7 @@ trait ModelGenerators extends BaseGenerators with JavaTimeGenerators {
     Arbitrary {
       for {
         idNumber <- stringsWithMaxLength(30)
-        regime <- arbitrary[String]
+        conversationID <- Gen.option(stringsWithMaxLength(36))
         receiptDate <- arbitrary[String]
         acknowledgementReference <- arbitrary[String]
         originatingSystem <- arbitrary[String]
@@ -65,14 +65,15 @@ trait ModelGenerators extends BaseGenerators with JavaTimeGenerators {
         DisplaySubscriptionForDACRequest(
           DisplaySubscriptionDetails(
             requestCommon = RequestCommon(
-              regime = regime,
+              regime = "DAC",
+              conversationID = conversationID,
               receiptDate = receiptDate,
               acknowledgementReference = acknowledgementReference,
               originatingSystem = originatingSystem,
               requestParameters = requestParameter
             ),
             requestDetail = RequestDetail(
-              IDType = "SAFE",
+              IDType = "DAC",
               IDNumber = idNumber
             )
           )
