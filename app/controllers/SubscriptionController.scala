@@ -58,7 +58,9 @@ class SubscriptionController @Inject()(subscriptionConnector: SubscriptionConnec
       case FORBIDDEN => Forbidden(httpResponse.body)
       case NOT_FOUND => NotFound(httpResponse.body)
       case METHOD_NOT_ALLOWED => MethodNotAllowed(httpResponse.body)
-      case _ => InternalServerError(httpResponse.body)
+      case CONFLICT => Conflict(httpResponse.body)
+      case INTERNAL_SERVER_ERROR => InternalServerError(httpResponse.body)
+      case _ => ServiceUnavailable(httpResponse.body)
     }
   }
 

@@ -18,7 +18,7 @@ package generators
 
 import java.time.LocalDateTime
 
-import models.SubmissionDetails
+import models._
 import org.scalacheck.Arbitrary.arbitrary
 import org.scalacheck.{Arbitrary, Gen}
 
@@ -44,5 +44,41 @@ trait ModelGenerators extends BaseGenerators with JavaTimeGenerators {
           importInstruction,
           initialDisclosureMA)
     }
+
+  implicit val arbitraryReturnParameters: Arbitrary[RequestParameter] = Arbitrary {
+    for {
+      paramName <- arbitrary[String]
+      paramValue <- arbitrary[String]
+    } yield RequestParameter(paramName, paramValue)
+  }
+
+  implicit lazy val arbitraryDisplaySubscriptionForDACRequest: Arbitrary[DisplaySubscriptionForDACRequest] = {
+    Arbitrary {
+      for {
+        idNumber <- stringsWithMaxLength(30)
+        regime <- arbitrary[String]
+        receiptDate <- arbitrary[String]
+        acknowledgementReference <- arbitrary[String]
+        originatingSystem <- arbitrary[String]
+        requestParameter <- Gen.option(Gen.listOf(arbitrary[RequestParameter]))
+      } yield {
+        DisplaySubscriptionForDACRequest(
+          DisplaySubscriptionDetails(
+            requestCommon = RequestCommon(
+              regime = regime,
+              receiptDate = receiptDate,
+              acknowledgementReference = acknowledgementReference,
+              originatingSystem = originatingSystem,
+              requestParameters = requestParameter
+            ),
+            requestDetail = RequestDetail(
+              IDType = "SAFE",
+              IDNumber = idNumber
+            )
+          )
+        )
+      }
+    }
+  }
 
 }
