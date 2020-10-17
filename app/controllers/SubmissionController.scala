@@ -23,7 +23,7 @@ import org.slf4j.LoggerFactory
 import play.api.libs.json.Json
 import play.api.mvc.{Action, AnyContent, ControllerComponents}
 import repositories.SubmissionDetailsRepository
-import services.{AuditService, ContactService, SubmissionService, TransformService}
+import services.{AuditService, ContactService, SubmissionService, TransformService, XMLValidationService}
 import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
 
 import scala.concurrent.ExecutionContext
@@ -34,6 +34,7 @@ class SubmissionController @Inject()(
                                       submissionService: SubmissionService,
                                       transformService: TransformService,
                                       contactService: ContactService,
+                                      validationService: XMLValidationService,
                                       dateHelper: DateHelper,
                                       submissionDetailsRepository: SubmissionDetailsRepository,
                                       auditService: AuditService
@@ -69,16 +70,21 @@ class SubmissionController @Inject()(
           subscriptionData <- contactService.getLatestContacts()
 
           //wrap data around the file to create submission payload
-          submission = transformService.addSubscriptionDetailsToSubmission(submissionFile, subscriptionData, submissionMetaData)
+          submission: NodeSeq = transformService.addSubscriptionDetailsToSubmission(submissionFile, subscriptionData, submissionMetaData)
 
           //validate the payload
-          //TODO
+          (_, errors) = validationService.validateXml(submission.mkString)
+        } yield {
+
+          if(errors.nonEmpty){
+            //TODO: Do something with the errors - probably needs to go into auditing
+            //then throw an exception or return an internal server error
+          }
+
           //submit to the backend
           //TODO
 
-          _ =  auditService.submissionAudit(submissionFile, transformedFile)
-
-        } yield {
+          auditService.submissionAudit(submissionFile, transformedFile)
 
           val submissionDetails = SubmissionDetails.build(
             xml = xml,
@@ -96,7 +102,7 @@ class SubmissionController @Inject()(
         }
       } recover {
         case ex:Exception =>
-          logger.error("Error storing to GridFS", ex)
+          logger.error("Error generating and submitting declaration", ex)
           InternalServerError
       }
   }
@@ -108,10 +114,9 @@ class SubmissionController @Inject()(
         history =>
           Ok(Json.toJson(SubmissionHistory(history)))
       ).recover {
-
-    case ex:Exception =>
-        logger.error("Error reading from GridFS", ex)
-      InternalServerError
+        case ex:Exception =>
+          logger.error("Error retrieving submission history", ex)
+          InternalServerError
       }
   }
 
