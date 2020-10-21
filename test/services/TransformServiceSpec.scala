@@ -20,6 +20,8 @@ import base.SpecBase
 import models._
 import org.scalatest.StreamlinedXmlEquality
 
+import scala.xml.NodeSeq
+
 class TransformServiceSpec extends SpecBase with StreamlinedXmlEquality {
 
   "TransformationService" - {
@@ -289,6 +291,77 @@ class TransformServiceSpec extends SpecBase with StreamlinedXmlEquality {
     </subscriptionDetails>
 
     expected mustEqual result
+  }
+
+  "must add Namespaces to a file" in {
+    val service = app.injector.instanceOf[TransformService]
+    val file =
+      <DAC6UKSubmissionInboundRequest xmlns:dac6="urn:eu:taxud:dac6:v1"
+                                      xmlns:eis="http://www.hmrc.gov.uk/dac6/eis"
+                                      xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                                      xsi:schemaLocation="http://www.hmrc.gov.uk/dac6/eis/DCT06_EIS_UK_schema.xsd">
+        <file>
+          <result>true</result>
+        </file>
+      </DAC6UKSubmissionInboundRequest>
+
+    val expected =
+      <eis:DAC6UKSubmissionInboundRequest xmlns:dac6="urn:eu:taxud:dac6:v1"
+                                          xmlns:eis="http://www.hmrc.gov.uk/dac6/eis"
+                                          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                                          xsi:schemaLocation="http://www.hmrc.gov.uk/dac6/eis/DCT06_EIS_UK_schema.xsd">
+        <eis:file>
+          <eis:result>true</eis:result>
+        </eis:file>
+      </eis:DAC6UKSubmissionInboundRequest>
+
+    val result: NodeSeq = service.addNameSpaces(file, Seq(NamespaceForNode("DAC6UKSubmissionInboundRequest", "eis")))
+
+    result mustBe expected
+  }
+
+  "must handle two Namespaces in a file" in {
+    val service = app.injector.instanceOf[TransformService]
+    val file =
+      <DAC6UKSubmissionInboundRequest xmlns:dac6="urn:eu:taxud:dac6:v1"
+                                      xmlns:eis="http://www.hmrc.gov.uk/dac6/eis"
+                                      xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                                      xsi:schemaLocation="http://www.hmrc.gov.uk/dac6/eis/DCT06_EIS_UK_schema.xsd">
+        <file>
+          <result>true</result>
+          <requestDetail>
+            <DAC6_Arrangement xmlns:dac6="urn:ukdac6:v0.1"
+                                   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                                   version="2020-04-16T09:30:47Z">
+              <submission>Submitted Data</submission>
+            </DAC6_Arrangement>
+          </requestDetail>
+        </file>
+      </DAC6UKSubmissionInboundRequest>
+
+    val expected =
+      <eis:DAC6UKSubmissionInboundRequest xmlns:dac6="urn:eu:taxud:dac6:v1"
+                                          xmlns:eis="http://www.hmrc.gov.uk/dac6/eis"
+                                          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                                          xsi:schemaLocation="http://www.hmrc.gov.uk/dac6/eis/DCT06_EIS_UK_schema.xsd">
+        <eis:file>
+          <eis:result>true</eis:result>
+          <eis:requestDetail>
+            <dac6:DAC6_Arrangement xmlns:dac6="urn:ukdac6:v0.1"
+                                   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                                   version="2020-04-16T09:30:47Z">
+              <dac6:submission>Submitted Data</dac6:submission>
+            </dac6:DAC6_Arrangement>
+          </eis:requestDetail>
+        </eis:file>
+      </eis:DAC6UKSubmissionInboundRequest>
+
+    val result: NodeSeq = service.addNameSpaces(file, Seq(
+      NamespaceForNode("DAC6UKSubmissionInboundRequest", "eis"),
+      NamespaceForNode("DAC6_Arrangement", "dac6")
+    ))
+
+    result mustBe expected
   }
 
 }

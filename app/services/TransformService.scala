@@ -17,9 +17,9 @@
 package services
 
 import javax.inject.Inject
-import models.{ContactInformation, GeneratedIDs, Individual, Organisation, SubmissionMetaData, SubscriptionDetails}
+import models.{ContactInformation, GeneratedIDs, Individual, NamespaceForNode, Organisation, SubmissionMetaData, SubscriptionDetails}
 
-import scala.xml.{Elem, Node, NodeSeq}
+import scala.xml.{Elem, NamespaceBinding, Node, NodeSeq, TopScope}
 import scala.xml.transform.{RewriteRule, RuleTransformer}
 
 class TransformService @Inject()() {
@@ -42,12 +42,40 @@ class TransformService @Inject()() {
       }
     }
 
+  def addNameSpaces(file: NodeSeq, namespaces:Seq[NamespaceForNode]): NodeSeq = {
+
+    def changeNS(el: NodeSeq): NodeSeq = {
+      def fixSeq(ns: Seq[Node], currentPrefix: Option[String]): Seq[Node] = for (node <- ns) yield node match {
+        case elem: Elem =>
+          namespaces.find(n => n.nodeName == elem.label).map {
+            n => elem.copy(
+              prefix = n.prefix,
+              child = fixSeq(elem.child, Some(n.prefix))
+            )
+          }.getOrElse(
+            elem.copy(
+              prefix = currentPrefix.get,
+              child = fixSeq(elem.child, Some(currentPrefix.get))
+            )
+          )
+        case other => other
+      }
+
+      fixSeq(el, None).head
+    }
+
+    changeNS(file)
+  }
+
   def addSubscriptionDetailsToSubmission(
                                           submissionFile: NodeSeq,
                                           subscriptionDetails: SubscriptionDetails,
                                           metaData: SubmissionMetaData
                                         ): NodeSeq = {
-    <DAC6UKSubmissionInboundRequest>
+    <DAC6UKSubmissionInboundRequest xmlns:dac6="urn:eu:taxud:dac6:v1"
+                                    xmlns:eis="http://www.hmrc.gov.uk/dac6/eis"
+                                    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                                    xsi:schemaLocation="http://www.hmrc.gov.uk/dac6/eis/DCT06_EIS_UK_schema.xsd">
       <requestCommon>
         <receiptDate>{metaData.submissionTime}</receiptDate>
         <regime>DAC</regime>

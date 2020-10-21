@@ -19,6 +19,7 @@ package controllers
 import java.time.LocalDateTime
 
 import base.SpecBase
+import connectors.SubmissionConnector
 import helpers.DateHelper
 import models.{DisclosureId, GeneratedIDs, SubmissionDetails}
 import org.mockito.Matchers
@@ -32,6 +33,7 @@ import play.api.test.FakeRequest
 import play.api.test.Helpers.{status, _}
 import repositories.SubmissionDetailsRepository
 import services.SubmissionService
+import uk.gov.hmrc.http.{HttpResponse, UpstreamErrorResponse}
 
 import scala.concurrent.Future
 
@@ -42,9 +44,10 @@ class SubmissionControllerSpec extends SpecBase
   val mockSubmissionService: SubmissionService = mock[SubmissionService]
   val mockDateHelper: DateHelper = mock[DateHelper]
   val mockSubmissionDetailsRepository: SubmissionDetailsRepository = mock[SubmissionDetailsRepository]
+  val mockSubmissionConnector: SubmissionConnector = mock[SubmissionConnector]
 
   override def beforeEach(): Unit = {
-    reset(mockSubmissionService, mockSubmissionDetailsRepository)
+    reset(mockSubmissionService, mockSubmissionDetailsRepository, mockSubmissionConnector)
   }
 
   "submission controller" - {
@@ -63,16 +66,20 @@ class SubmissionControllerSpec extends SpecBase
       .overrides(
         bind[SubmissionService].toInstance(mockSubmissionService),
         bind[DateHelper].toInstance(mockDateHelper),
-        bind[SubmissionDetailsRepository].toInstance(mockSubmissionDetailsRepository)
+        bind[SubmissionDetailsRepository].toInstance(mockSubmissionDetailsRepository),
+        bind[SubmissionConnector].toInstance(mockSubmissionConnector)
       )
       .build()
 
-    "when a file is posted we store it and send an OK" in {
+    "when a file is posted we transform it, send it to the HOD and return OK" in {
       when(mockSubmissionService.generateIDsForInstruction(any()))
         .thenReturn(Future.successful(GeneratedIDs(None, Some(DisclosureId("GBD", "20200601", "AAA000")))))
       when(mockDateHelper.now).thenReturn(testDateTime)
       when(mockSubmissionDetailsRepository.storeSubmissionDetails(submissionDetails))
         .thenReturn(Future.successful(true))
+
+      when(mockSubmissionConnector.submitDisclosure(any())(any()))
+        .thenReturn(Future.successful(HttpResponse(OK, "")))
 
       val submission =
         <submission>
@@ -94,7 +101,7 @@ class SubmissionControllerSpec extends SpecBase
           </file>
         </submission>
 
-      val request = FakeRequest(POST, routes.SubmissionController.storeSubmission().url).withXmlBody(submission)
+      val request = FakeRequest(POST, routes.SubmissionController.submitDisclosure().url).withXmlBody(submission)
       val result: Future[Result] = route(application, request).value
 
       //TODO: Needs a submission to HOD
@@ -103,10 +110,12 @@ class SubmissionControllerSpec extends SpecBase
       verify(mockSubmissionDetailsRepository, times(1)).storeSubmissionDetails(Matchers.eq(submissionDetails))
     }
 
-    "when a file is posted we try to store it and there is an error we respond with InternalServerError" ignore {
+    "when a file is posted we try to submit it and there is an error we respond with InternalServerError" in {
       when(mockSubmissionService.generateIDsForInstruction(any()))
         .thenReturn(Future.successful(GeneratedIDs(None, Some(DisclosureId("GBD", "20200601", "AAA000")))))
       when(mockDateHelper.now).thenReturn(testDateTime)
+      when(mockSubmissionConnector.submitDisclosure(any())(any()))
+        .thenReturn(Future.failed(UpstreamErrorResponse("", INTERNAL_SERVER_ERROR)))
       val submission =
         <submission>
           <fileName>my-file.xml</fileName>
@@ -127,10 +136,9 @@ class SubmissionControllerSpec extends SpecBase
           </file>
         </submission>
 
-      val request = FakeRequest(POST, routes.SubmissionController.storeSubmission().url).withXmlBody(submission)
+      val request = FakeRequest(POST, routes.SubmissionController.submitDisclosure().url).withXmlBody(submission)
       val result: Future[Result] = route(application, request).value
 
-      //TODO: This won't currently work as we are not submitting to a HOD
       status(result) mustBe INTERNAL_SERVER_ERROR
     }
 

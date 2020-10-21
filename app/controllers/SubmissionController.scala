@@ -16,14 +16,18 @@
 
 package controllers
 
+import java.util.UUID
+
+import connectors.SubmissionConnector
 import helpers.DateHelper
 import javax.inject.Inject
-import models.{ImportInstruction, SubmissionDetails, SubmissionHistory, SubmissionMetaData}
+import models.{ImportInstruction, NamespaceForNode, SubmissionDetails, SubmissionHistory, SubmissionMetaData}
 import org.slf4j.LoggerFactory
 import play.api.libs.json.Json
 import play.api.mvc.{Action, AnyContent, ControllerComponents}
 import repositories.SubmissionDetailsRepository
-import services.{AuditService, ContactService, SubmissionService, TransformService, XMLValidationService}
+import services._
+import uk.gov.hmrc.http.HeaderNames.xRequestId
 import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
 
 import scala.concurrent.ExecutionContext
@@ -35,6 +39,7 @@ class SubmissionController @Inject()(
                                       transformService: TransformService,
                                       contactService: ContactService,
                                       validationService: XMLValidationService,
+                                      submissionConnector: SubmissionConnector,
                                       dateHelper: DateHelper,
                                       submissionDetailsRepository: SubmissionDetailsRepository,
                                       auditService: AuditService
@@ -43,7 +48,7 @@ class SubmissionController @Inject()(
 
   private val logger = LoggerFactory.getLogger(getClass)
 
-  def storeSubmission: Action[NodeSeq] = Action.async(parse.xml) {
+  def submitDisclosure: Action[NodeSeq] = Action.async(parse.xml) {
     implicit request =>
       {
         //receive xml and find import instructions
@@ -56,7 +61,9 @@ class SubmissionController @Inject()(
         val submissionTime = dateHelper.now
         val initialDisclosureMA = (xml \\ "InitialDisclosureMA").text.toBoolean
 
-        val conversationID = "" //TODO: Generate UUID
+        val conversationID: String = hc.headers
+          .find(_._1 == xRequestId).map(_._2)
+          .getOrElse(UUID.randomUUID().toString)
 
         val submissionMetaData = SubmissionMetaData.build(submissionTime, conversationID, fileName)
 
@@ -72,36 +79,40 @@ class SubmissionController @Inject()(
           //wrap data around the file to create submission payload
           submission: NodeSeq = transformService.addSubscriptionDetailsToSubmission(submissionFile, subscriptionData, submissionMetaData)
 
-          //validate the payload
-          (_, errors) = validationService.validateXml(submission.mkString)
-        } yield {
+          //change namespaces
+          disclosureSubmission: NodeSeq  = transformService.addNameSpaces(submission, Seq(
+              NamespaceForNode("DAC6UKSubmissionInboundRequest", "eis"),
+              NamespaceForNode("DAC6_Arrangement", "dac6")
+            ))
 
-          if(errors.nonEmpty){
+          //validate the payload
+          a = validationService.validateXml(disclosureSubmission.mkString).left.map {
+            errors =>
             //TODO: Do something with the errors - probably needs to go into auditing
             //then throw an exception or return an internal server error
           }
 
           //submit to the backend
-          //TODO
+          _ <- submissionConnector.submitDisclosure(disclosureSubmission)
 
+        } yield {
           auditService.submissionAudit(submissionFile, transformedFile)
 
           val submissionDetails = SubmissionDetails.build(
-            xml = xml,
-            ids = ids,
-            fileName = fileName,
-            enrolmentID = enrolmentID,
-            importInstruction = importInstruction,
-            disclosureID = disclosureID,
-            submissionTime = submissionTime,
-            initialDisclosureMA = initialDisclosureMA)
+              xml = xml,
+              ids = ids,
+              fileName = fileName,
+              enrolmentID = enrolmentID,
+              importInstruction = importInstruction,
+              disclosureID = disclosureID,
+              submissionTime = submissionTime,
+              initialDisclosureMA = initialDisclosureMA)
 
           submissionDetailsRepository.storeSubmissionDetails(submissionDetails)
-
           Ok(Json.toJson(ids))
         }
       } recover {
-        case ex:Exception =>
+        case ex: Exception =>
           logger.error("Error generating and submitting declaration", ex)
           InternalServerError
       }

@@ -33,7 +33,7 @@ import scala.collection.mutable.ListBuffer
 import scala.xml.Elem
 
 class XMLValidationService @Inject()(xmlValidatingParser: XMLValidatingParser){
-  def validateXml(xmlString: String): (Elem, ListBuffer[SaxParseError]) = {
+  def validateXml(xmlString: String): Either[ListBuffer[SaxParseError], Elem] = {
     val list: ListBuffer[SaxParseError] = new ListBuffer[SaxParseError]
 
     trait AccumulatorState extends DefaultHandler {
@@ -54,7 +54,8 @@ class XMLValidationService @Inject()(xmlValidatingParser: XMLValidatingParser){
 
     }.load(new StringReader(xmlString))
 
-    (elem, list)
+    if(list.nonEmpty) Left(list)
+    else Right(elem)
   }
 }
 

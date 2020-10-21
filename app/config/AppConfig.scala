@@ -29,5 +29,6 @@ class AppConfig @Inject()(config: Configuration, servicesConfig: ServicesConfig)
   val auditingEnabled: Boolean = config.get[Boolean]("auditing.enabled")
   val graphiteHost: String     = config.get[String]("microservice.metrics.graphite.host")
 
-  lazy val bearerToken: String = config.get[String]("microservice.services.business-matching.bearer-token")
+  lazy val bearerToken: String = config.get[String]("microservice.services.submission.bearer-token")
+  lazy val submissionUrl: String = s"${config.get[Service]("microservice.services.submission").baseUrl}${config.get[String]("microservice.services.submission.startUrl")}"
 }

@@ -29,9 +29,9 @@ class XmlValidationServiceSpec extends SpecBase {
       <will>not validate</will>
       </this>
 
-      val (_, lb) = service.validateXml(invalid.mkString)
+      val result = service.validateXml(invalid.mkString)
 
-      lb.nonEmpty mustBe true
+      result.isLeft mustBe true
     }
 
     "must correctly invalidate a submission with a data problem" in {
@@ -41,9 +41,9 @@ class XmlValidationServiceSpec extends SpecBase {
           .fromInputStream(getClass.getResourceAsStream("/invalid.xml"))
           .getLines.mkString("\n")
 
-      val (_, lb) = service.validateXml(validsubmission)
+      val result = service.validateXml(validsubmission)
 
-      lb.nonEmpty mustBe true
+      result.isLeft mustBe true
     }
 
     "must correctly validate a submission" in {
@@ -53,9 +53,9 @@ class XmlValidationServiceSpec extends SpecBase {
           .fromInputStream(getClass.getResourceAsStream("/valid.xml"))
           .getLines.mkString("\n")
 
-      val (_, lb) = service.validateXml(validsubmission)
+      val result = service.validateXml(validsubmission)
 
-      lb.nonEmpty mustBe false
+      result.isLeft mustBe false
     }
   }
 }
