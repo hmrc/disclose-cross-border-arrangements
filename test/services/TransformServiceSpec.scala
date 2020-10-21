@@ -136,7 +136,7 @@ class TransformServiceSpec extends SpecBase with StreamlinedXmlEquality {
 
   "must transform an individual without a middle name" in {
     val service = app.injector.instanceOf[TransformService]
-    val individual = Individual(
+    val individual = IndividualDetails(
       firstName = "firstName",
       middleName = None,
       lastName = "lastName"
@@ -157,7 +157,7 @@ class TransformServiceSpec extends SpecBase with StreamlinedXmlEquality {
 
   "must transform an individual with a middle name" in {
     val service = app.injector.instanceOf[TransformService]
-    val individual = Individual(
+    val individual = IndividualDetails(
       firstName = "firstName",
       middleName = Some("middleName"),
       lastName = "lastName"
@@ -180,11 +180,11 @@ class TransformServiceSpec extends SpecBase with StreamlinedXmlEquality {
   "must transform ContactInformation with individual" in {
     val service = app.injector.instanceOf[TransformService]
 
-    val contactInformation = ContactInformation(
+    val contactInformation = ContactInformationForIndividual(
       email = "aaa",
       phone = Some("bbb"),
       mobile = Some("ccc"),
-      name = Individual(
+      individual = IndividualDetails(
         firstName = "firstName",
         middleName = Some("middleName"),
         lastName = "lastName"
@@ -213,11 +213,11 @@ class TransformServiceSpec extends SpecBase with StreamlinedXmlEquality {
   "must transform ContactInformation with organisation" in {
     val service = app.injector.instanceOf[TransformService]
 
-    val contactInformation = ContactInformation(
+    val contactInformation = ContactInformationForOrganisation(
       email = "aaa",
       phone = Some("bbb"),
       mobile = None,
-      name = Organisation(
+      organisation = OrganisationDetails(
         organisationName = "Example"
       )
     )
@@ -246,19 +246,19 @@ class TransformServiceSpec extends SpecBase with StreamlinedXmlEquality {
         subscriptionID = "subscriptionID",
         tradingName = Some("tradingName"),
         isGBUser = true,
-        primaryContact = ContactInformation(
+        primaryContact = ContactInformationForOrganisation(
           email = "aaa",
           phone = Some("bbb"),
           mobile = None,
-          name = Organisation(
+          organisation = OrganisationDetails(
             organisationName = "Example"
           )
         ),
-        secondaryContact = Some(ContactInformation(
+        secondaryContact = Some(ContactInformationForOrganisation(
           email = "ddd",
           phone = Some("eee"),
           mobile = Some("fff"),
-          name = Organisation(
+          organisation = OrganisationDetails(
             organisationName = "AnotherExample"
           )
         ))

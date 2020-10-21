@@ -20,7 +20,7 @@ import java.time.LocalDateTime
 
 import base.SpecBase
 import connectors.SubmissionConnector
-import helpers.DateHelper
+import helpers.{ContactFixtures, DateHelper}
 import models.{DisclosureId, GeneratedIDs, SubmissionDetails}
 import org.mockito.Matchers
 import org.mockito.Matchers.any
@@ -32,7 +32,7 @@ import play.api.mvc.Result
 import play.api.test.FakeRequest
 import play.api.test.Helpers.{status, _}
 import repositories.SubmissionDetailsRepository
-import services.SubmissionService
+import services.{ContactService, SubmissionService}
 import uk.gov.hmrc.http.{HttpResponse, UpstreamErrorResponse}
 
 import scala.concurrent.Future
@@ -45,6 +45,7 @@ class SubmissionControllerSpec extends SpecBase
   val mockDateHelper: DateHelper = mock[DateHelper]
   val mockSubmissionDetailsRepository: SubmissionDetailsRepository = mock[SubmissionDetailsRepository]
   val mockSubmissionConnector: SubmissionConnector = mock[SubmissionConnector]
+  val mockContactService: ContactService = mock[ContactService]
 
   override def beforeEach(): Unit = {
     reset(mockSubmissionService, mockSubmissionDetailsRepository, mockSubmissionConnector)
@@ -67,7 +68,8 @@ class SubmissionControllerSpec extends SpecBase
         bind[SubmissionService].toInstance(mockSubmissionService),
         bind[DateHelper].toInstance(mockDateHelper),
         bind[SubmissionDetailsRepository].toInstance(mockSubmissionDetailsRepository),
-        bind[SubmissionConnector].toInstance(mockSubmissionConnector)
+        bind[SubmissionConnector].toInstance(mockSubmissionConnector),
+        bind[ContactService].toInstance(mockContactService)
       )
       .build()
 
@@ -77,7 +79,8 @@ class SubmissionControllerSpec extends SpecBase
       when(mockDateHelper.now).thenReturn(testDateTime)
       when(mockSubmissionDetailsRepository.storeSubmissionDetails(submissionDetails))
         .thenReturn(Future.successful(true))
-
+      when(mockContactService.getLatestContacts(any())(any(), any()))
+        .thenReturn(Future.successful(ContactFixtures.contact))
       when(mockSubmissionConnector.submitDisclosure(any())(any()))
         .thenReturn(Future.successful(HttpResponse(OK, "")))
 
@@ -114,6 +117,8 @@ class SubmissionControllerSpec extends SpecBase
       when(mockSubmissionService.generateIDsForInstruction(any()))
         .thenReturn(Future.successful(GeneratedIDs(None, Some(DisclosureId("GBD", "20200601", "AAA000")))))
       when(mockDateHelper.now).thenReturn(testDateTime)
+      when(mockContactService.getLatestContacts(any())(any(), any()))
+        .thenReturn(Future.successful(ContactFixtures.contact))
       when(mockSubmissionConnector.submitDisclosure(any())(any()))
         .thenReturn(Future.failed(UpstreamErrorResponse("", INTERNAL_SERVER_ERROR)))
       val submission =

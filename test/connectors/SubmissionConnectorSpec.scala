@@ -73,9 +73,7 @@ class SubmissionConnectorSpec extends SpecBase
         val xml = <test></test>
         val result = connector.submitDisclosure(xml)
 
-        whenReady(result.failed){ e =>
-          e mustBe a[BadRequestException]
-        }
+        result.futureValue.status mustBe BAD_REQUEST
       }
 
       "when upscan returns 5xx response" in {
@@ -89,11 +87,7 @@ class SubmissionConnectorSpec extends SpecBase
 
         val xml = <test></test>
         val result = connector.submitDisclosure(xml)
-        whenReady(result.failed){ e =>
-          e mustBe an[UpstreamErrorResponse]
-          val error = e.asInstanceOf[UpstreamErrorResponse]
-          error.statusCode mustBe SERVICE_UNAVAILABLE
-        }
+        result.futureValue.status mustBe SERVICE_UNAVAILABLE
       }
     }
 

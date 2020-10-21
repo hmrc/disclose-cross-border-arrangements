@@ -14,12 +14,16 @@
  * limitations under the License.
  */
 
-package models
+package helpers
 
-case class SubscriptionDetails(
-                            subscriptionID: String,
-                            tradingName: Option[String],
-                            isGBUser: Boolean,
-                            primaryContact: ContactInformation,
-                            secondaryContact: Option[ContactInformation]
-                          )
+import models.{ContactInformationForIndividual, ContactInformationForOrganisation, IndividualDetails, OrganisationDetails, SubscriptionDetails}
+
+object ContactFixtures {
+
+  val contact = SubscriptionDetails("111111111",
+    Some(""),
+    true,
+    ContactInformationForIndividual(IndividualDetails("First", "Last", None), "", Some(""), Some("")),
+    Some(ContactInformationForOrganisation(OrganisationDetails(""), "", None, None)))
+
+}

@@ -16,40 +16,55 @@
 
 package services
 
-import models.{ContactInformation, Individual, SubscriptionDetails}
+import connectors.SubscriptionConnector
+import javax.inject.Inject
+import models._
+import play.api.http.Status.OK
+import play.api.libs.json.{JsError, JsSuccess}
+import uk.gov.hmrc.http.HeaderCarrier
 
-import scala.concurrent.Future
+import scala.concurrent.{ExecutionContext, Future}
 
-class ContactService {
+class ContactService @Inject()(subscriptionConnector: SubscriptionConnector) {
 
-  //Fake Service waiting for integration
-  def getLatestContacts(): Future[SubscriptionDetails] =
-    Future.successful(
-      SubscriptionDetails(
-        subscriptionID = "",
-        tradingName = Some(""),
-        isGBUser = true,
-        primaryContact = ContactInformation(
-          email = "",
-          phone = Some(""),
-          mobile = Some(""),
-          name = Individual(
-            firstName = "",
-            middleName = Some(""),
-            lastName = ""
+  //TODO: find where to get latest contact data from
+  def getLatestContacts(enrolmentID: String)(implicit hc: HeaderCarrier, ex: ExecutionContext): Future[SubscriptionDetails] = {
+
+
+    val subscriptionForDACRequest: DisplaySubscriptionForDACRequest =
+      DisplaySubscriptionForDACRequest(DisplaySubscriptionDetails(
+        RequestCommon.createRequestCommon,
+        RequestDetail(
+          IDType = "DAC",
+          IDNumber = enrolmentID)
+      ))
+
+    subscriptionConnector.displaySubscriptionForDAC(subscriptionForDACRequest).map {
+      response =>
+        response.status match {
+          case OK => response.json.validate[DisplaySubscriptionForDACResponse] match {
+            case JsSuccess(response, _) => Some(response)
+            case JsError(_) => None
+          }
+          case _ => None
+        }
+    } map {
+      retrievedSubscription =>
+        retrievedSubscription.map {
+          sub =>
+            val details = sub.displaySubscriptionForDACResponse.responseDetail
+
+          SubscriptionDetails(
+            subscriptionID = details.subscriptionID,
+            tradingName = details.tradingName,
+            isGBUser = details.isGBUser,
+            primaryContact = details.primaryContact.contactInformation.head,
+            secondaryContact = details.secondaryContact.map(_.contactInformation.head)
           )
-        ),
-        secondaryContact = Some(ContactInformation(
-          email = "",
-          phone = Some(""),
-          mobile = Some(""),
-          name = Individual(
-            firstName = "",
-            middleName = Some(""),
-            lastName = ""
-          )
-        ))
-      )
-    )
+
+        } getOrElse(throw new Exception("Failed to retrieve and convert subscription"))
+
+    }
+  }
 
 }

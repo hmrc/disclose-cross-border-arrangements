@@ -24,10 +24,11 @@ import javax.inject.Inject
 import models.{ImportInstruction, NamespaceForNode, SubmissionDetails, SubmissionHistory, SubmissionMetaData}
 import org.slf4j.LoggerFactory
 import play.api.libs.json.Json
-import play.api.mvc.{Action, AnyContent, ControllerComponents}
+import play.api.mvc.{Action, AnyContent, ControllerComponents, Result}
 import repositories.SubmissionDetailsRepository
 import services._
 import uk.gov.hmrc.http.HeaderNames.xRequestId
+import uk.gov.hmrc.http.HttpResponse
 import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
 
 import scala.concurrent.ExecutionContext
@@ -74,7 +75,7 @@ class SubmissionController @Inject()(
           transformedFile = transformService.transformFileForIDs(submissionFile, ids)
 
           //get subscription data from SOMEWHERE (could be cache could be from HOD)
-          subscriptionData <- contactService.getLatestContacts()
+          subscriptionData <- contactService.getLatestContacts(enrolmentID)
 
           //wrap data around the file to create submission payload
           submission: NodeSeq = transformService.addSubscriptionDetailsToSubmission(submissionFile, subscriptionData, submissionMetaData)
@@ -86,19 +87,21 @@ class SubmissionController @Inject()(
             ))
 
           //validate the payload
-          a = validationService.validateXml(disclosureSubmission.mkString).left.map {
+          _ = validationService.validateXml(disclosureSubmission.mkString).left.map {
             errors =>
             //TODO: Do something with the errors - probably needs to go into auditing
             //then throw an exception or return an internal server error
           }
 
           //submit to the backend
-          _ <- submissionConnector.submitDisclosure(disclosureSubmission)
+          response <- submissionConnector.submitDisclosure(disclosureSubmission)
 
         } yield {
-          auditService.submissionAudit(submissionFile, transformedFile)
+          if(response.status == OK) {
+            auditService.submissionAudit(submissionFile, transformedFile)
 
-          val submissionDetails = SubmissionDetails.build(
+
+            val submissionDetails = SubmissionDetails.build(
               xml = xml,
               ids = ids,
               fileName = fileName,
@@ -108,8 +111,12 @@ class SubmissionController @Inject()(
               submissionTime = submissionTime,
               initialDisclosureMA = initialDisclosureMA)
 
-          submissionDetailsRepository.storeSubmissionDetails(submissionDetails)
-          Ok(Json.toJson(ids))
+            submissionDetailsRepository.storeSubmissionDetails(submissionDetails)
+            Ok(Json.toJson(ids))
+          } else {
+            //TODO: Can we release the generated ids for a downstream error?
+            convertToResult(response)
+          }
         }
       } recover {
         case ex: Exception =>
@@ -129,6 +136,19 @@ class SubmissionController @Inject()(
           logger.error("Error retrieving submission history", ex)
           InternalServerError
       }
+  }
+
+  private def convertToResult(httpResponse: HttpResponse): Result = {
+    httpResponse.status match {
+      case OK => Ok(httpResponse.body)
+      case BAD_REQUEST => BadRequest(httpResponse.body)
+      case FORBIDDEN => Forbidden(httpResponse.body)
+      case NOT_FOUND => NotFound(httpResponse.body)
+      case METHOD_NOT_ALLOWED => MethodNotAllowed(httpResponse.body)
+      case CONFLICT => Conflict(httpResponse.body)
+      case INTERNAL_SERVER_ERROR => InternalServerError(httpResponse.body)
+      case _ => ServiceUnavailable(httpResponse.body)
+    }
   }
 
 }

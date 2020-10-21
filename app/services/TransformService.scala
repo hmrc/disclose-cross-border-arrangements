@@ -17,10 +17,10 @@
 package services
 
 import javax.inject.Inject
-import models.{ContactInformation, GeneratedIDs, Individual, NamespaceForNode, Organisation, SubmissionMetaData, SubscriptionDetails}
+import models._
 
-import scala.xml.{Elem, NamespaceBinding, Node, NodeSeq, TopScope}
 import scala.xml.transform.{RewriteRule, RuleTransformer}
+import scala.xml.{Elem, Node, NodeSeq}
 
 class TransformService @Inject()() {
   def transformFileForIDs(submissionFile: NodeSeq, ids: GeneratedIDs): NodeSeq =
@@ -112,25 +112,31 @@ class TransformService @Inject()() {
   def transformContactInformation(
                                   contactInformation: ContactInformation
                                  ): NodeSeq = {
-    Seq(
-      contactInformation.phone.map(phone => <phoneNumber>{phone}</phoneNumber>),
-      contactInformation.mobile.map(mobile => <mobileNumber>{mobile}</mobileNumber>),
-      Some(<emailAddress>{contactInformation.email}</emailAddress>),
-      Some(contactInformation.name match {
-        case individual: Individual =>
-          <individualDetails>
-            {transformIndividual(individual)}
-          </individualDetails>
-        case organisation: Organisation =>
-          <organisationDetails>
-            <organisationName>{organisation.organisationName}</organisationName>
-          </organisationDetails>
-      })
-    ).filter(_.isDefined).map(_.get)
+    val nodes = contactInformation match {
+      case contactIndividual: ContactInformationForIndividual =>
+        Seq(
+          contactIndividual.phone.map(phone => <phoneNumber>{phone}</phoneNumber>),
+          contactIndividual.mobile.map(mobile => <mobileNumber>{mobile}</mobileNumber>),
+          Some(<emailAddress>{contactIndividual.email}</emailAddress>),
+          Some(<individualDetails>
+                {transformIndividual(contactIndividual.individual)}
+              </individualDetails>)
+        )
+      case contactOrganisation: ContactInformationForOrganisation =>
+        Seq(
+          contactOrganisation.phone.map(phone => <phoneNumber>{phone}</phoneNumber>),
+          contactOrganisation.mobile.map(mobile => <mobileNumber>{mobile}</mobileNumber>),
+          Some(<emailAddress>{contactOrganisation.email}</emailAddress>),
+          Some(<organisationDetails>
+                <organisationName>{contactOrganisation.organisation.organisationName}</organisationName>
+              </organisationDetails>)
+        )
+    }
 
+      nodes.filter(_.isDefined).map(_.get)
   }
 
-  def transformIndividual(individual: Individual): NodeSeq = {
+  def transformIndividual(individual: IndividualDetails): NodeSeq = {
     Seq(
       Some(<firstName>{individual.firstName}</firstName>),
       individual.middleName.map(middle => <middleName>{middle}</middleName>),

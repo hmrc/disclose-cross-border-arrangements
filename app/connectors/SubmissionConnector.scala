@@ -61,8 +61,8 @@ class SubmissionConnector @Inject()(
           .map(_.value)
           .getOrElse(UUID.randomUUID().toString)
       },
-      "content-type"    -> "application/json",
-      "accept"          -> "application/json"
+      "content-type"    -> "application/xml",
+      "accept"          -> "application/xml"
     )
   }
 
