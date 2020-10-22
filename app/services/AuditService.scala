@@ -17,8 +17,10 @@
 package services
 
 import javax.inject.Inject
+import models.SaxParseError
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.play.audit.http.connector.AuditConnector
+
 import scala.concurrent.ExecutionContext
 import scala.xml.NodeSeq
 
@@ -37,6 +39,18 @@ class AuditService @Inject()(auditConnector: AuditConnector)(implicit ec: Execut
       withSubmissionFile(submissionFile) andThen
         withTransformedFile(transformedFile)
       )(emptyMap)
+
+    auditConnector.sendExplicitAudit(auditType, auditMap)
+  }
+
+  def auditValidationFailures(subscriptionID: String, errors: Seq[SaxParseError])(implicit hc: HeaderCarrier): Unit = {
+
+    val auditMap: Map[String, String] = Map(
+      "subscriptionID" -> subscriptionID,
+      "validationErrors" -> errors
+        .map(error => s"${error.lineNumber}: ${error.errorMessage}")
+        .mkString(",")
+    )
 
     auditConnector.sendExplicitAudit(auditType, auditMap)
   }

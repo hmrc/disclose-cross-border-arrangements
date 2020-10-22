@@ -31,7 +31,7 @@ import uk.gov.hmrc.http.HeaderNames.xRequestId
 import uk.gov.hmrc.http.HttpResponse
 import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
 
-import scala.concurrent.ExecutionContext
+import scala.concurrent.{ExecutionContext, Future}
 import scala.xml.NodeSeq
 
 class SubmissionController @Inject()(
@@ -58,7 +58,7 @@ class SubmissionController @Inject()(
         val enrolmentID = (xml \ "enrolmentID").text
         val importInstruction = ImportInstruction((xml \\ "DisclosureImportInstruction").text)
         val disclosureID = (xml \\ "DisclosureID").text
-        val submissionFile: NodeSeq = (xml \ "file")
+        val submissionFile: NodeSeq = (xml \ "file" \ "DAC6_Arrangement")
         val submissionTime = dateHelper.now
         val initialDisclosureMA = (xml \\ "InitialDisclosureMA").text.toBoolean
 
@@ -89,8 +89,10 @@ class SubmissionController @Inject()(
           //validate the payload
           _ = validationService.validateXml(disclosureSubmission.mkString).left.map {
             errors =>
-            //TODO: Do something with the errors - probably needs to go into auditing
-            //then throw an exception or return an internal server error
+              auditService.auditValidationFailures(enrolmentID, errors)
+
+              //then throw an exception or return an internal server error
+              throw new Exception("There have been errors in validating the submission payload")
           }
 
           //submit to the backend
@@ -99,7 +101,6 @@ class SubmissionController @Inject()(
         } yield {
           if(response.status == OK) {
             auditService.submissionAudit(submissionFile, transformedFile)
-
 
             val submissionDetails = SubmissionDetails.build(
               xml = xml,
@@ -111,14 +112,20 @@ class SubmissionController @Inject()(
               submissionTime = submissionTime,
               initialDisclosureMA = initialDisclosureMA)
 
-            submissionDetailsRepository.storeSubmissionDetails(submissionDetails)
-            Ok(Json.toJson(ids))
+            submissionDetailsRepository.storeSubmissionDetails(submissionDetails).map {
+              succeeded =>
+                if(succeeded) Ok(Json.toJson(ids))
+                else {
+                  logger.error("Unable to store submission detail to database")
+                  throw new Exception("Unable to store submission detail to database")
+                }
+            }
           } else {
             //TODO: Can we release the generated ids for a downstream error?
-            convertToResult(response)
+            Future.successful(convertToResult(response))
           }
         }
-      } recover {
+      }.flatMap(identity) recover {
         case ex: Exception =>
           logger.error("Error generating and submitting declaration", ex)
           InternalServerError

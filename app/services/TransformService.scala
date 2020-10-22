@@ -20,7 +20,7 @@ import javax.inject.Inject
 import models._
 
 import scala.xml.transform.{RewriteRule, RuleTransformer}
-import scala.xml.{Elem, Node, NodeSeq}
+import scala.xml._
 
 class TransformService @Inject()() {
   def transformFileForIDs(submissionFile: NodeSeq, ids: GeneratedIDs): NodeSeq =
@@ -75,20 +75,28 @@ class TransformService @Inject()() {
     <DAC6UKSubmissionInboundRequest xmlns:dac6="urn:eu:taxud:dac6:v1"
                                     xmlns:eis="http://www.hmrc.gov.uk/dac6/eis"
                                     xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-                                    xsi:schemaLocation="http://www.hmrc.gov.uk/dac6/eis/DCT06_EIS_UK_schema.xsd">
+                                    xsi:schemaLocation="http://www.hmrc.gov.uk/dac6/eis DCT06_EIS_UK_schema.xsd">
       <requestCommon>
         <receiptDate>{metaData.submissionTime}</receiptDate>
         <regime>DAC</regime>
-        <conversationID>{metaData.conversationID}</conversationID>
+        <conversationID>{metaData.conversationID.replace("govuk-tax-", "")}</conversationID>
         <schemaVersion>1.0.0</schemaVersion>
       </requestCommon>
       <requestDetail>
-        {submissionFile}
+        {addNameSpaceDefinitions(submissionFile)}
       </requestDetail>
       <requestAdditionalDetail>
         {transformSubscriptionDetails(subscriptionDetails, metaData.fileName)}
       </requestAdditionalDetail>
     </DAC6UKSubmissionInboundRequest>
+  }
+
+  def addNameSpaceDefinitions(submissionFile: NodeSeq): NodeSeq = {
+    for (node <- submissionFile) yield node match {
+      case elem: Elem =>
+        elem.copy(scope = NamespaceBinding("dac6","urn:ukdac6:v0.1",
+          NamespaceBinding("xsi", "http://www.w3.org/2001/XMLSchema-instance", TopScope)))
+    }
   }
 
   def transformSubscriptionDetails(

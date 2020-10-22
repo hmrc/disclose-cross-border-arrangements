@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!-- edited with XMLSpy v2017 (http://www.altova.com) by Sandeep Nair (H M Revenue & Customs) -->
 <xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:ukd="urn:ukdac6:v0.1" xmlns:eis="http://www.hmrc.gov.uk/dac6/eis" targetNamespace="http://www.hmrc.gov.uk/dac6/eis" elementFormDefault="qualified" attributeFormDefault="unqualified">
-	<xs:import namespace="urn:ukdac6:v0.1" schemaLocation=".\xsd\UKDac6XSD_v0.3.xsd"/>
+	<xs:import namespace="urn:ukdac6:v0.1" schemaLocation="UKDac6XSD_v0.4.xsd"/>
 	<xs:complexType name="contactInformationType">
 		<xs:sequence>
 			<xs:element name="phoneNumber" minOccurs="0">

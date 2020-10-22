@@ -21,9 +21,9 @@ import models.{ContactInformationForIndividual, ContactInformationForOrganisatio
 object ContactFixtures {
 
   val contact = SubscriptionDetails("111111111",
-    Some(""),
+    Some("a"),
     true,
-    ContactInformationForIndividual(IndividualDetails("First", "Last", None), "", Some(""), Some("")),
-    Some(ContactInformationForOrganisation(OrganisationDetails(""), "", None, None)))
+    ContactInformationForIndividual(IndividualDetails("First", "Last", None), "a", Some("A"), Some("A")),
+    Some(ContactInformationForOrganisation(OrganisationDetails("o"), "a", None, None)))
 
 }
