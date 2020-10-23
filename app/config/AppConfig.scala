@@ -24,7 +24,10 @@ import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
 class AppConfig @Inject()(config: Configuration, servicesConfig: ServicesConfig) {
 
   val authBaseUrl: String = servicesConfig.baseUrl("auth")
+  lazy val registrationUrl = s"${servicesConfig.baseUrl("registration")}${config.get[String]("microservice.services.registration.startUrl")}"
 
   val auditingEnabled: Boolean = config.get[Boolean]("auditing.enabled")
   val graphiteHost: String     = config.get[String]("microservice.metrics.graphite.host")
+
+  lazy val bearerToken: String = config.get[String]("microservice.services.business-matching.bearer-token")
 }
