@@ -371,15 +371,15 @@ class TransformServiceSpec extends SpecBase with StreamlinedXmlEquality {
       <submission>Submitted Data</submission>
     </DAC6_Arrangement>
 
-    val expected = <DAC6_Arrangement xmlns:dac6="urn:ukdac6:v0.1"
-                      xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-                      version="2020-04-16T09:30:47Z">
+    val expected = <DAC6_Arrangement version="2020-04-16T09:30:47Z"
+                                     xmlns:dac6="urn:ukdac6:v0.1"
+                                     xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
       <submission>Submitted Data</submission>
     </DAC6_Arrangement>
 
     val result = service.addNameSpaceDefinitions(file)
 
-    result mustBe expected
+    result.toString mustBe expected.toString
   }
 
 }

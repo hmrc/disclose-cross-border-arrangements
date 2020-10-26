@@ -94,8 +94,8 @@ class TransformService @Inject()() {
   def addNameSpaceDefinitions(submissionFile: NodeSeq): NodeSeq = {
     for (node <- submissionFile) yield node match {
       case elem: Elem =>
-        elem.copy(scope = NamespaceBinding("dac6","urn:ukdac6:v0.1",
-          NamespaceBinding("xsi", "http://www.w3.org/2001/XMLSchema-instance", TopScope)))
+        elem.copy(scope = NamespaceBinding("xsi", "http://www.w3.org/2001/XMLSchema-instance",
+          NamespaceBinding("dac6","urn:ukdac6:v0.1", TopScope)))
     }
   }
 
