@@ -19,7 +19,9 @@ package controllers
 import java.time.LocalDateTime
 
 import base.SpecBase
-import helpers.DateHelper
+import connectors.SubmissionConnector
+import helpers.SubmissionFixtures.{minimalPassing, oneError}
+import helpers.{ContactFixtures, DateHelper}
 import models.{DisclosureId, GeneratedIDs, SubmissionDetails}
 import org.mockito.Matchers
 import org.mockito.Matchers.any
@@ -31,7 +33,8 @@ import play.api.mvc.Result
 import play.api.test.FakeRequest
 import play.api.test.Helpers.{status, _}
 import repositories.SubmissionDetailsRepository
-import services.SubmissionService
+import services.{ContactService, SubmissionService}
+import uk.gov.hmrc.http.{HttpResponse, UpstreamErrorResponse}
 
 import scala.concurrent.Future
 
@@ -42,9 +45,11 @@ class SubmissionControllerSpec extends SpecBase
   val mockSubmissionService: SubmissionService = mock[SubmissionService]
   val mockDateHelper: DateHelper = mock[DateHelper]
   val mockSubmissionDetailsRepository: SubmissionDetailsRepository = mock[SubmissionDetailsRepository]
+  val mockSubmissionConnector: SubmissionConnector = mock[SubmissionConnector]
+  val mockContactService: ContactService = mock[ContactService]
 
   override def beforeEach(): Unit = {
-    reset(mockSubmissionService, mockSubmissionDetailsRepository)
+    reset(mockSubmissionService, mockSubmissionDetailsRepository, mockSubmissionConnector, mockSubmissionConnector)
   }
 
   "submission controller" - {
@@ -63,75 +68,106 @@ class SubmissionControllerSpec extends SpecBase
       .overrides(
         bind[SubmissionService].toInstance(mockSubmissionService),
         bind[DateHelper].toInstance(mockDateHelper),
-        bind[SubmissionDetailsRepository].toInstance(mockSubmissionDetailsRepository)
+        bind[SubmissionDetailsRepository].toInstance(mockSubmissionDetailsRepository),
+        bind[SubmissionConnector].toInstance(mockSubmissionConnector),
+        bind[ContactService].toInstance(mockContactService)
       )
       .build()
 
-    "when a file is posted we store it and send an OK" in {
+    "when a file is posted we transform it, send it to the HOD and return OK" in {
       when(mockSubmissionService.generateIDsForInstruction(any()))
         .thenReturn(Future.successful(GeneratedIDs(None, Some(DisclosureId("GBD", "20200601", "AAA000")))))
       when(mockDateHelper.now).thenReturn(testDateTime)
-      when(mockSubmissionDetailsRepository.storeSubmissionDetails(submissionDetails))
+      when(mockSubmissionDetailsRepository.storeSubmissionDetails(any()))
         .thenReturn(Future.successful(true))
+      when(mockContactService.getLatestContacts(any())(any(), any()))
+        .thenReturn(Future.successful(ContactFixtures.contact))
+      when(mockSubmissionConnector.submitDisclosure(any())(any()))
+        .thenReturn(Future.successful(HttpResponse(OK, "")))
 
-      val submission =
-        <submission>
-          <fileName>my-file.xml</fileName>
-          <enrolmentID>enrolmentID</enrolmentID>
-          <file>
-            <DAC6_Arrangement version="First">
-              <Header>
-                <MessageRefId>GB0000000XXX</MessageRefId>
-                <Timestamp>2020-05-14T17:10:00</Timestamp>
-              </Header>
-              <ArrangementID>GBA20200601AAA000</ArrangementID>
-              <DAC6Disclosures>
-                <DisclosureImportInstruction>DAC6ADD</DisclosureImportInstruction>
-                <Disclosing></Disclosing>
-                <InitialDisclosureMA>false</InitialDisclosureMA>
-              </DAC6Disclosures>
-            </DAC6_Arrangement>
-          </file>
-        </submission>
+      val submission = minimalPassing
 
-      val request = FakeRequest(POST, routes.SubmissionController.storeSubmission().url).withXmlBody(submission)
+      val request = FakeRequest(POST, routes.SubmissionController.submitDisclosure().url).withXmlBody(submission)
       val result: Future[Result] = route(application, request).value
 
-      //TODO: Needs a submission to HOD
-
       status(result) mustBe OK
+      verify(mockSubmissionConnector, times(1)).submitDisclosure(any())(any())
       verify(mockSubmissionDetailsRepository, times(1)).storeSubmissionDetails(Matchers.eq(submissionDetails))
     }
 
-    "when a file is posted we try to store it and there is an error we respond with InternalServerError" ignore {
+    "when a file is posted we try to get the contacts and there is an error and we respond with InternalServerError" in {
       when(mockSubmissionService.generateIDsForInstruction(any()))
         .thenReturn(Future.successful(GeneratedIDs(None, Some(DisclosureId("GBD", "20200601", "AAA000")))))
       when(mockDateHelper.now).thenReturn(testDateTime)
-      val submission =
-        <submission>
-          <fileName>my-file.xml</fileName>
-          <enrolmentID>enrolmentID</enrolmentID>
-          <file>
-            <DAC6_Arrangement version="First">
-              <Header>
-                <MessageRefId>GB0000000XXX</MessageRefId>
-                <Timestamp>2020-05-14T17:10:00</Timestamp>
-              </Header>
-              <ArrangementID>GBA20200601AAA000</ArrangementID>
-              <DAC6Disclosures>
-                <DisclosureImportInstruction>DAC6ADD</DisclosureImportInstruction>
-                <Disclosing></Disclosing>
-                <InitialDisclosureMA>false</InitialDisclosureMA>
-              </DAC6Disclosures>
-            </DAC6_Arrangement>
-          </file>
-        </submission>
+      when(mockContactService.getLatestContacts(any())(any(), any()))
+        .thenReturn(Future.failed(new Exception("Failed to retrieve and convert subscription")))
+      when(mockSubmissionConnector.submitDisclosure(any())(any()))
+        .thenReturn(Future.failed(UpstreamErrorResponse("", INTERNAL_SERVER_ERROR)))
+      val submission = minimalPassing
 
-      val request = FakeRequest(POST, routes.SubmissionController.storeSubmission().url).withXmlBody(submission)
+      val request = FakeRequest(POST, routes.SubmissionController.submitDisclosure().url).withXmlBody(submission)
       val result: Future[Result] = route(application, request).value
 
-      //TODO: This won't currently work as we are not submitting to a HOD
       status(result) mustBe INTERNAL_SERVER_ERROR
+      verify(mockSubmissionConnector, times(0)).submitDisclosure(any())(any())
+      verify(mockSubmissionDetailsRepository, times(0)).storeSubmissionDetails(Matchers.eq(submissionDetails))
+    }
+
+    "when a file is posted we try to validate it and there is an error and we respond with InternalServerError" in {
+      when(mockSubmissionService.generateIDsForInstruction(any()))
+        .thenReturn(Future.successful(GeneratedIDs(None, Some(DisclosureId("GBD", "20200601", "AAA000")))))
+      when(mockDateHelper.now).thenReturn(testDateTime)
+      when(mockContactService.getLatestContacts(any())(any(), any()))
+        .thenReturn(Future.successful(ContactFixtures.contact))
+      when(mockSubmissionConnector.submitDisclosure(any())(any()))
+        .thenReturn(Future.failed(UpstreamErrorResponse("", INTERNAL_SERVER_ERROR)))
+      val submission = oneError
+
+      val request = FakeRequest(POST, routes.SubmissionController.submitDisclosure().url).withXmlBody(submission)
+      val result: Future[Result] = route(application, request).value
+
+      status(result) mustBe INTERNAL_SERVER_ERROR
+      verify(mockSubmissionConnector, times(0)).submitDisclosure(any())(any())
+      verify(mockSubmissionDetailsRepository, times(0)).storeSubmissionDetails(Matchers.eq(submissionDetails))
+    }
+
+    "when a file is posted we try to submit it and there is an error we respond with InternalServerError" in {
+      when(mockSubmissionService.generateIDsForInstruction(any()))
+        .thenReturn(Future.successful(GeneratedIDs(None, Some(DisclosureId("GBD", "20200601", "AAA000")))))
+      when(mockDateHelper.now).thenReturn(testDateTime)
+      when(mockContactService.getLatestContacts(any())(any(), any()))
+        .thenReturn(Future.successful(ContactFixtures.contact))
+      when(mockSubmissionConnector.submitDisclosure(any())(any()))
+        .thenReturn(Future.failed(UpstreamErrorResponse("", INTERNAL_SERVER_ERROR)))
+      val submission = minimalPassing
+
+      val request = FakeRequest(POST, routes.SubmissionController.submitDisclosure().url).withXmlBody(submission)
+      val result: Future[Result] = route(application, request).value
+
+      status(result) mustBe INTERNAL_SERVER_ERROR
+      verify(mockSubmissionConnector, times(1)).submitDisclosure(any())(any())
+      verify(mockSubmissionDetailsRepository, times(0)).storeSubmissionDetails(Matchers.eq(submissionDetails))
+    }
+
+    "when a file is posted, send it to the HOD but repository fails to store we return a server error" in {
+      when(mockSubmissionService.generateIDsForInstruction(any()))
+        .thenReturn(Future.successful(GeneratedIDs(None, Some(DisclosureId("GBD", "20200601", "AAA000")))))
+      when(mockDateHelper.now).thenReturn(testDateTime)
+      when(mockSubmissionDetailsRepository.storeSubmissionDetails(any()))
+        .thenReturn(Future.successful(false))
+      when(mockContactService.getLatestContacts(any())(any(), any()))
+        .thenReturn(Future.successful(ContactFixtures.contact))
+      when(mockSubmissionConnector.submitDisclosure(any())(any()))
+        .thenReturn(Future.successful(HttpResponse(OK, "")))
+
+      val submission = minimalPassing
+
+      val request = FakeRequest(POST, routes.SubmissionController.submitDisclosure().url).withXmlBody(submission)
+      val result: Future[Result] = route(application, request).value
+
+      status(result) mustBe INTERNAL_SERVER_ERROR
+      verify(mockSubmissionConnector, times(1)).submitDisclosure(any())(any())
+      verify(mockSubmissionDetailsRepository, times(1)).storeSubmissionDetails(Matchers.eq(submissionDetails))
     }
 
   }

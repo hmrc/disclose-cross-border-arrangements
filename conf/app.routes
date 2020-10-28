@@ -2,7 +2,7 @@
 
 GET        /verify-arrangement-id/:arrangementId        controllers.IdController.verifyArrangementId(arrangementId: String)
 
-POST       /submit                                      controllers.SubmissionController.storeSubmission
+POST       /submit                                      controllers.SubmissionController.submitDisclosure
 GET       /get-history/:enrolmentId                     controllers.SubmissionController.getHistory(enrolmentId: String)
 
 GET        /history/count/:enrolmentId                  controllers.HistoryController.noOfPreviousSubmissions(enrolmentId: String)
