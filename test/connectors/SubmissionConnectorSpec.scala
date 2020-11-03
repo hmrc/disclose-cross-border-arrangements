@@ -18,14 +18,13 @@ package connectors
 
 import base.SpecBase
 import com.github.tomakehurst.wiremock.client.WireMock.{aResponse, post, urlEqualTo}
+import helpers.WireMockHelper
 import org.scalatest.concurrent.ScalaFutures
 import org.scalatestplus.mockito.MockitoSugar
 import org.scalatestplus.play.guice.GuiceOneAppPerSuite
 import play.api.Application
 import play.api.http.Status._
 import play.api.inject.guice.GuiceApplicationBuilder
-import helpers.WireMockHelper
-import uk.gov.hmrc.http.{BadRequestException, UpstreamErrorResponse}
 
 class SubmissionConnectorSpec extends SpecBase
   with GuiceOneAppPerSuite

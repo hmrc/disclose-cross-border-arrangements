@@ -62,7 +62,8 @@ class SubmissionConnector @Inject()(
           .getOrElse(UUID.randomUUID().toString)
       },
       "content-type"    -> "application/xml",
-      "accept"          -> "application/xml"
+      "accept"          -> "application/xml",
+      "Environment"      -> config.eisEnvironment
     )
   }
 

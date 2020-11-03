@@ -60,7 +60,8 @@ class SubscriptionConnector @Inject()(val config: AppConfig, val http: HttpClien
       "x-conversation-id" -> conversationID,
       "x-forwarded-host" -> "mdtp",
       "content-type"    -> "application/json",
-      "accept"          -> "application/json"
+      "accept"          -> "application/json",
+      "Environment"      -> config.eisEnvironment
     )
   }
 
