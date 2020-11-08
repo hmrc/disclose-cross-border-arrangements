@@ -19,6 +19,8 @@ package models
 import base.SpecBase
 import play.api.libs.json.{JsObject, Json}
 
+import scala.util.matching.Regex
+
 class DisplaySubscriptionForDACRequestSpec extends SpecBase {
 
   val requestCommon: RequestCommon =
@@ -80,6 +82,19 @@ class DisplaySubscriptionForDACRequestSpec extends SpecBase {
       )
 
       Json.toJson(displaySubscriptionForDACRequest) mustBe json
+    }
+
+    "must generate a correct request common" in {
+      val requestCommon = RequestCommon.createRequestCommon
+      val ackRefLength = requestCommon.acknowledgementReference.length
+      ackRefLength >= 1 && ackRefLength <= 32 mustBe true
+
+      requestCommon.regime mustBe "DAC"
+
+      val date: Regex = raw"[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}Z".r
+      date.findAllIn(requestCommon.receiptDate).toList.nonEmpty mustBe true
+
+      requestCommon.originatingSystem mustBe "MDTP"
     }
   }
 }
