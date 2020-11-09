@@ -21,9 +21,9 @@ import java.util.UUID
 import connectors.SubmissionConnector
 import helpers.DateHelper
 import javax.inject.Inject
-import models.{ImportInstruction, NamespaceForNode, SubmissionDetails, SubmissionHistory, SubmissionMetaData}
+import models.{ErrorDetails, ImportInstruction, NamespaceForNode, SubmissionDetails, SubmissionHistory, SubmissionMetaData}
 import org.slf4j.LoggerFactory
-import play.api.libs.json.Json
+import play.api.libs.json.{JsError, JsSuccess, Json}
 import play.api.mvc.{Action, AnyContent, ControllerComponents, Result}
 import repositories.SubmissionDetailsRepository
 import services._
@@ -32,6 +32,7 @@ import uk.gov.hmrc.http.HttpResponse
 import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
 
 import scala.concurrent.{ExecutionContext, Future}
+import scala.util.{Success, Try}
 import scala.xml.NodeSeq
 
 class SubmissionController @Inject()(
@@ -148,13 +149,61 @@ class SubmissionController @Inject()(
   private def convertToResult(httpResponse: HttpResponse): Result = {
     httpResponse.status match {
       case OK => Ok(httpResponse.body)
-      case BAD_REQUEST => BadRequest(httpResponse.body)
-      case FORBIDDEN => Forbidden(httpResponse.body)
       case NOT_FOUND => NotFound(httpResponse.body)
-      case METHOD_NOT_ALLOWED => MethodNotAllowed(httpResponse.body)
-      case CONFLICT => Conflict(httpResponse.body)
-      case INTERNAL_SERVER_ERROR => InternalServerError(httpResponse.body)
-      case _ => ServiceUnavailable(httpResponse.body)
+      case BAD_REQUEST => {
+        val error = Try(Json.parse(httpResponse.body).validate[ErrorDetails])
+        error match {
+          case Success(JsSuccess(value, _)) =>
+            logger.error(s"Error with submission: ${value.errorDetail.sourceFaultDetail.map(_.detail.mkString)}")
+          case _ => logger.error("Error with submission but return is not a valid json")
+        }
+        BadRequest(httpResponse.body)
+      }
+      case FORBIDDEN => {
+        val error = Try(Json.parse(httpResponse.body).validate[ErrorDetails])
+        error match {
+          case Success(JsSuccess(value, _)) =>
+            logger.error(s"Error with submission: ${value.errorDetail.sourceFaultDetail.map(_.detail.mkString)}")
+          case _ => logger.error("Error with submission but return is not a valid json")
+        }
+        Forbidden(httpResponse.body)
+      }
+      case METHOD_NOT_ALLOWED => {
+        val error = Try(Json.parse(httpResponse.body).validate[ErrorDetails])
+        error match {
+          case Success(JsSuccess(value, _)) =>
+            logger.error(s"Error with submission: ${value.errorDetail.sourceFaultDetail.map(_.detail.mkString)}")
+          case _ => logger.error("Error with submission but return is not a valid json")
+        }
+        MethodNotAllowed(httpResponse.body)
+      }
+      case CONFLICT => {
+        val error = Try(Json.parse(httpResponse.body).validate[ErrorDetails])
+        error match {
+          case Success(JsSuccess(value, _)) =>
+            logger.error(s"Error with submission: ${value.errorDetail.sourceFaultDetail.map(_.detail.mkString)}")
+          case _ => logger.error("Error with submission but return is not a valid json")
+        }
+        Conflict(httpResponse.body)
+      }
+      case INTERNAL_SERVER_ERROR => {
+        val error = Try(Json.parse(httpResponse.body).validate[ErrorDetails])
+        error match {
+          case Success(JsSuccess(value, _)) =>
+            logger.error(s"Error with submission: ${value.errorDetail.sourceFaultDetail.map(_.detail.mkString)}")
+          case _ => logger.error("Error with submission but return is not a valid json")
+        }
+        InternalServerError(httpResponse.body)
+      }
+      case _ => {
+        val error = Try(Json.parse(httpResponse.body).validate[ErrorDetails])
+        error match {
+          case Success(JsSuccess(value, _)) =>
+            logger.error(s"Error with submission: ${value.errorDetail.sourceFaultDetail.map(_.detail.mkString)}")
+          case _ => logger.error("Error with submission but return is not a valid json")
+        }
+        ServiceUnavailable(httpResponse.body)
+      }
     }
   }
 
