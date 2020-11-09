@@ -53,7 +53,7 @@ class SubscriptionConnector @Inject()(val config: AppConfig, val http: HttpClien
     Seq(
       "date" -> ZonedDateTime.now().format(formatter),
       "x-correlation-id" -> {
-        headerCarrier.sessionId
+        headerCarrier.requestId
           .map(_.value)
           .getOrElse(UUID.randomUUID().toString)
       },

@@ -27,7 +27,7 @@ import play.api.libs.json.{JsError, JsSuccess, Json}
 import play.api.mvc.{Action, AnyContent, ControllerComponents, Result}
 import repositories.SubmissionDetailsRepository
 import services._
-import uk.gov.hmrc.http.HeaderNames.xRequestId
+import uk.gov.hmrc.http.HeaderNames.{xRequestId, xSessionId}
 import uk.gov.hmrc.http.HttpResponse
 import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
 
@@ -64,7 +64,7 @@ class SubmissionController @Inject()(
         val initialDisclosureMA = (xml \\ "InitialDisclosureMA").text.toBoolean
 
         val conversationID: String = hc.headers
-          .find(_._1 == xRequestId).map(_._2)
+          .find(_._1 == xSessionId).map(_._2)
           .getOrElse(UUID.randomUUID().toString)
 
         val submissionMetaData = SubmissionMetaData.build(submissionTime, conversationID, fileName)
