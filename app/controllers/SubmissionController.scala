@@ -21,13 +21,13 @@ import java.util.UUID
 import connectors.SubmissionConnector
 import helpers.DateHelper
 import javax.inject.Inject
-import models.{ErrorDetails, ImportInstruction, NamespaceForNode, SubmissionDetails, SubmissionHistory, SubmissionMetaData}
+import models._
 import org.slf4j.LoggerFactory
-import play.api.libs.json.{JsError, JsSuccess, Json}
+import play.api.libs.json.{JsSuccess, Json}
 import play.api.mvc.{Action, AnyContent, ControllerComponents, Result}
 import repositories.SubmissionDetailsRepository
 import services._
-import uk.gov.hmrc.http.HeaderNames.xRequestId
+import uk.gov.hmrc.http.HeaderNames.xSessionId
 import uk.gov.hmrc.http.HttpResponse
 import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
 
@@ -64,7 +64,7 @@ class SubmissionController @Inject()(
         val initialDisclosureMA = (xml \\ "InitialDisclosureMA").text.toBoolean
 
         val conversationID: String = hc.headers
-          .find(_._1 == xRequestId).map(_._2)
+          .find(_._1 == xSessionId).map(_._2)
           .getOrElse(UUID.randomUUID().toString)
 
         val submissionMetaData = SubmissionMetaData.build(submissionTime, conversationID, fileName)

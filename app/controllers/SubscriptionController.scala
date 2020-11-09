@@ -20,7 +20,7 @@ import connectors.SubscriptionConnector
 import javax.inject.Inject
 import models.{DisplaySubscriptionForDACRequest, ErrorDetails}
 import play.api.Logger
-import play.api.libs.json.{JsError, JsResult, JsSuccess, JsValue, Json}
+import play.api.libs.json.{JsResult, JsSuccess, JsValue, Json}
 import play.api.mvc.{Action, ControllerComponents, Result}
 import uk.gov.hmrc.http.{HeaderCarrier, HttpResponse}
 import uk.gov.hmrc.play.HeaderCarrierConverter
