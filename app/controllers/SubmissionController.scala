@@ -64,7 +64,7 @@ class SubmissionController @Inject()(
         val initialDisclosureMA = (xml \\ "InitialDisclosureMA").text.toBoolean
 
         val conversationID: String = hc.headers
-          .find(_._1 == xSessionId).map(_._2)
+          .find(_._1 == xSessionId).map(n => n._2.replaceAll("session-", ""))
           .getOrElse(UUID.randomUUID().toString)
 
         val submissionMetaData = SubmissionMetaData.build(submissionTime, conversationID, fileName)
