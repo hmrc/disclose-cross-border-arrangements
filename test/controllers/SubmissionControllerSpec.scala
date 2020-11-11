@@ -17,24 +17,29 @@
 package controllers
 
 import java.time.LocalDateTime
+import java.util.UUID
 
 import base.SpecBase
 import connectors.SubmissionConnector
 import helpers.SubmissionFixtures.{minimalPassing, oneError}
 import helpers.{ContactFixtures, DateHelper}
-import models.{DisclosureId, GeneratedIDs, SubmissionDetails}
-import org.mockito.Matchers
+import models.{DisclosureId, GeneratedIDs, SubmissionDetails, SubmissionMetaData}
+import org.mockito.{ArgumentCaptor, Matchers}
 import org.mockito.Matchers.any
 import org.mockito.Mockito._
 import org.scalatest.BeforeAndAfterEach
 import org.scalatestplus.mockito.MockitoSugar
+import play.api.inject
 import play.api.inject.bind
-import play.api.mvc.Result
+import play.api.inject.guice.GuiceApplicationBuilder
+import play.api.mvc.{Headers, Result}
 import play.api.test.FakeRequest
 import play.api.test.Helpers.{status, _}
 import repositories.SubmissionDetailsRepository
-import services.{ContactService, SubmissionService}
-import uk.gov.hmrc.http.{HttpResponse, UpstreamErrorResponse}
+import services.{ContactService, SubmissionService, TransformService}
+import uk.gov.hmrc.http.{HeaderCarrier, HeaderNames, HttpResponse, UpstreamErrorResponse}
+import uk.gov.hmrc.play.HeaderCarrierConverter
+import uk.gov.hmrc.play.audit.http.connector.AuditConnector
 
 import scala.concurrent.Future
 
@@ -170,5 +175,75 @@ class SubmissionControllerSpec extends SpecBase
       verify(mockSubmissionDetailsRepository, times(1)).storeSubmissionDetails(Matchers.eq(submissionDetails))
     }
 
+    "conversationID is the correct length per spec when passed from frontend" in {
+      val mockTransformService = mock[TransformService]
+      val app = new GuiceApplicationBuilder()
+        .overrides(
+          bind[SubmissionService].toInstance(mockSubmissionService),
+          bind[DateHelper].toInstance(mockDateHelper),
+          bind[SubmissionDetailsRepository].toInstance(mockSubmissionDetailsRepository),
+          bind[SubmissionConnector].toInstance(mockSubmissionConnector),
+          bind[ContactService].toInstance(mockContactService),
+          bind[TransformService].toInstance(mockTransformService)
+        )
+        .build()
+
+      when(mockSubmissionService.generateIDsForInstruction(any()))
+        .thenReturn(Future.successful(GeneratedIDs(None, Some(DisclosureId("GBD", "20200601", "AAA000")))))
+      when(mockDateHelper.now).thenReturn(testDateTime)
+      when(mockContactService.getLatestContacts(any())(any(), any()))
+        .thenReturn(Future.successful(ContactFixtures.contact))
+      when(mockSubmissionConnector.submitDisclosure(any())(any()))
+        .thenReturn(Future.failed(UpstreamErrorResponse("", INTERNAL_SERVER_ERROR)))
+
+      val submission = minimalPassing
+      val request = FakeRequest(POST, routes.SubmissionController.submitDisclosure().url).withXmlBody(submission)
+        .withHeaders((HeaderNames.xSessionId, s"session-${UUID.randomUUID()}"))
+      val result: Future[Result] = route(app, request).value
+
+      status(result) mustBe INTERNAL_SERVER_ERROR
+
+      val argumentCaptorData: ArgumentCaptor[SubmissionMetaData] = ArgumentCaptor.forClass(classOf[SubmissionMetaData])
+      verify(mockTransformService, times(1)).addSubscriptionDetailsToSubmission(any(), any(), argumentCaptorData.capture())
+
+      val submissionMetaData = argumentCaptorData.getValue
+      val conversationIDLength = submissionMetaData.conversationID.length
+      conversationIDLength >= 1 && conversationIDLength <= 36 mustBe true
+    }
+
+    "conversationID is the correct length per spec when generated" in {
+      val mockTransformService = mock[TransformService]
+      val app = new GuiceApplicationBuilder()
+        .overrides(
+          bind[SubmissionService].toInstance(mockSubmissionService),
+          bind[DateHelper].toInstance(mockDateHelper),
+          bind[SubmissionDetailsRepository].toInstance(mockSubmissionDetailsRepository),
+          bind[SubmissionConnector].toInstance(mockSubmissionConnector),
+          bind[ContactService].toInstance(mockContactService),
+          bind[TransformService].toInstance(mockTransformService)
+        )
+        .build()
+
+      when(mockSubmissionService.generateIDsForInstruction(any()))
+        .thenReturn(Future.successful(GeneratedIDs(None, Some(DisclosureId("GBD", "20200601", "AAA000")))))
+      when(mockDateHelper.now).thenReturn(testDateTime)
+      when(mockContactService.getLatestContacts(any())(any(), any()))
+        .thenReturn(Future.successful(ContactFixtures.contact))
+      when(mockSubmissionConnector.submitDisclosure(any())(any()))
+        .thenReturn(Future.failed(UpstreamErrorResponse("", INTERNAL_SERVER_ERROR)))
+
+      val submission = minimalPassing
+      val request = FakeRequest(POST, routes.SubmissionController.submitDisclosure().url).withXmlBody(submission)
+      val result: Future[Result] = route(app, request).value
+
+      status(result) mustBe INTERNAL_SERVER_ERROR
+
+      val argumentCaptorData: ArgumentCaptor[SubmissionMetaData] = ArgumentCaptor.forClass(classOf[SubmissionMetaData])
+      verify(mockTransformService, times(1)).addSubscriptionDetailsToSubmission(any(), any(), argumentCaptorData.capture())
+
+      val submissionMetaData = argumentCaptorData.getValue
+      val conversationIDLength = submissionMetaData.conversationID.length
+      conversationIDLength >= 1 && conversationIDLength <= 36 mustBe true
+    }
   }
 }
