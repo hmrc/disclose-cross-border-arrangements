@@ -23,7 +23,7 @@ import connectors.SubscriptionConnector
 import controllers.Assets.OK
 import generators.ModelGenerators
 import helpers.WireMockServerHandler
-import models.DisplaySubscriptionForDACRequest
+import models.subscription.{DisplaySubscriptionForDACRequest, UpdateSubscriptionForDACRequest}
 import org.scalacheck.Arbitrary.arbitrary
 import org.scalacheck.Gen
 import org.scalatestplus.mockito.MockitoSugar
@@ -47,6 +47,9 @@ class SubscriptionConnectorSpec extends SpecBase
 
   lazy val connector: SubscriptionConnector = app.injector.instanceOf[SubscriptionConnector]
 
+  val errorStatusCodes: Seq[Int] = Seq(BAD_REQUEST, FORBIDDEN, NOT_FOUND, METHOD_NOT_ALLOWED,
+                                       CONFLICT, INTERNAL_SERVER_ERROR, SERVICE_UNAVAILABLE)
+
   "SubscriptionConnector" - {
 
     "displaySubscriptionForDAC" - {
@@ -63,13 +66,36 @@ class SubscriptionConnectorSpec extends SpecBase
 
       "must return status non-OK for an unsuccessful request to display subscription" in {
 
-        forAll(arbitrary[DisplaySubscriptionForDACRequest],
-          Gen.oneOf(Seq(BAD_REQUEST, FORBIDDEN, NOT_FOUND, METHOD_NOT_ALLOWED, CONFLICT, INTERNAL_SERVER_ERROR, SERVICE_UNAVAILABLE))) {
+        forAll(arbitrary[DisplaySubscriptionForDACRequest], Gen.oneOf(errorStatusCodes)) {
             (displaySubscriptionForDACRequest, statusCode) =>
               stubResponse("/register-for-cross-border-arrangement-stubs/dac6/dct04/v1", statusCode)
 
               val result = connector.displaySubscriptionForDAC(displaySubscriptionForDACRequest)
               result.futureValue.status mustBe statusCode
+        }
+      }
+    }
+
+    "updateSubscriptionForDAC" - {
+      "must return status OK for a successful request to update subscription's contact details" in {
+
+        forAll(arbitrary[UpdateSubscriptionForDACRequest]) {
+          updateSubscriptionForDAC =>
+            stubResponse("/register-for-cross-border-arrangement-stubs/dac6/dct05/v1", OK)
+
+            val result = connector.updateSubscriptionForDAC(updateSubscriptionForDAC)
+            result.futureValue.status mustBe OK
+        }
+      }
+
+      "must return status non-OK for an unsuccessful request to update subscription's contact details" in {
+
+        forAll(arbitrary[UpdateSubscriptionForDACRequest], Gen.oneOf(errorStatusCodes)) {
+          (updateSubscriptionForDAC, statusCode) =>
+            stubResponse("/register-for-cross-border-arrangement-stubs/dac6/dct05/v1", statusCode)
+
+            val result = connector.updateSubscriptionForDAC(updateSubscriptionForDAC)
+            result.futureValue.status mustBe statusCode
         }
       }
     }

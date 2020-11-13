@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package models
+package models.subscription
 
 import java.time.ZonedDateTime
 import java.time.format.DateTimeFormatter

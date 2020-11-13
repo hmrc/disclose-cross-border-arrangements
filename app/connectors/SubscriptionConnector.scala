@@ -22,7 +22,7 @@ import java.util.UUID
 
 import config.AppConfig
 import javax.inject.Inject
-import models.DisplaySubscriptionForDACRequest
+import models.subscription.{DisplaySubscriptionForDACRequest, UpdateSubscriptionForDACRequest}
 import uk.gov.hmrc.http.logging.Authorization
 import uk.gov.hmrc.http.{HeaderCarrier, HttpClient, HttpResponse}
 
@@ -34,6 +34,7 @@ class SubscriptionConnector @Inject()(val config: AppConfig, val http: HttpClien
                                (implicit hc: HeaderCarrier, ec: ExecutionContext): Future[HttpResponse] = {
 
     val displaySubscriptionUrl = s"${config.registrationUrl}/dac6/dct04/v1"
+    //x-conversation-id must match conversationID in RequestCommon otherwise EIS will throw a 400 Bad Request
     val conversationID = subscriptionForDACRequest.displaySubscriptionForDACRequest.requestCommon.conversationID.getOrElse("")
 
     val newHeaders = hc
@@ -44,12 +45,25 @@ class SubscriptionConnector @Inject()(val config: AppConfig, val http: HttpClien
       DisplaySubscriptionForDACRequest.format, rds = httpReads, hc = newHeaders, ec = ec)
   }
 
+  def updateSubscriptionForDAC(updateSubscriptionForDACRequest: UpdateSubscriptionForDACRequest)
+                               (implicit hc: HeaderCarrier, ec: ExecutionContext): Future[HttpResponse] = {
+
+    val displaySubscriptionUrl = s"${config.registrationUrl}/dac6/dct05/v1"
+    val conversationID = UUID.randomUUID().toString
+
+    val newHeaders = hc
+      .copy(authorization = Some(Authorization(s"Bearer ${config.bearerToken}")))
+      .withExtraHeaders(addHeaders(conversationID): _*)
+
+    http.POST[UpdateSubscriptionForDACRequest, HttpResponse](displaySubscriptionUrl, updateSubscriptionForDACRequest)(wts =
+      UpdateSubscriptionForDACRequest.format, rds = httpReads, hc = newHeaders, ec = ec)
+  }
+
   private def addHeaders(conversationID: String)(implicit headerCarrier: HeaderCarrier): Seq[(String,String)] = {
 
     //HTTP-date format defined by RFC 7231 e.g. Fri, 01 Aug 2020 15:51:38 GMT+1
     val formatter = DateTimeFormatter.ofPattern("EEE, dd MMM yyyy HH:mm:ss O")
 
-    //x-conversation-id must match conversationID in RequestCommon otherwise EIS will throw a 400 Bad Request
     Seq(
       "date" -> ZonedDateTime.now().format(formatter),
       "x-correlation-id" -> {

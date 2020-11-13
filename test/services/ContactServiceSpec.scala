@@ -19,7 +19,8 @@ package services
 import base.SpecBase
 import connectors.SubscriptionConnector
 import helpers.JsonFixtures.contactsResponse
-import models.{ContactInformationForIndividual, ContactInformationForOrganisation, IndividualDetails, OrganisationDetails, SubscriptionDetails}
+import models.SubscriptionDetails
+import models.subscription.{ContactInformationForIndividual, ContactInformationForOrganisation, IndividualDetails, OrganisationDetails}
 import org.mockito.Matchers.any
 import org.mockito.Mockito.when
 import org.scalatestplus.mockito.MockitoSugar
