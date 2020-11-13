@@ -20,7 +20,7 @@ lazy val microservice = Project(appName, file("."))
     ScoverageKeys.coverageExcludedFiles := "<empty>;Reverse.*;.*handlers.*;.*repositories.*;" +
       ".*BuildInfo.*;.*javascript.*;.*Routes.*;.*GuiceInjector;" +
       ".*ControllerConfiguration;.*LanguageSwitchController",
-    ScoverageKeys.coverageMinimum := 75,
+    ScoverageKeys.coverageMinimum := 80,
     ScoverageKeys.coverageFailOnMinimum := true,
     ScoverageKeys.coverageHighlighting := true,
     resolvers += Resolver.jcenterRepo)
