@@ -61,65 +61,43 @@ class SubscriptionController @Inject()(subscriptionConnector: SubscriptionConnec
       case NOT_FOUND => NotFound(httpResponse.body)
 
       case BAD_REQUEST => {
-        val error = Try(Json.parse(httpResponse.body).validate[ErrorDetails])
-        error match {
-          case Success(JsSuccess(value, _)) =>
-            logger.error(s"Error with submission: ${value.errorDetail.sourceFaultDetail.map(_.detail.mkString)}")
-          case _ => logger.error("Error with submission but return is not a valid json")
-        }
+        logDownStreamError(httpResponse.body)
         BadRequest(httpResponse.body)
       }
 
       case FORBIDDEN => {
-        val error = Try(Json.parse(httpResponse.body).validate[ErrorDetails])
-        error match {
-          case Success(JsSuccess(value, _)) =>
-            logger.error(s"Error with submission: ${value.errorDetail.sourceFaultDetail.map(_.detail.mkString)}")
-          case _ => logger.error("Error with submission but return is not a valid json")
-        }
+        logDownStreamError(httpResponse.body)
         Forbidden(httpResponse.body)
       }
 
       case METHOD_NOT_ALLOWED => {
-        val error = Try(Json.parse(httpResponse.body).validate[ErrorDetails])
-        error match {
-          case Success(JsSuccess(value, _)) =>
-            logger.error(s"Error with submission: ${value.errorDetail.sourceFaultDetail.map(_.detail.mkString)}")
-          case _ => logger.error("Error with submission but return is not a valid json")
-        }
+        logDownStreamError(httpResponse.body)
         MethodNotAllowed(httpResponse.body)
       }
 
       case CONFLICT => {
-        val error = Try(Json.parse(httpResponse.body).validate[ErrorDetails])
-        error match {
-          case Success(JsSuccess(value, _)) =>
-            logger.error(s"Error with submission: ${value.errorDetail.sourceFaultDetail.map(_.detail.mkString)}")
-          case _ => logger.error("Error with submission but return is not a valid json")
-        }
+        logDownStreamError(httpResponse.body)
         Conflict(httpResponse.body)
       }
 
       case INTERNAL_SERVER_ERROR => {
-        val error = Try(Json.parse(httpResponse.body).validate[ErrorDetails])
-        error match {
-          case Success(JsSuccess(value, _)) =>
-            logger.error(s"Error with submission: ${value.errorDetail.sourceFaultDetail.map(_.detail.mkString)}")
-          case _ => logger.error("Error with submission but return is not a valid json")
-        }
+        logDownStreamError(httpResponse.body)
         InternalServerError(httpResponse.body)
       }
 
       case _ => {
-        val error = Try(Json.parse(httpResponse.body).validate[ErrorDetails])
-        error match {
-          case Success(JsSuccess(value, _)) =>
-            logger.error(s"Error with submission: ${value.errorDetail.sourceFaultDetail.map(_.detail.mkString)}")
-          case _ => logger.error("Error with submission but return is not a valid json")
-        }
+        logDownStreamError(httpResponse.body)
         ServiceUnavailable(httpResponse.body)
       }
     }
   }
 
+  private def logDownStreamError(body: String): Unit = {
+    val error = Try(Json.parse(body).validate[ErrorDetails])
+    error match {
+      case Success(JsSuccess(value, _)) =>
+        logger.error(s"Error with submission: ${value.errorDetail.sourceFaultDetail.map(_.detail.mkString)}")
+      case _ => logger.error("Error with submission but return is not a valid json")
+    }
+  }
 }
