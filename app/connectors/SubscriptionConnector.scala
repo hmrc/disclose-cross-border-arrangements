@@ -49,7 +49,7 @@ class SubscriptionConnector @Inject()(val config: AppConfig, val http: HttpClien
                                (implicit hc: HeaderCarrier, ec: ExecutionContext): Future[HttpResponse] = {
 
     val displaySubscriptionUrl = s"${config.registrationUrl}/dac6/dct05/v1"
-    val conversationID = UUID.randomUUID().toString
+    val conversationID = hc.sessionId.map(_.value).getOrElse(UUID.randomUUID().toString)
 
     val newHeaders = hc
       .copy(authorization = Some(Authorization(s"Bearer ${config.bearerToken}")))

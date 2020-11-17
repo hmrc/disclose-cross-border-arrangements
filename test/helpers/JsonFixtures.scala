@@ -72,11 +72,11 @@ object JsonFixtures {
       |}
       |}""".stripMargin
 
-  def jsonPayloadNoSecondContact(idNumber: JsString,
-                                 isGBUser: JsBoolean,
-                                 firstName: JsString,
-                                 lastName: JsString,
-                                 primaryEmail: JsString): String = {
+  def updateDetailsPayloadNoSecondContact(idNumber: JsString,
+                                          isGBUser: JsBoolean,
+                                          firstName: JsString,
+                                          lastName: JsString,
+                                          primaryEmail: JsString): String = {
     s"""
        |{
        |  "updateSubscriptionForDACRequest": {
@@ -107,13 +107,13 @@ object JsonFixtures {
        |""".stripMargin
   }
 
-  def jsonPayloadSecondContact(idNumber: JsString,
-                               isGBUser: JsBoolean,
-                               firstName: JsString,
-                               lastName: JsString,
-                               email: JsString,
-                               organisationName: JsString,
-                               phone: JsString): String = {
+  def updateDetailsPayload(idNumber: JsString,
+                           isGBUser: JsBoolean,
+                           firstName: JsString,
+                           lastName: JsString,
+                           email: JsString,
+                           organisationName: JsString,
+                           phone: JsString): String = {
     s"""
        |{
        |  "updateSubscriptionForDACRequest": {
@@ -151,11 +151,11 @@ object JsonFixtures {
        |""".stripMargin
   }
 
-  def indRequestJsonNoSecondContact(idNumber: String,
-                                    isGBUser: Boolean,
-                                    firstName: String,
-                                    lastName: String,
-                                    primaryEmail: String): JsObject = {
+  def updateDetailsJsonNoSecondContact(idNumber: String,
+                                       isGBUser: Boolean,
+                                       firstName: String,
+                                       lastName: String,
+                                       primaryEmail: String): JsObject = {
     Json.obj(
       "updateSubscriptionForDACRequest" -> Json.obj(
         "requestCommon" -> Json.obj(
@@ -187,13 +187,13 @@ object JsonFixtures {
     )
   }
 
-  def indRequestJsonSecondContact(idNumber: String,
-                                  isGBUser: Boolean,
-                                  firstName: String,
-                                  lastName: String,
-                                  email: String,
-                                  organisationName: String,
-                                  phone: String): JsObject = {
+  def updateDetailsJson(idNumber: String,
+                        isGBUser: Boolean,
+                        firstName: String,
+                        lastName: String,
+                        email: String,
+                        organisationName: String,
+                        phone: String): JsObject = {
     Json.obj(
       "updateSubscriptionForDACRequest" -> Json.obj(
         "requestCommon" -> Json.obj(

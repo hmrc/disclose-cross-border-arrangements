@@ -16,12 +16,7 @@
 
 package models.subscription
 
-import java.time.ZonedDateTime
-import java.time.format.DateTimeFormatter
-
 import play.api.libs.json.{Json, OFormat}
-
-import scala.util.Random
 
 
 case class RequestCommonForUpdate(regime: String,
@@ -32,23 +27,6 @@ case class RequestCommonForUpdate(regime: String,
 
 object RequestCommonForUpdate {
   implicit val format: OFormat[RequestCommonForUpdate] = Json.format[RequestCommonForUpdate]
-
-  def createRequestCommon: RequestCommonForUpdate = {
-    //Format: ISO 8601 YYYY-MM-DDTHH:mm:ssZ e.g. 2020-09-23T16:12:11Z
-    val formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss'Z'")
-
-    val r = new Random()
-    val idSize: Int = 1 + r.nextInt(33) //Generate a size between 1 and 32
-    val generateAcknowledgementReference: String = r.alphanumeric.take(idSize).mkString
-
-    RequestCommonForUpdate(
-      regime = "DAC",
-      receiptDate = ZonedDateTime.now().format(formatter),
-      acknowledgementReference = generateAcknowledgementReference,
-      originatingSystem = "MDTP",
-      requestParameters = None
-    )
-  }
 }
 
 case class RequestDetailForUpdate(IDType: String,

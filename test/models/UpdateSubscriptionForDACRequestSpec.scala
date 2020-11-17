@@ -18,7 +18,7 @@ package models
 
 import base.SpecBase
 import generators.ModelGenerators
-import helpers.JsonFixtures.{indRequestJsonNoSecondContact, indRequestJsonSecondContact, jsonPayloadNoSecondContact, jsonPayloadSecondContact}
+import helpers.JsonFixtures.{updateDetailsJson, updateDetailsJsonNoSecondContact, updateDetailsPayload, updateDetailsPayloadNoSecondContact}
 import models.subscription._
 import org.scalacheck.Arbitrary.arbitrary
 import org.scalacheck.Gen.alphaNumStr
@@ -38,38 +38,6 @@ class UpdateSubscriptionForDACRequestSpec extends SpecBase with ModelGenerators 
   )
 
   "UpdateSubscriptionForDACRequest" - {
-
-    "must deserialise UpdateSubscriptionForDACRequest without secondary contact" in {
-      forAll(arbitrary[UpdateSubscriptionForDACRequest], nonNumerics, nonNumerics, nonNumerics) {
-        (updateSubscriptionForDAC, firstName, lastName, primaryEmail) =>
-          val requestDetail = updateSubscriptionForDAC.updateSubscriptionForDACRequest.requestDetail
-
-          val primaryContactForInd: PrimaryContact = PrimaryContact(
-            Seq(ContactInformationForIndividual(IndividualDetails(firstName, lastName, None), primaryEmail, None, None))
-          )
-
-          val requestDetailForUpdate = RequestDetailForUpdate(
-            IDType = "SAFE",
-            IDNumber = requestDetail.IDNumber,
-            tradingName = None,
-            isGBUser =  requestDetail.isGBUser,
-            primaryContact = primaryContactForInd,
-            secondaryContact = None
-          )
-
-          val updateRequest = UpdateSubscriptionForDACRequest(
-            UpdateSubscriptionDetails(
-              requestCommon = requestCommon,
-              requestDetail = requestDetailForUpdate
-            )
-          )
-
-          val jsonPayload = jsonPayloadNoSecondContact(JsString(requestDetail.IDNumber),
-            JsBoolean(requestDetail.isGBUser), JsString(firstName), JsString(lastName), JsString(primaryEmail))
-
-          Json.parse(jsonPayload).validate[UpdateSubscriptionForDACRequest].get mustBe updateRequest
-      }
-    }
 
     "must deserialise UpdateSubscriptionForDACRequest" in {
       forAll(arbitrary[UpdateSubscriptionForDACRequest], nonNumerics, nonNumerics, nonNumerics, alphaNumStr, nonNumerics) {
@@ -100,14 +68,14 @@ class UpdateSubscriptionForDACRequestSpec extends SpecBase with ModelGenerators 
             )
           )
 
-          val jsonPayload = jsonPayloadSecondContact(JsString(requestDetail.IDNumber), JsBoolean(requestDetail.isGBUser),
+          val jsonPayload = updateDetailsPayload(JsString(requestDetail.IDNumber), JsBoolean(requestDetail.isGBUser),
             JsString(firstName), JsString(lastName), JsString(email), JsString(orgName), JsString(phone))
 
           Json.parse(jsonPayload).validate[UpdateSubscriptionForDACRequest].get mustBe updateRequest
       }
     }
 
-    "must serialise UpdateSubscriptionForDACRequest without secondary contact" in {
+    "must deserialise UpdateSubscriptionForDACRequest without secondary contact" in {
       forAll(arbitrary[UpdateSubscriptionForDACRequest], nonNumerics, nonNumerics, nonNumerics) {
         (updateSubscriptionForDAC, firstName, lastName, primaryEmail) =>
           val requestDetail = updateSubscriptionForDAC.updateSubscriptionForDACRequest.requestDetail
@@ -132,8 +100,10 @@ class UpdateSubscriptionForDACRequestSpec extends SpecBase with ModelGenerators 
             )
           )
 
-          Json.toJson(updateRequest) mustBe indRequestJsonNoSecondContact(requestDetail.IDNumber,
-            requestDetail.isGBUser, firstName, lastName, primaryEmail)
+          val jsonPayload = updateDetailsPayloadNoSecondContact(JsString(requestDetail.IDNumber),
+            JsBoolean(requestDetail.isGBUser), JsString(firstName), JsString(lastName), JsString(primaryEmail))
+
+          Json.parse(jsonPayload).validate[UpdateSubscriptionForDACRequest].get mustBe updateRequest
       }
     }
 
@@ -166,8 +136,38 @@ class UpdateSubscriptionForDACRequestSpec extends SpecBase with ModelGenerators 
             )
           )
 
-          Json.toJson(updateRequest) mustBe indRequestJsonSecondContact(requestDetail.IDNumber,
-            requestDetail.isGBUser, firstName, lastName, email, orgName, phone)
+          Json.toJson(updateRequest) mustBe updateDetailsJson(requestDetail.IDNumber, requestDetail.isGBUser,
+            firstName, lastName, email, orgName, phone)
+      }
+    }
+
+    "must serialise UpdateSubscriptionForDACRequest without secondary contact" in {
+      forAll(arbitrary[UpdateSubscriptionForDACRequest], nonNumerics, nonNumerics, nonNumerics) {
+        (updateSubscriptionForDAC, firstName, lastName, primaryEmail) =>
+          val requestDetail = updateSubscriptionForDAC.updateSubscriptionForDACRequest.requestDetail
+
+          val primaryContactForInd: PrimaryContact = PrimaryContact(
+            Seq(ContactInformationForIndividual(IndividualDetails(firstName, lastName, None), primaryEmail, None, None))
+          )
+
+          val requestDetailForUpdate = RequestDetailForUpdate(
+            IDType = "SAFE",
+            IDNumber = requestDetail.IDNumber,
+            tradingName = None,
+            isGBUser =  requestDetail.isGBUser,
+            primaryContact = primaryContactForInd,
+            secondaryContact = None
+          )
+
+          val updateRequest = UpdateSubscriptionForDACRequest(
+            UpdateSubscriptionDetails(
+              requestCommon = requestCommon,
+              requestDetail = requestDetailForUpdate
+            )
+          )
+
+          Json.toJson(updateRequest) mustBe updateDetailsJsonNoSecondContact(requestDetail.IDNumber, requestDetail.isGBUser,
+            firstName, lastName, primaryEmail)
       }
     }
 
