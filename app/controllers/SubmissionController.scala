@@ -23,7 +23,7 @@ import helpers.DateHelper
 import javax.inject.Inject
 import models._
 import org.slf4j.LoggerFactory
-import play.api.libs.json.{JsError, JsSuccess, Json}
+import play.api.libs.json.{JsSuccess, Json}
 import play.api.mvc.{Action, AnyContent, ControllerComponents, Result}
 import repositories.SubmissionDetailsRepository
 import services._
