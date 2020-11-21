@@ -34,6 +34,7 @@ trait ModelGenerators extends BaseGenerators with JavaTimeGenerators {
         disclosureID <- Gen.option(arbitrary[String])
         importInstruction <- Gen.oneOf("New", "Add", "Replace", "Delete")
         initialDisclosureMA <- Gen.oneOf(true, false)
+        messageRefId <- arbitrary[String]
       } yield
         SubmissionDetails(
           enrolmentID,
@@ -42,7 +43,8 @@ trait ModelGenerators extends BaseGenerators with JavaTimeGenerators {
           arrangementID,
           disclosureID,
           importInstruction,
-          initialDisclosureMA)
+          initialDisclosureMA,
+          messageRefId)
     }
 
   implicit val arbitraryReturnParameters: Arbitrary[RequestParameter] = Arbitrary {

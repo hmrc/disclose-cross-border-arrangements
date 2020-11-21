@@ -28,7 +28,8 @@ class SubmissionDetailsRepositorySpec
       arrangementID = Some(arrangementID),
       disclosureID = Some(disclosureID),
       importInstruction = "Add",
-      initialDisclosureMA = false)
+      initialDisclosureMA = false,
+      messageRefId = "GB0000000XXX")
 
     "calling getSubmissionDetails" - {
       "must get submission details" in {

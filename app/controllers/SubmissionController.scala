@@ -62,6 +62,7 @@ class SubmissionController @Inject()(
         val submissionFile: NodeSeq = (xml \ "file" \ "DAC6_Arrangement")
         val submissionTime = dateHelper.now
         val initialDisclosureMA = (xml \\ "InitialDisclosureMA").text.toBoolean
+        val messageRefId = (xml \\ "MessageRefId").text
 
         val conversationID: String = hc.headers
           .find(_._1 == xSessionId).map(n => n._2.replaceAll("session-", ""))
@@ -111,7 +112,8 @@ class SubmissionController @Inject()(
               importInstruction = importInstruction,
               disclosureID = disclosureID,
               submissionTime = submissionTime,
-              initialDisclosureMA = initialDisclosureMA)
+              initialDisclosureMA = initialDisclosureMA,
+              messageRefId = messageRefId)
 
             submissionDetailsRepository.storeSubmissionDetails(submissionDetails).map {
               succeeded =>

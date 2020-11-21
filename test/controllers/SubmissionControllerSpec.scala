@@ -64,7 +64,8 @@ class SubmissionControllerSpec extends SpecBase
       arrangementID = Some("GBA20200601AAA000"),
       disclosureID = Some("GBD20200601AAA000"),
       importInstruction = "Add",
-      initialDisclosureMA = false)
+      initialDisclosureMA = false,
+      messageRefId = "GB0000000XXX")
 
     val application = applicationBuilder()
       .overrides(

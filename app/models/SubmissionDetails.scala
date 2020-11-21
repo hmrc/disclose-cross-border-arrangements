@@ -46,7 +46,8 @@ case class SubmissionDetails(enrolmentID: String,
                              arrangementID: Option[String],
                              disclosureID: Option[String],
                              importInstruction: String,
-                             initialDisclosureMA: Boolean)
+                             initialDisclosureMA: Boolean,
+                             messageRefId: String)
 
 object SubmissionDetails {
 
@@ -57,7 +58,8 @@ object SubmissionDetails {
             importInstruction: ImportInstruction,
             disclosureID: String,
             submissionTime: LocalDateTime,
-            initialDisclosureMA: Boolean): SubmissionDetails = {
+            initialDisclosureMA: Boolean,
+            messageRefId: String): SubmissionDetails = {
 
     val arrID = Option {
       ids.arrangementID.map(_.value)
@@ -76,7 +78,8 @@ object SubmissionDetails {
       arrangementID = arrID,
       disclosureID = discID,
       importInstruction = importInstruction.toString,
-      initialDisclosureMA = initialDisclosureMA
+      initialDisclosureMA = initialDisclosureMA,
+      messageRefId = messageRefId
     )
   }
 

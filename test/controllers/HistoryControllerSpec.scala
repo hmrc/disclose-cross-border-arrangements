@@ -39,6 +39,7 @@ class HistoryControllerSpec extends SpecBase
 
   val arrangementID = "GBA20200904AAAAAA"
   val disclosureID = "GBD20200904AAAAAA"
+  val messageRefId = "GB1234567"
   val initialSubmissionDetails: SubmissionDetails =
     SubmissionDetails(
       enrolmentID = "enrolmentID",
@@ -47,7 +48,8 @@ class HistoryControllerSpec extends SpecBase
       arrangementID = Some(arrangementID),
       disclosureID = Some(disclosureID),
       importInstruction = "New",
-      initialDisclosureMA = true
+      initialDisclosureMA = true,
+      messageRefId
     )
 
   "submissionDetails" - {
@@ -154,7 +156,8 @@ class HistoryControllerSpec extends SpecBase
           arrangementID = Some(arrangementID),
           disclosureID = Some(disclosureID),
           importInstruction = "Replace",
-          initialDisclosureMA = false
+          initialDisclosureMA = false,
+          messageRefId = messageRefId
         )
 
       running(application) {
