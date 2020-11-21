@@ -18,6 +18,7 @@ package controllers
 
 import base.SpecBase
 import connectors.SubscriptionConnector
+import controllers.auth.{AuthAction, FakeAuthAction}
 import generators.ModelGenerators
 import models.DisplaySubscriptionForDACRequest
 import org.mockito.Matchers.any
@@ -44,7 +45,8 @@ class SubscriptionControllerSpec extends SpecBase
 
   val application: Application = applicationBuilder()
     .overrides(
-      bind[SubscriptionConnector].toInstance(mockSubscriptionConnector)
+      bind[SubscriptionConnector].toInstance(mockSubscriptionConnector),
+      bind[AuthAction].to[FakeAuthAction]
     ).build()
 
   "SubscriptionController" - {
