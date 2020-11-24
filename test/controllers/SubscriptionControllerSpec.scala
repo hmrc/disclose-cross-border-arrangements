@@ -18,6 +18,7 @@ package controllers
 
 import base.SpecBase
 import connectors.SubscriptionConnector
+import controllers.auth.{AuthAction, FakeAuthAction}
 import generators.ModelGenerators
 import models.subscription.{DisplaySubscriptionForDACRequest, UpdateSubscriptionForDACRequest}
 import org.mockito.Matchers.any
@@ -44,7 +45,8 @@ class SubscriptionControllerSpec extends SpecBase
 
   val application: Application = applicationBuilder()
     .overrides(
-      bind[SubscriptionConnector].toInstance(mockSubscriptionConnector)
+      bind[SubscriptionConnector].toInstance(mockSubscriptionConnector),
+      bind[AuthAction].to[FakeAuthAction]
     ).build()
 
   val errorStatusCodes: Seq[Int] = Seq(BAD_REQUEST, FORBIDDEN, NOT_FOUND, METHOD_NOT_ALLOWED,

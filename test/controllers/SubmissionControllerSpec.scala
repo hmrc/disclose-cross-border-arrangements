@@ -21,6 +21,7 @@ import java.util.UUID
 
 import base.SpecBase
 import connectors.SubmissionConnector
+import controllers.auth.{AuthAction, FakeAuthAction}
 import helpers.SubmissionFixtures.{minimalPassing, oneError}
 import helpers.{ContactFixtures, DateHelper}
 import models.{DisclosureId, GeneratedIDs, SubmissionDetails, SubmissionMetaData}
@@ -72,7 +73,8 @@ class SubmissionControllerSpec extends SpecBase
         bind[DateHelper].toInstance(mockDateHelper),
         bind[SubmissionDetailsRepository].toInstance(mockSubmissionDetailsRepository),
         bind[SubmissionConnector].toInstance(mockSubmissionConnector),
-        bind[ContactService].toInstance(mockContactService)
+        bind[ContactService].toInstance(mockContactService),
+        bind[AuthAction].to[FakeAuthAction]
       )
       .build()
 
@@ -181,7 +183,8 @@ class SubmissionControllerSpec extends SpecBase
           bind[SubmissionDetailsRepository].toInstance(mockSubmissionDetailsRepository),
           bind[SubmissionConnector].toInstance(mockSubmissionConnector),
           bind[ContactService].toInstance(mockContactService),
-          bind[TransformService].toInstance(mockTransformService)
+          bind[TransformService].toInstance(mockTransformService),
+          bind[AuthAction].to[FakeAuthAction]
         )
         .build()
 
@@ -192,6 +195,7 @@ class SubmissionControllerSpec extends SpecBase
         .thenReturn(Future.successful(ContactFixtures.contact))
       when(mockSubmissionConnector.submitDisclosure(any())(any()))
         .thenReturn(Future.failed(UpstreamErrorResponse("", INTERNAL_SERVER_ERROR)))
+      when(mockTransformService.addNameSpaces(any(), any())).thenReturn(minimalPassing)
 
       val submission = minimalPassing
       val request = FakeRequest(POST, routes.SubmissionController.submitDisclosure().url).withXmlBody(submission)
@@ -217,7 +221,8 @@ class SubmissionControllerSpec extends SpecBase
           bind[SubmissionDetailsRepository].toInstance(mockSubmissionDetailsRepository),
           bind[SubmissionConnector].toInstance(mockSubmissionConnector),
           bind[ContactService].toInstance(mockContactService),
-          bind[TransformService].toInstance(mockTransformService)
+          bind[TransformService].toInstance(mockTransformService),
+          bind[AuthAction].to[FakeAuthAction]
         )
         .build()
 
@@ -228,6 +233,7 @@ class SubmissionControllerSpec extends SpecBase
         .thenReturn(Future.successful(ContactFixtures.contact))
       when(mockSubmissionConnector.submitDisclosure(any())(any()))
         .thenReturn(Future.failed(UpstreamErrorResponse("", INTERNAL_SERVER_ERROR)))
+      when(mockTransformService.addNameSpaces(any(), any())).thenReturn(minimalPassing)
 
       val submission = minimalPassing
       val request = FakeRequest(POST, routes.SubmissionController.submitDisclosure().url).withXmlBody(submission)

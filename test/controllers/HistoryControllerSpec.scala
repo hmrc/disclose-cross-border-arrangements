@@ -19,23 +19,30 @@ package controllers
 import java.time.LocalDateTime
 
 import base.SpecBase
+import controllers.auth.{AuthAction, FakeAuthAction}
 import generators.ModelGenerators
 import models.{SubmissionDetails, SubmissionHistory}
 import org.mockito.Matchers._
 import org.mockito.Mockito._
+import org.scalatest.BeforeAndAfterEach
 import org.scalatestplus.scalacheck.ScalaCheckPropertyChecks
+import play.api.Application
 import play.api.inject.bind
 import play.api.libs.json.Json
 import play.api.test.FakeRequest
-import play.api.test.Helpers.{GET, contentAsJson, route, running, status, _}
+import play.api.test.Helpers.{GET, contentAsJson, route, status, _}
 import repositories.SubmissionDetailsRepository
 
 import scala.concurrent.Future
 
 class HistoryControllerSpec extends SpecBase
-  with ScalaCheckPropertyChecks with ModelGenerators {
+  with ScalaCheckPropertyChecks
+  with ModelGenerators
+  with BeforeAndAfterEach {
 
   val mockSubmissionDetailsRepository: SubmissionDetailsRepository = mock[SubmissionDetailsRepository]
+
+  override def beforeEach(): Unit = reset(mockSubmissionDetailsRepository)
 
   val arrangementID = "GBA20200904AAAAAA"
   val disclosureID = "GBD20200904AAAAAA"
@@ -50,102 +57,71 @@ class HistoryControllerSpec extends SpecBase
       initialDisclosureMA = true
     )
 
+  val application: Application =
+    applicationBuilder()
+      .overrides(
+        bind[SubmissionDetailsRepository].toInstance(mockSubmissionDetailsRepository),
+        bind[AuthAction].to[FakeAuthAction]
+      ).build()
+
   "submissionDetails" - {
     "must return ok with submission details" in {
+      forAll(listWithMaxLength[SubmissionDetails](15)){
+        details =>
+          when(mockSubmissionDetailsRepository.retrieveSubmissionHistory(any()))
+            .thenReturn(Future.successful(details))
 
-      val application =
-        applicationBuilder
-          .overrides(bind[SubmissionDetailsRepository].toInstance(mockSubmissionDetailsRepository))
-          .build()
+          val request = FakeRequest(GET, routes.HistoryController.submissionDetails("123").url)
 
-      running(application) {
-        forAll(listWithMaxLength[SubmissionDetails](15)){
-          details =>
-            when(mockSubmissionDetailsRepository.retrieveSubmissionHistory(any()))
-              .thenReturn(Future.successful(details))
+          val result = route(application, request).value
 
-            val request = FakeRequest(GET, routes.HistoryController.submissionDetails("123").url)
-
-            val result = route(application, request).value
-
-            status(result) mustEqual OK
-            contentAsJson(result) mustEqual Json.toJson(SubmissionHistory(details))
-        }
+          status(result) mustEqual OK
+          contentAsJson(result) mustEqual Json.toJson(SubmissionHistory(details))
       }
     }
 
     "must return Internal Service Error when there is a problem fetching results" in {
+      when(mockSubmissionDetailsRepository.retrieveSubmissionHistory(any()))
+            .thenReturn(Future.failed(new Exception))
 
-      val application =
-        applicationBuilder
-          .overrides(bind[SubmissionDetailsRepository].toInstance(mockSubmissionDetailsRepository))
-          .build()
+      val request = FakeRequest(GET, routes.HistoryController.submissionDetails("123").url)
 
-      running(application) {
-         when(mockSubmissionDetailsRepository.retrieveSubmissionHistory(any()))
-              .thenReturn(Future.failed(new Exception))
+      val result = route(application, request).value
 
-            val request = FakeRequest(GET, routes.HistoryController.submissionDetails("123").url)
+      status(result) mustEqual INTERNAL_SERVER_ERROR
 
-            val result = route(application, request).value
-
-            status(result) mustEqual INTERNAL_SERVER_ERROR
-        }
     }
   }
 
   "retrieveFirstDisclosure" - {
-
     "must return a NOT_FOUND if there is no first disclosure" in {
+      when(mockSubmissionDetailsRepository.retrieveFirstDisclosureForArrangementId(""))
+        .thenReturn(Future.successful(None))
+      when(mockSubmissionDetailsRepository.retrieveFirstOrReplacedDisclosureForArrangementId(""))
+        .thenReturn(Future.successful(None))
 
-      val application =
-        applicationBuilder
-          .overrides(bind[SubmissionDetailsRepository].toInstance(mockSubmissionDetailsRepository))
-          .build()
+      val request = FakeRequest(GET, routes.HistoryController.retrieveFirstDisclosure("").url)
 
-      running(application) {
-        when(mockSubmissionDetailsRepository.retrieveFirstDisclosureForArrangementId(""))
-          .thenReturn(Future.successful(None))
-        when(mockSubmissionDetailsRepository.retrieveFirstOrReplacedDisclosureForArrangementId(""))
-          .thenReturn(Future.successful(None))
+      val result = route(application, request).value
 
-        val request = FakeRequest(GET, routes.HistoryController.retrieveFirstDisclosure("").url)
-
-        val result = route(application, request).value
-
-        status(result) mustEqual NOT_FOUND
-      }
+      status(result) mustEqual NOT_FOUND
     }
 
     "must return an OK if there is a first disclosure available for the given arrangement ID" in {
+      when(mockSubmissionDetailsRepository.retrieveFirstDisclosureForArrangementId(arrangementID))
+        .thenReturn(Future.successful(None))
+      when(mockSubmissionDetailsRepository.retrieveFirstOrReplacedDisclosureForArrangementId(arrangementID))
+        .thenReturn(Future.successful(Some(initialSubmissionDetails)))
 
-      val application =
-        applicationBuilder
-          .overrides(bind[SubmissionDetailsRepository].toInstance(mockSubmissionDetailsRepository))
-          .build()
+      val request = FakeRequest(GET, routes.HistoryController.retrieveFirstDisclosure(arrangementID).url)
 
-      running(application) {
-        when(mockSubmissionDetailsRepository.retrieveFirstDisclosureForArrangementId(arrangementID))
-          .thenReturn(Future.successful(None))
-        when(mockSubmissionDetailsRepository.retrieveFirstOrReplacedDisclosureForArrangementId(arrangementID))
-          .thenReturn(Future.successful(Some(initialSubmissionDetails)))
+      val result = route(application, request).value
 
-        val request = FakeRequest(GET, routes.HistoryController.retrieveFirstDisclosure(arrangementID).url)
-
-        val result = route(application, request).value
-
-        status(result) mustEqual OK
-        contentAsJson(result) mustEqual Json.toJson(initialSubmissionDetails)
-      }
+      status(result) mustEqual OK
+      contentAsJson(result) mustEqual Json.toJson(initialSubmissionDetails)
     }
 
     "must return an OK if there is a replaced first disclosure available for the given arrangement ID" in {
-
-      val application =
-        applicationBuilder
-          .overrides(bind[SubmissionDetailsRepository].toInstance(mockSubmissionDetailsRepository))
-          .build()
-
       val submissionDetails =
         SubmissionDetails(
           enrolmentID = "enrolmentID",
@@ -157,19 +133,17 @@ class HistoryControllerSpec extends SpecBase
           initialDisclosureMA = false
         )
 
-      running(application) {
-        when(mockSubmissionDetailsRepository.retrieveFirstDisclosureForArrangementId(arrangementID))
-          .thenReturn(Future.successful(Some(initialSubmissionDetails)))
-        when(mockSubmissionDetailsRepository.retrieveFirstOrReplacedDisclosureForArrangementId(arrangementID, disclosureID))
-          .thenReturn(Future.successful(Some(submissionDetails)))
+      when(mockSubmissionDetailsRepository.retrieveFirstDisclosureForArrangementId(arrangementID))
+        .thenReturn(Future.successful(Some(initialSubmissionDetails)))
+      when(mockSubmissionDetailsRepository.retrieveFirstOrReplacedDisclosureForArrangementId(arrangementID, disclosureID))
+        .thenReturn(Future.successful(Some(submissionDetails)))
 
-        val request = FakeRequest(GET, routes.HistoryController.retrieveFirstDisclosure(arrangementID).url)
+      val request = FakeRequest(GET, routes.HistoryController.retrieveFirstDisclosure(arrangementID).url)
 
-        val result = route(application, request).value
+      val result = route(application, request).value
 
-        status(result) mustEqual OK
-        contentAsJson(result) mustEqual Json.toJson(submissionDetails)
-      }
+      status(result) mustEqual OK
+      contentAsJson(result) mustEqual Json.toJson(submissionDetails)
     }
   }
 
@@ -177,41 +151,29 @@ class HistoryControllerSpec extends SpecBase
     "must return an OK with the submission history if the search has found submissions" in {
       val search = "fileName"
       val submissionDetailsList = List(initialSubmissionDetails)
-      val application =
-        applicationBuilder
-          .overrides(bind[SubmissionDetailsRepository].toInstance(mockSubmissionDetailsRepository))
-          .build()
 
-      running(application) {
-        when(mockSubmissionDetailsRepository.searchSubmissions(search))
-          .thenReturn(Future.successful(submissionDetailsList))
+      when(mockSubmissionDetailsRepository.searchSubmissions(search))
+        .thenReturn(Future.successful(submissionDetailsList))
 
-        val request = FakeRequest(GET, routes.HistoryController.searchSubmissions(search).url)
+      val request = FakeRequest(GET, routes.HistoryController.searchSubmissions(search).url)
 
-        val result = route(application, request).value
+      val result = route(application, request).value
 
-        status(result) mustEqual OK
-        contentAsJson(result) mustEqual Json.toJson(SubmissionHistory(submissionDetailsList))
-      }
+      status(result) mustEqual OK
+      contentAsJson(result) mustEqual Json.toJson(SubmissionHistory(submissionDetailsList))
     }
 
     "must return a NOT_FOUND if mongo fails" in {
       val search = "fileName"
-      val application =
-        applicationBuilder
-          .overrides(bind[SubmissionDetailsRepository].toInstance(mockSubmissionDetailsRepository))
-          .build()
 
-      running(application) {
-        when(mockSubmissionDetailsRepository.searchSubmissions(search))
-          .thenReturn(Future.failed(new Exception("")))
+      when(mockSubmissionDetailsRepository.searchSubmissions(search))
+        .thenReturn(Future.failed(new Exception("")))
 
-        val request = FakeRequest(GET, routes.HistoryController.searchSubmissions(search).url)
+      val request = FakeRequest(GET, routes.HistoryController.searchSubmissions(search).url)
 
-        val result = route(application, request).value
+      val result = route(application, request).value
 
-        status(result) mustEqual NOT_FOUND
-      }
+      status(result) mustEqual NOT_FOUND
     }
 
   }

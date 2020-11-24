@@ -16,6 +16,7 @@
 
 package controllers
 
+import controllers.auth.AuthAction
 import javax.inject.Inject
 import play.api.mvc.{Action, AnyContent, ControllerComponents}
 import services.IdService
@@ -23,14 +24,17 @@ import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
 
 import scala.concurrent.ExecutionContext
 
-class IdController @Inject()(idService: IdService,
-                             cc: ControllerComponents)
-                            (implicit executionContext: ExecutionContext)
+class IdController @Inject()(
+                              authenticate: AuthAction,
+                              idService: IdService,
+                              cc: ControllerComponents
+                            )(implicit executionContext: ExecutionContext)
 extends BackendController(cc) {
 
   val arrangementIdRegEx = "[A-Z]{2}[A]([2]\\d{3}(0[1-9]|1[0-2])(0[1-9]|[12]\\d|3[01]))([A-Z0-9]{6})"
 
-  def verifyArrangementId(arrangementId: String): Action[AnyContent] = Action.async { implicit request =>
+  def verifyArrangementId(arrangementId: String): Action[AnyContent] = authenticate.async {
+    implicit request =>
       idService.verifyArrangementId(arrangementId) map {
         case Some(true) => NoContent
         case Some(false) => NotFound("Arrangement Id does not exist")

@@ -17,6 +17,7 @@
 package controllers
 
 import connectors.SubscriptionConnector
+import controllers.auth.AuthAction
 import javax.inject.Inject
 import models.ErrorDetails
 import models.subscription.{DisplaySubscriptionForDACRequest, UpdateSubscriptionForDACRequest}
@@ -30,13 +31,15 @@ import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
 import scala.concurrent.{ExecutionContext, Future}
 import scala.util.{Success, Try}
 
-class SubscriptionController @Inject()(subscriptionConnector: SubscriptionConnector,
-                                       cc: ControllerComponents
+class SubscriptionController @Inject()(
+                                        authenticate: AuthAction,
+                                        subscriptionConnector: SubscriptionConnector,
+                                        cc: ControllerComponents
                                       )(implicit ec: ExecutionContext) extends BackendController(cc) {
 
   private val logger: Logger = Logger(this.getClass)
 
-  def displaySubscriptionDetails: Action[JsValue] = Action(parse.json).async {
+  def displaySubscriptionDetails: Action[JsValue] = authenticate(parse.json).async {
     implicit request =>
 
       implicit val hc: HeaderCarrier =

@@ -17,6 +17,7 @@
 package controllers
 
 import base.SpecBase
+import controllers.auth.{AuthAction, FakeAuthAction}
 import models.ArrangementId
 import org.mockito.Matchers.any
 import org.mockito.Mockito.when
@@ -38,7 +39,8 @@ with ScalaCheckPropertyChecks {
   val application: Application = new GuiceApplicationBuilder()
     .configure(Configuration("metrics.enabled" -> "false"))
     .overrides(
-      bind[IdService].toInstance(mockIdService)
+      bind[IdService].toInstance(mockIdService),
+      bind[AuthAction].to[FakeAuthAction]
     ).build()
 
   val validArrangementId: ArrangementId = ArrangementId(dateString = "20200601", suffix = "A1B1C1")
