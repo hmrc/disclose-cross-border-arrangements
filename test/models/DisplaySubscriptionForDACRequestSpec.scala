@@ -17,6 +17,7 @@
 package models
 
 import base.SpecBase
+import models.subscription.{DisplaySubscriptionDetails, DisplaySubscriptionForDACRequest, RequestCommon, RequestDetail}
 import play.api.libs.json.{JsObject, Json}
 
 import scala.util.matching.Regex

@@ -18,6 +18,7 @@ package services
 
 import base.SpecBase
 import models._
+import models.subscription.{ContactInformationForIndividual, ContactInformationForOrganisation, IndividualDetails, OrganisationDetails}
 import org.scalatest.StreamlinedXmlEquality
 
 import scala.xml.NodeSeq

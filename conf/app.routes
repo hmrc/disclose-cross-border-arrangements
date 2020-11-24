@@ -11,3 +11,4 @@ GET        /history/first-disclosure/:arrangementId     controllers.HistoryContr
 GET        /history/search-submissions/:searchCriteria  controllers.HistoryController.searchSubmissions(searchCriteria: String)
 
 POST       /subscription/display-subscription           controllers.SubscriptionController.displaySubscriptionDetails
+POST       /subscription/update-subscription            controllers.SubscriptionController.updateSubscription

@@ -18,7 +18,8 @@ package controllers
 
 import connectors.SubscriptionConnector
 import javax.inject.Inject
-import models.{DisplaySubscriptionForDACRequest, ErrorDetails}
+import models.ErrorDetails
+import models.subscription.{DisplaySubscriptionForDACRequest, UpdateSubscriptionForDACRequest}
 import play.api.Logger
 import play.api.libs.json.{JsResult, JsSuccess, JsValue, Json}
 import play.api.mvc.{Action, ControllerComponents, Result}
@@ -49,6 +50,26 @@ class SubscriptionController @Inject()(subscriptionConnector: SubscriptionConnec
         valid = request =>
           for {
             httpResponse <- subscriptionConnector.displaySubscriptionForDAC(request)
+          } yield {
+            convertToResult(httpResponse)
+          }
+      )
+  }
+
+  def updateSubscription(): Action[JsValue] = Action(parse.json).async {
+    implicit request =>
+
+      implicit val hc: HeaderCarrier =
+        HeaderCarrierConverter.fromHeadersAndSession(request.headers, Some(request.session))
+
+      val displaySubscriptionResult: JsResult[UpdateSubscriptionForDACRequest] =
+        request.body.validate[UpdateSubscriptionForDACRequest]
+
+      displaySubscriptionResult.fold(
+        invalid = _ => Future.successful(BadRequest("")),
+        valid = request =>
+          for {
+            httpResponse <- subscriptionConnector.updateSubscriptionForDAC(request)
           } yield {
             convertToResult(httpResponse)
           }

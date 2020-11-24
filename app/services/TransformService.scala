@@ -18,6 +18,7 @@ package services
 
 import javax.inject.Inject
 import models._
+import models.subscription.{ContactInformation, ContactInformationForIndividual, ContactInformationForOrganisation, IndividualDetails}
 
 import scala.xml.transform.{RewriteRule, RuleTransformer}
 import scala.xml._

@@ -16,7 +16,8 @@
 
 package helpers
 
-import models.{ContactInformationForIndividual, ContactInformationForOrganisation, IndividualDetails, OrganisationDetails, SubscriptionDetails}
+import models.SubscriptionDetails
+import models.subscription.{ContactInformationForIndividual, ContactInformationForOrganisation, IndividualDetails, OrganisationDetails}
 
 object ContactFixtures {
 

@@ -16,6 +16,8 @@
 
 package models
 
+import models.subscription.ContactInformation
+
 case class SubscriptionDetails(
                             subscriptionID: String,
                             tradingName: Option[String],
