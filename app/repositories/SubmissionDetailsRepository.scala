@@ -75,7 +75,12 @@ class SubmissionDetailsRepository @Inject()(mongo: ReactiveMongoApi)
           "initialDisclosureMA" -> true)
       )
     )
-    val sortByLatestSubmission = Json.obj("submissionTime" -> -1)
+
+    val sortByLatestSubmission = Json.obj(
+      "submissionTime" -> -1,
+      "arrangementID" -> 1,
+      "disclosureID" -> 1
+    )
 
     submissionDetailsCollection
       .flatMap(
@@ -91,7 +96,11 @@ class SubmissionDetailsRepository @Inject()(mongo: ReactiveMongoApi)
       "importInstruction" -> "New",
       "initialDisclosureMA" -> true
     )
-    val sortByOldestSubmission = Json.obj("submissionTime" -> 1)
+    val sortByOldestSubmission = Json.obj(
+      "submissionTime" -> 1,
+      "arrangementID" -> 1,
+      "disclosureID" -> 1
+    )
 
     submissionDetailsCollection.flatMap(
       _.find(selector, None)
@@ -104,7 +113,11 @@ class SubmissionDetailsRepository @Inject()(mongo: ReactiveMongoApi)
   def retrieveSubmissionHistory(enrolmentID: String): Future[List[SubmissionDetails]] = {
     val maxDocs = 10000
     val selector = Json.obj("enrolmentID" -> enrolmentID)
-    val sortByLatestSubmission = Json.obj("submissionTime" -> -1)
+    val sortByLatestSubmission = Json.obj(
+      "submissionTime" -> -1,
+      "arrangementID" -> 1,
+      "disclosureID" -> 1
+    )
 
     submissionDetailsCollection.flatMap(
       _.find(selector, None)
@@ -145,7 +158,11 @@ class SubmissionDetailsRepository @Inject()(mongo: ReactiveMongoApi)
     )
 
     val maxDocs = 50
-    val sortByLatestSubmission = Json.obj("submissionTime" -> -1)
+    val sortByLatestSubmission = Json.obj(
+      "submissionTime" -> -1,
+      "arrangementID" -> 1,
+      "disclosureID" -> 1
+    )
 
     submissionDetailsCollection.flatMap(
       _.find(selector, None)
