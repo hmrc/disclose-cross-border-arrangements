@@ -31,7 +31,7 @@ import scala.xml.NodeSeq
 class SubmissionConnector @Inject()(
                                      val config: AppConfig,
                                      http: HttpClient
-                                   )(implicit ex: ExecutionContext) {
+                                   )(implicit ec: ExecutionContext) {
 
   val submissionUrl = s"${config.submissionUrl}/dac6/dct06/v1"
 
@@ -40,7 +40,7 @@ class SubmissionConnector @Inject()(
       .copy(authorization = Some(Authorization(s"Bearer ${config.bearerToken}")))
       .withExtraHeaders(addHeaders(): _*)
 
-    http.POSTString(submissionUrl, submission.mkString, newHeaders.headers)
+    http.POSTString[HttpResponse](submissionUrl, submission.mkString, Seq.empty[(String, String)])(implicitly, newHeaders, ec)
   }
 
   private def addHeaders()(implicit headerCarrier: HeaderCarrier): Seq[(String,String)] = {
