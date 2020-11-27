@@ -60,6 +60,7 @@ class SubmissionConnector @Inject()(
         headerCarrier.sessionId
           .map(_.value)
           .getOrElse(UUID.randomUUID().toString)
+          .replace("session-", "")
       },
       "content-type"    -> "application/xml",
       "accept"          -> "application/xml",
