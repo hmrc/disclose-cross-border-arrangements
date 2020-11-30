@@ -81,7 +81,7 @@ class SubmissionController @Inject()(
           subscriptionData <- contactService.getLatestContacts(enrolmentID)
 
           //wrap data around the file to create submission payload
-          submission: NodeSeq = transformService.addSubscriptionDetailsToSubmission(submissionFile, subscriptionData, submissionMetaData)
+          submission: NodeSeq = transformService.addSubscriptionDetailsToSubmission(transformedFile, subscriptionData, submissionMetaData)
 
           //change namespaces
           disclosureSubmission: NodeSeq  = transformService.addNameSpaces(submission, Seq(
