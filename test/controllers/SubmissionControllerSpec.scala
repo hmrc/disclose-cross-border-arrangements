@@ -38,8 +38,10 @@ import play.api.test.Helpers.{status, _}
 import repositories.SubmissionDetailsRepository
 import services.{ContactService, SubmissionService, TransformService}
 import uk.gov.hmrc.http.{HeaderNames, HttpResponse, UpstreamErrorResponse}
+import org.mockito.Matchers.{eq => meq}
 
 import scala.concurrent.Future
+import scala.xml.NodeSeq
 
 class SubmissionControllerSpec extends SpecBase
   with MockitoSugar
@@ -79,8 +81,11 @@ class SubmissionControllerSpec extends SpecBase
       .build()
 
     "when a file is posted we transform it, send it to the HOD and return OK" in {
+
+      val disclosureId = DisclosureId("GBD", "20200601", "AAA000")
+
       when(mockSubmissionService.generateIDsForInstruction(any()))
-        .thenReturn(Future.successful(GeneratedIDs(None, Some(DisclosureId("GBD", "20200601", "AAA000")))))
+        .thenReturn(Future.successful(GeneratedIDs(None, Some(disclosureId))))
       when(mockDateHelper.now).thenReturn(testDateTime)
       when(mockSubmissionDetailsRepository.storeSubmissionDetails(any()))
         .thenReturn(Future.successful(true))
@@ -95,8 +100,16 @@ class SubmissionControllerSpec extends SpecBase
       val result: Future[Result] = route(application, request).value
 
       status(result) mustBe OK
-      verify(mockSubmissionConnector, times(1)).submitDisclosure(any())(any())
+
+      val argumentCaptor: ArgumentCaptor[NodeSeq] = ArgumentCaptor.forClass(classOf[NodeSeq])
+
+      verify(mockSubmissionConnector, times(1)).submitDisclosure(argumentCaptor.capture())(any())
       verify(mockSubmissionDetailsRepository, times(1)).storeSubmissionDetails(Matchers.eq(submissionDetails))
+
+      val xmlWithIds = argumentCaptor.getValue
+      val generatedDisclosureId = (xmlWithIds \\ "DisclosureID").text
+      generatedDisclosureId mustBe disclosureId.value
+
     }
 
     "when a file is posted we try to get the contacts and there is an error and we respond with InternalServerError" in {
