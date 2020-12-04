@@ -16,8 +16,8 @@
 
 package models.subscription
 
-import play.api.libs.json.{Json, OFormat}
-
+import play.api.libs.json.{Json, OFormat, Reads, Writes, __}
+import play.api.libs.functional.syntax.toFunctionalBuilderOps
 
 case class RequestCommonForUpdate(regime: String,
                                   receiptDate: String,
@@ -36,7 +36,24 @@ case class RequestDetailForUpdate(IDType: String,
                                   primaryContact: PrimaryContact,
                                   secondaryContact: Option[SecondaryContact])
 object RequestDetailForUpdate {
-  implicit val format: OFormat[RequestDetailForUpdate] = Json.format[RequestDetailForUpdate]
+  implicit val reads: Reads[RequestDetailForUpdate] = (
+    (__ \ "IDType").read[String] and
+      (__ \ "IDNumber").read[String] and
+      (__ \ "tradingName").readNullable[String] and
+      (__ \ "isGBUser").read[Boolean] and
+      (__ \ "primaryContact").read[Seq[PrimaryContact]] and
+      (__ \ "secondaryContact").readNullable[Seq[SecondaryContact]]
+    )((idt, idr, tn, gb, pc, sc) => RequestDetailForUpdate(idt, idr, tn, gb, pc.head, sc.map(_.head)))
+
+  implicit lazy val writes: Writes[RequestDetailForUpdate] = (
+    (__ \ "IDType").write[String] and
+      (__ \ "IDNumber").write[String] and
+      (__ \ "tradingName").writeNullable[String] and
+      (__ \ "isGBUser").write[Boolean] and
+      (__ \ "primaryContact").write[Seq[PrimaryContact]] and
+      (__ \ "secondaryContact").writeNullable[Seq[SecondaryContact]]
+    )(r => (r.IDType, r.IDNumber, r.tradingName, r.isGBUser, Seq(r.primaryContact), r.secondaryContact.map(Seq(_))))
+
 }
 
 case class UpdateSubscriptionDetails(requestCommon: RequestCommonForUpdate,

@@ -174,13 +174,13 @@ object JsonFixtures {
           "IDType" -> "SAFE",
           "IDNumber" -> idNumber,
           "isGBUser" -> isGBUser,
-          "primaryContact" -> Json.obj(
+          "primaryContact" -> Json.arr(Json.obj(
             "individual" -> Json.obj(
               "firstName" -> firstName,
               "lastName" -> lastName
             ),
             "email" -> primaryEmail
-          )
+          ))
 
         )
       )
@@ -212,20 +212,20 @@ object JsonFixtures {
           "IDType" -> "SAFE",
           "IDNumber" -> idNumber,
           "isGBUser" -> isGBUser,
-          "primaryContact" -> Json.obj(
+          "primaryContact" -> Json.arr(Json.obj(
             "individual" -> Json.obj(
               "firstName" -> firstName,
               "lastName" -> lastName
             ),
             "email" -> email
-          ),
-          "secondaryContact" -> Json.obj(
+          )),
+          "secondaryContact" -> Json.arr(Json.obj(
             "organisation" -> Json.obj(
               "organisationName" -> organisationName
             ),
             "email" -> email,
             "phone" -> phone
-          )
+          ))
 
         )
       )
