@@ -18,8 +18,9 @@ package controllers
 
 import base.SpecBase
 import connectors.SubscriptionConnector
+import controllers.auth.{AuthAction, FakeAuthAction}
 import generators.ModelGenerators
-import models.DisplaySubscriptionForDACRequest
+import models.subscription.{DisplaySubscriptionForDACRequest, UpdateSubscriptionForDACRequest}
 import org.mockito.Matchers.any
 import org.mockito.Mockito.when
 import org.scalacheck.Arbitrary.arbitrary
@@ -44,8 +45,12 @@ class SubscriptionControllerSpec extends SpecBase
 
   val application: Application = applicationBuilder()
     .overrides(
-      bind[SubscriptionConnector].toInstance(mockSubscriptionConnector)
+      bind[SubscriptionConnector].toInstance(mockSubscriptionConnector),
+      bind[AuthAction].to[FakeAuthAction]
     ).build()
+
+  val errorStatusCodes: Seq[Int] = Seq(BAD_REQUEST, FORBIDDEN, NOT_FOUND, METHOD_NOT_ALLOWED,
+                                       CONFLICT, INTERNAL_SERVER_ERROR, SERVICE_UNAVAILABLE)
 
   "SubscriptionController" - {
     "displaySubscriptionDetails" - {
@@ -66,17 +71,50 @@ class SubscriptionControllerSpec extends SpecBase
 
       "must return non-OK if EIS returns an error status code (400, 403, 404, 405, 409, 500, 503)" in {
 
-        forAll(arbitrary[DisplaySubscriptionForDACRequest],
-          Gen.oneOf(Seq(BAD_REQUEST, FORBIDDEN, NOT_FOUND, METHOD_NOT_ALLOWED, CONFLICT, INTERNAL_SERVER_ERROR, SERVICE_UNAVAILABLE))) {
-            (displaySubscriptionForDACRequest, statusCode) =>
-              when(mockSubscriptionConnector.displaySubscriptionForDAC(any())(any(), any()))
-                .thenReturn(Future.successful(HttpResponse(statusCode, "")))
+        forAll(arbitrary[DisplaySubscriptionForDACRequest], Gen.oneOf(errorStatusCodes)) {
+          (displaySubscriptionForDACRequest, statusCode) =>
+            when(mockSubscriptionConnector.displaySubscriptionForDAC(any())(any(), any()))
+              .thenReturn(Future.successful(HttpResponse(statusCode, "")))
 
-              val request = FakeRequest(POST, routes.SubscriptionController.displaySubscriptionDetails().url)
-                .withJsonBody(Json.toJson(displaySubscriptionForDACRequest))
+            val request = FakeRequest(POST, routes.SubscriptionController.displaySubscriptionDetails().url)
+              .withJsonBody(Json.toJson(displaySubscriptionForDACRequest))
 
-              val result = route(application, request).value
-              status(result) mustEqual statusCode
+            val result = route(application, request).value
+            status(result) mustEqual statusCode
+        }
+      }
+    }
+
+    "updateSubscription" - {
+      "must return OK if update request is valid and successful" in {
+
+        forAll(arbitrary[UpdateSubscriptionForDACRequest]) {
+          updateSubscriptionForDAC =>
+
+            when(mockSubscriptionConnector.updateSubscriptionForDAC(any())(any(), any()))
+              .thenReturn(Future.successful(HttpResponse(OK, "")))
+
+            val request = FakeRequest(POST, routes.SubscriptionController.updateSubscription().url)
+              .withJsonBody(Json.toJson(updateSubscriptionForDAC))
+
+            val result = route(application, request).value
+            status(result) mustEqual OK
+        }
+      }
+
+      "must return non-OK if EIS returns an error status code (400, 403, 404, 405, 409, 500, 503)" in {
+
+        forAll(arbitrary[UpdateSubscriptionForDACRequest], Gen.oneOf(errorStatusCodes)) {
+          (updateSubscriptionForDAC, statusCode) =>
+
+            when(mockSubscriptionConnector.updateSubscriptionForDAC(any())(any(), any()))
+              .thenReturn(Future.successful(HttpResponse(statusCode, "")))
+
+            val request = FakeRequest(POST, routes.SubscriptionController.updateSubscription().url)
+              .withJsonBody(Json.toJson(updateSubscriptionForDAC))
+
+            val result = route(application, request).value
+            status(result) mustEqual statusCode
         }
       }
     }

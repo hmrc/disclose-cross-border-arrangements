@@ -17,8 +17,10 @@
 package controllers
 
 import connectors.SubscriptionConnector
+import controllers.auth.AuthAction
 import javax.inject.Inject
-import models.{DisplaySubscriptionForDACRequest, ErrorDetails}
+import models.ErrorDetails
+import models.subscription.{DisplaySubscriptionForDACRequest, UpdateSubscriptionForDACRequest}
 import play.api.Logger
 import play.api.libs.json.{JsResult, JsSuccess, JsValue, Json}
 import play.api.mvc.{Action, ControllerComponents, Result}
@@ -29,13 +31,15 @@ import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
 import scala.concurrent.{ExecutionContext, Future}
 import scala.util.{Success, Try}
 
-class SubscriptionController @Inject()(subscriptionConnector: SubscriptionConnector,
-                                       cc: ControllerComponents
+class SubscriptionController @Inject()(
+                                        authenticate: AuthAction,
+                                        subscriptionConnector: SubscriptionConnector,
+                                        cc: ControllerComponents
                                       )(implicit ec: ExecutionContext) extends BackendController(cc) {
 
   private val logger: Logger = Logger(this.getClass)
 
-  def displaySubscriptionDetails: Action[JsValue] = Action(parse.json).async {
+  def displaySubscriptionDetails: Action[JsValue] = authenticate(parse.json).async {
     implicit request =>
 
       implicit val hc: HeaderCarrier =
@@ -49,6 +53,26 @@ class SubscriptionController @Inject()(subscriptionConnector: SubscriptionConnec
         valid = request =>
           for {
             httpResponse <- subscriptionConnector.displaySubscriptionForDAC(request)
+          } yield {
+            convertToResult(httpResponse)
+          }
+      )
+  }
+
+  def updateSubscription(): Action[JsValue] = Action(parse.json).async {
+    implicit request =>
+
+      implicit val hc: HeaderCarrier =
+        HeaderCarrierConverter.fromHeadersAndSession(request.headers, Some(request.session))
+
+      val displaySubscriptionResult: JsResult[UpdateSubscriptionForDACRequest] =
+        request.body.validate[UpdateSubscriptionForDACRequest]
+
+      displaySubscriptionResult.fold(
+        invalid = _ => Future.successful(BadRequest("")),
+        valid = request =>
+          for {
+            httpResponse <- subscriptionConnector.updateSubscriptionForDAC(request)
           } yield {
             convertToResult(httpResponse)
           }

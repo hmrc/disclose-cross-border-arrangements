@@ -14,17 +14,21 @@
  * limitations under the License.
  */
 
-package helpers
+package repositories
 
-import models.SubscriptionDetails
-import models.subscription.{ContactInformationForIndividual, ContactInformationForOrganisation, IndividualDetails, OrganisationDetails}
+import java.time.{Instant, LocalDateTime, ZoneId, ZoneOffset}
 
-object ContactFixtures {
+import play.api.libs.json.{Json, Reads, Writes, __}
 
-  val contact = SubscriptionDetails("111111111",
-    Some("a"),
-    true,
-    ContactInformationForIndividual(IndividualDetails("First", "Last", None), "a", Some("A"), Some("A")),
-    Some(ContactInformationForOrganisation(OrganisationDetails("o"), "a", None, None)))
+trait MongoDateTimeFormats {
 
+  implicit val localDateTimeRead: Reads[LocalDateTime] =
+    (__ \ "$date").read[Long].map {
+      millis =>
+        LocalDateTime.ofInstant(Instant.ofEpochMilli(millis), ZoneOffset.UTC)
+    }
+
+  implicit val localDateTimeWrite: Writes[LocalDateTime] = (dateTime: LocalDateTime) => Json.obj(
+    "$date" -> dateTime.atZone(ZoneId.of("UTC")).toInstant.toEpochMilli
+  )
 }

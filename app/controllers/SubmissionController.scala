@@ -19,6 +19,7 @@ package controllers
 import java.util.UUID
 
 import connectors.SubmissionConnector
+import controllers.auth.AuthAction
 import helpers.DateHelper
 import javax.inject.Inject
 import models._
@@ -36,6 +37,7 @@ import scala.util.{Success, Try}
 import scala.xml.NodeSeq
 
 class SubmissionController @Inject()(
+                                      authenticate: AuthAction,
                                       cc: ControllerComponents,
                                       submissionService: SubmissionService,
                                       transformService: TransformService,
@@ -50,7 +52,7 @@ class SubmissionController @Inject()(
 
   private val logger = LoggerFactory.getLogger(getClass)
 
-  def submitDisclosure: Action[NodeSeq] = Action.async(parse.xml) {
+  def submitDisclosure: Action[NodeSeq] = authenticate.async(parse.xml) {
     implicit request =>
       {
         //receive xml and find import instructions
@@ -80,7 +82,7 @@ class SubmissionController @Inject()(
           subscriptionData <- contactService.getLatestContacts(enrolmentID)
 
           //wrap data around the file to create submission payload
-          submission: NodeSeq = transformService.addSubscriptionDetailsToSubmission(submissionFile, subscriptionData, submissionMetaData)
+          submission: NodeSeq = transformService.addSubscriptionDetailsToSubmission(transformedFile, subscriptionData, submissionMetaData)
 
           //change namespaces
           disclosureSubmission: NodeSeq  = transformService.addNameSpaces(submission, Seq(
@@ -135,7 +137,7 @@ class SubmissionController @Inject()(
       }
   }
 
-  def getHistory(enrolmentId: String): Action[AnyContent] = Action.async {
+  def getHistory(enrolmentId: String): Action[AnyContent] = authenticate.async {
     implicit request =>
 
       submissionDetailsRepository.retrieveSubmissionHistory(enrolmentId).map(

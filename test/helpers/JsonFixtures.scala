@@ -16,7 +16,8 @@
 
 package helpers
 
-import models._
+import models.subscription._
+import play.api.libs.json.{JsBoolean, JsObject, JsString, Json}
 
 object JsonFixtures {
 
@@ -70,5 +71,165 @@ object JsonFixtures {
       |}
       |}
       |}""".stripMargin
+
+  def updateDetailsPayloadNoSecondContact(idNumber: JsString,
+                                          isGBUser: JsBoolean,
+                                          firstName: JsString,
+                                          lastName: JsString,
+                                          primaryEmail: JsString): String = {
+    s"""
+       |{
+       |  "updateSubscriptionForDACRequest": {
+       |    "requestCommon": {
+       |      "regime": "DAC",
+       |      "receiptDate": "2020-09-23T16:12:11Z",
+       |      "acknowledgementReference": "AB123c",
+       |      "originatingSystem": "MDTP",
+       |      "requestParameters": [{
+       |        "paramName":"Name",
+       |        "paramValue":"Value"
+       |      }]
+       |    },
+       |    "requestDetail": {
+       |      "IDType": "SAFE",
+       |      "IDNumber": $idNumber,
+       |      "isGBUser": $isGBUser,
+       |      "primaryContact": [{
+       |        "individual": {
+       |          "firstName": $firstName,
+       |          "lastName": $lastName
+       |        },
+       |        "email": $primaryEmail
+       |      }]
+       |    }
+       |  }
+       |}
+       |""".stripMargin
+  }
+
+  def updateDetailsPayload(idNumber: JsString,
+                           isGBUser: JsBoolean,
+                           firstName: JsString,
+                           lastName: JsString,
+                           email: JsString,
+                           organisationName: JsString,
+                           phone: JsString): String = {
+    s"""
+       |{
+       |  "updateSubscriptionForDACRequest": {
+       |    "requestCommon": {
+       |      "regime": "DAC",
+       |      "receiptDate": "2020-09-23T16:12:11Z",
+       |      "acknowledgementReference": "AB123c",
+       |      "originatingSystem": "MDTP",
+       |      "requestParameters": [{
+       |        "paramName":"Name",
+       |        "paramValue":"Value"
+       |      }]
+       |    },
+       |    "requestDetail": {
+       |      "IDType": "SAFE",
+       |      "IDNumber": $idNumber,
+       |      "isGBUser": $isGBUser,
+       |      "primaryContact": [{
+       |        "individual": {
+       |          "firstName": $firstName,
+       |          "lastName": $lastName
+       |        },
+       |        "email": $email
+       |      }],
+       |      "secondaryContact": [{
+       |        "organisation": {
+       |          "organisationName": $organisationName
+       |        },
+       |        "email": $email,
+       |        "phone": $phone
+       |      }]
+       |    }
+       |  }
+       |}
+       |""".stripMargin
+  }
+
+  def updateDetailsJsonNoSecondContact(idNumber: String,
+                                       isGBUser: Boolean,
+                                       firstName: String,
+                                       lastName: String,
+                                       primaryEmail: String): JsObject = {
+    Json.obj(
+      "updateSubscriptionForDACRequest" -> Json.obj(
+        "requestCommon" -> Json.obj(
+          "regime" -> "DAC",
+          "receiptDate" -> "2020-09-23T16:12:11Z",
+          "acknowledgementReference" -> "AB123c",
+          "originatingSystem" -> "MDTP",
+          "requestParameters" -> Json.arr(
+            Json.obj(
+              "paramName" -> "Name",
+              "paramValue" -> "Value"
+            )
+          )
+        ),
+        "requestDetail" -> Json.obj(
+          "IDType" -> "SAFE",
+          "IDNumber" -> idNumber,
+          "isGBUser" -> isGBUser,
+          "primaryContact" -> Json.arr(Json.obj(
+            "individual" -> Json.obj(
+              "firstName" -> firstName,
+              "lastName" -> lastName
+            ),
+            "email" -> primaryEmail
+          ))
+
+        )
+      )
+    )
+  }
+
+  def updateDetailsJson(idNumber: String,
+                        isGBUser: Boolean,
+                        firstName: String,
+                        lastName: String,
+                        email: String,
+                        organisationName: String,
+                        phone: String): JsObject = {
+    Json.obj(
+      "updateSubscriptionForDACRequest" -> Json.obj(
+        "requestCommon" -> Json.obj(
+          "regime" -> "DAC",
+          "receiptDate" -> "2020-09-23T16:12:11Z",
+          "acknowledgementReference" -> "AB123c",
+          "originatingSystem" -> "MDTP",
+          "requestParameters" -> Json.arr(
+            Json.obj(
+              "paramName" -> "Name",
+              "paramValue" -> "Value"
+            )
+          )
+        ),
+        "requestDetail" -> Json.obj(
+          "IDType" -> "SAFE",
+          "IDNumber" -> idNumber,
+          "isGBUser" -> isGBUser,
+          "primaryContact" -> Json.arr(Json.obj(
+            "individual" -> Json.obj(
+              "firstName" -> firstName,
+              "lastName" -> lastName
+            ),
+            "email" -> email
+          )),
+          "secondaryContact" -> Json.arr(Json.obj(
+            "organisation" -> Json.obj(
+              "organisationName" -> organisationName
+            ),
+            "email" -> email,
+            "phone" -> phone
+          ))
+
+        )
+      )
+    )
+  }
 
 }

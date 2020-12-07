@@ -19,7 +19,9 @@ package generators
 import java.time.LocalDateTime
 
 import models._
+import models.subscription._
 import org.scalacheck.Arbitrary.arbitrary
+import org.scalacheck.Gen.alphaStr
 import org.scalacheck.{Arbitrary, Gen}
 
 trait ModelGenerators extends BaseGenerators with JavaTimeGenerators {
@@ -49,8 +51,8 @@ trait ModelGenerators extends BaseGenerators with JavaTimeGenerators {
 
   implicit val arbitraryReturnParameters: Arbitrary[RequestParameter] = Arbitrary {
     for {
-      paramName <- arbitrary[String]
-      paramValue <- arbitrary[String]
+      paramName <- alphaStr
+      paramValue <- alphaStr
     } yield RequestParameter(paramName, paramValue)
   }
 
@@ -77,6 +79,67 @@ trait ModelGenerators extends BaseGenerators with JavaTimeGenerators {
             requestDetail = RequestDetail(
               IDType = "DAC",
               IDNumber = idNumber
+            )
+          )
+        )
+      }
+    }
+  }
+
+  implicit val arbitraryContactInformationForIndividual: Arbitrary[ContactInformationForIndividual] = Arbitrary {
+    for {
+      firstName <- alphaStr
+      lastName <- alphaStr
+      middleName <- Gen.option(alphaStr)
+      email <- alphaStr
+      telephone <- Gen.option(alphaStr)
+      mobile <- Gen.option(alphaStr)
+    } yield ContactInformationForIndividual(IndividualDetails(firstName, lastName, middleName), email, telephone, mobile)
+  }
+
+  implicit val arbitraryContactInformationForOrganisation: Arbitrary[ContactInformationForOrganisation] = Arbitrary {
+    for {
+      name <- alphaStr
+      email <- alphaStr
+      telephone <- Gen.option(alphaStr)
+      mobile <- Gen.option(alphaStr)
+    } yield ContactInformationForOrganisation(OrganisationDetails(name), email, telephone, mobile)
+  }
+
+  implicit val arbitrarySecondaryContact: Arbitrary[SecondaryContact] = Arbitrary {
+    for {
+      contactInformation <- arbitrary[ContactInformationForOrganisation]
+    } yield SecondaryContact(Seq(contactInformation))
+  }
+
+  implicit lazy val arbitraryUpdateSubscriptionForDACRequest: Arbitrary[UpdateSubscriptionForDACRequest] = {
+    Arbitrary {
+      for {
+        idNumber <- stringsWithMaxLength(30)
+        receiptDate <- alphaStr
+        acknowledgementReference <- alphaStr
+        originatingSystem <- alphaStr
+        requestParameter <- Gen.option(Gen.listOf(arbitrary[RequestParameter]))
+        isGBUser <- arbitrary[Boolean]
+        primaryContact <- Gen.oneOf(arbitrary[ContactInformationForIndividual], arbitrary[ContactInformationForOrganisation])
+        secondaryContact <- Gen.option(arbitrary[SecondaryContact])
+      } yield {
+        UpdateSubscriptionForDACRequest(
+          UpdateSubscriptionDetails(
+            requestCommon = RequestCommonForUpdate(
+              regime = "DAC",
+              receiptDate = receiptDate,
+              acknowledgementReference = acknowledgementReference,
+              originatingSystem = originatingSystem,
+              requestParameters = requestParameter
+            ),
+            requestDetail = RequestDetailForUpdate(
+              IDType = "SAFE",
+              IDNumber = idNumber,
+              tradingName = None,
+              isGBUser = isGBUser,
+              primaryContact = PrimaryContact(Seq(primaryContact)),
+              secondaryContact = secondaryContact
             )
           )
         )

@@ -14,17 +14,16 @@
  * limitations under the License.
  */
 
-package helpers
+package controllers.auth
 
-import models.SubscriptionDetails
-import models.subscription.{ContactInformationForIndividual, ContactInformationForOrganisation, IndividualDetails, OrganisationDetails}
+import javax.inject.Inject
+import play.api.mvc.{BodyParsers, Request, Result}
 
-object ContactFixtures {
+import scala.concurrent.{ExecutionContext, Future}
 
-  val contact = SubscriptionDetails("111111111",
-    Some("a"),
-    true,
-    ContactInformationForIndividual(IndividualDetails("First", "Last", None), "a", Some("A"), Some("A")),
-    Some(ContactInformationForOrganisation(OrganisationDetails("o"), "a", None, None)))
-
+class FakeAuthAction @Inject()(
+                                val parser: BodyParsers.Default
+                              )(implicit val executionContext: ExecutionContext) extends AuthAction {
+  override def invokeBlock[A](request: Request[A], block: Request[A] => Future[Result]): Future[Result] =
+    block(request)
 }

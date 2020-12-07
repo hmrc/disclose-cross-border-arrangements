@@ -21,6 +21,7 @@ import java.util.UUID
 
 import base.SpecBase
 import connectors.SubmissionConnector
+import controllers.auth.{AuthAction, FakeAuthAction}
 import helpers.SubmissionFixtures.{minimalPassing, oneError}
 import helpers.{ContactFixtures, DateHelper}
 import models.{DisclosureId, GeneratedIDs, SubmissionDetails, SubmissionMetaData}
@@ -37,8 +38,10 @@ import play.api.test.Helpers.{status, _}
 import repositories.SubmissionDetailsRepository
 import services.{ContactService, SubmissionService, TransformService}
 import uk.gov.hmrc.http.{HeaderNames, HttpResponse, UpstreamErrorResponse}
+import org.mockito.Matchers.{eq => meq}
 
 import scala.concurrent.Future
+import scala.xml.NodeSeq
 
 class SubmissionControllerSpec extends SpecBase
   with MockitoSugar
@@ -73,13 +76,17 @@ class SubmissionControllerSpec extends SpecBase
         bind[DateHelper].toInstance(mockDateHelper),
         bind[SubmissionDetailsRepository].toInstance(mockSubmissionDetailsRepository),
         bind[SubmissionConnector].toInstance(mockSubmissionConnector),
-        bind[ContactService].toInstance(mockContactService)
+        bind[ContactService].toInstance(mockContactService),
+        bind[AuthAction].to[FakeAuthAction]
       )
       .build()
 
     "when a file is posted we transform it, send it to the HOD and return OK" in {
+
+      val disclosureId = DisclosureId("GBD", "20200601", "AAA000")
+
       when(mockSubmissionService.generateIDsForInstruction(any()))
-        .thenReturn(Future.successful(GeneratedIDs(None, Some(DisclosureId("GBD", "20200601", "AAA000")))))
+        .thenReturn(Future.successful(GeneratedIDs(None, Some(disclosureId))))
       when(mockDateHelper.now).thenReturn(testDateTime)
       when(mockSubmissionDetailsRepository.storeSubmissionDetails(any()))
         .thenReturn(Future.successful(true))
@@ -94,8 +101,16 @@ class SubmissionControllerSpec extends SpecBase
       val result: Future[Result] = route(application, request).value
 
       status(result) mustBe OK
-      verify(mockSubmissionConnector, times(1)).submitDisclosure(any())(any())
+
+      val argumentCaptor: ArgumentCaptor[NodeSeq] = ArgumentCaptor.forClass(classOf[NodeSeq])
+
+      verify(mockSubmissionConnector, times(1)).submitDisclosure(argumentCaptor.capture())(any())
       verify(mockSubmissionDetailsRepository, times(1)).storeSubmissionDetails(Matchers.eq(submissionDetails))
+
+      val xmlWithIds = argumentCaptor.getValue
+      val generatedDisclosureId = (xmlWithIds \\ "DisclosureID").text
+      generatedDisclosureId mustBe disclosureId.value
+
     }
 
     "when a file is posted we try to get the contacts and there is an error and we respond with InternalServerError" in {
@@ -182,7 +197,8 @@ class SubmissionControllerSpec extends SpecBase
           bind[SubmissionDetailsRepository].toInstance(mockSubmissionDetailsRepository),
           bind[SubmissionConnector].toInstance(mockSubmissionConnector),
           bind[ContactService].toInstance(mockContactService),
-          bind[TransformService].toInstance(mockTransformService)
+          bind[TransformService].toInstance(mockTransformService),
+          bind[AuthAction].to[FakeAuthAction]
         )
         .build()
 
@@ -193,6 +209,7 @@ class SubmissionControllerSpec extends SpecBase
         .thenReturn(Future.successful(ContactFixtures.contact))
       when(mockSubmissionConnector.submitDisclosure(any())(any()))
         .thenReturn(Future.failed(UpstreamErrorResponse("", INTERNAL_SERVER_ERROR)))
+      when(mockTransformService.addNameSpaces(any(), any())).thenReturn(minimalPassing)
 
       val submission = minimalPassing
       val request = FakeRequest(POST, routes.SubmissionController.submitDisclosure().url).withXmlBody(submission)
@@ -218,7 +235,8 @@ class SubmissionControllerSpec extends SpecBase
           bind[SubmissionDetailsRepository].toInstance(mockSubmissionDetailsRepository),
           bind[SubmissionConnector].toInstance(mockSubmissionConnector),
           bind[ContactService].toInstance(mockContactService),
-          bind[TransformService].toInstance(mockTransformService)
+          bind[TransformService].toInstance(mockTransformService),
+          bind[AuthAction].to[FakeAuthAction]
         )
         .build()
 
@@ -229,6 +247,7 @@ class SubmissionControllerSpec extends SpecBase
         .thenReturn(Future.successful(ContactFixtures.contact))
       when(mockSubmissionConnector.submitDisclosure(any())(any()))
         .thenReturn(Future.failed(UpstreamErrorResponse("", INTERNAL_SERVER_ERROR)))
+      when(mockTransformService.addNameSpaces(any(), any())).thenReturn(minimalPassing)
 
       val submission = minimalPassing
       val request = FakeRequest(POST, routes.SubmissionController.submitDisclosure().url).withXmlBody(submission)

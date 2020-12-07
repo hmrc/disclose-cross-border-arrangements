@@ -18,6 +18,7 @@ package models
 
 import java.time.format.DateTimeFormatter
 import java.time.{LocalDateTime, OffsetDateTime}
+import repositories.MongoDateTimeFormats
 
 import play.api.libs.json.{Json, OFormat}
 
@@ -49,7 +50,7 @@ case class SubmissionDetails(enrolmentID: String,
                              initialDisclosureMA: Boolean,
                              messageRefId: String)
 
-object SubmissionDetails {
+object SubmissionDetails extends MongoDateTimeFormats {
 
   def build(xml: NodeSeq,
             ids: GeneratedIDs,
