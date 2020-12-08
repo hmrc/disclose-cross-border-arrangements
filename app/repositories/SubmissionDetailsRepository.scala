@@ -93,8 +93,7 @@ class SubmissionDetailsRepository @Inject()(mongo: ReactiveMongoApi)
   def retrieveFirstDisclosureForArrangementId(arrangementID: String): Future[Option[SubmissionDetails]] = {
     val selector = Json.obj(
       "arrangementID" -> arrangementID,
-      "importInstruction" -> "New",
-      "initialDisclosureMA" -> true
+      "importInstruction" -> "New"
     )
     val sortByOldestSubmission = Json.obj(
       "submissionTime" -> 1,
