@@ -60,51 +60,14 @@ class SubmissionDetailsRepository @Inject()(mongo: ReactiveMongoApi)
         .one[SubmissionDetails]
       )
 
-
-  def retrieveFirstOrReplacedDisclosureForArrangementId(arrangementID: String, disclosureID: String = ""): Future[Option[SubmissionDetails]] = {
-    val selector = Json.obj(
-      "$or" -> Json.arr(
-        Json.obj(
-          "arrangementID" -> arrangementID,
-          "disclosureID" -> disclosureID,
-          "importInstruction" -> "Replace",
-          "initialDisclosureMA" -> false),
-        Json.obj(
-          "arrangementID" -> arrangementID,
-          "importInstruction" -> "New",
-          "initialDisclosureMA" -> true)
-      )
-    )
-
-    val sortByLatestSubmission = Json.obj(
-      "submissionTime" -> -1,
-      "arrangementID" -> 1,
-      "disclosureID" -> 1
-    )
-
-    submissionDetailsCollection
-      .flatMap(
-        _.find(selector, None)
-          .sort(sortByLatestSubmission)
-          .one[SubmissionDetails]
-      )
-  }
-
   def retrieveFirstDisclosureForArrangementId(arrangementID: String): Future[Option[SubmissionDetails]] = {
     val selector = Json.obj(
       "arrangementID" -> arrangementID,
-      "importInstruction" -> "New",
-      "initialDisclosureMA" -> true
-    )
-    val sortByOldestSubmission = Json.obj(
-      "submissionTime" -> 1,
-      "arrangementID" -> 1,
-      "disclosureID" -> 1
+      "importInstruction" -> "New"
     )
 
     submissionDetailsCollection.flatMap(
       _.find(selector, None)
-        .sort(sortByOldestSubmission)
         .one[SubmissionDetails]
     )
   }

@@ -50,42 +50,7 @@ class SubmissionDetailsRepositorySpec
       }
     }
 
-    "calling retrieveFirstOrReplacedDisclosureForArrangementId" - {
-
-      "must retrieve submission details for the replaced first disclosure for arrangement ID" in {
-        val firstSubmissionDetails = submissionDetails.copy(importInstruction = "New", initialDisclosureMA = true)
-        val secondSubmissionDetails = submissionDetails.copy(submissionTime = LocalDateTime.now().plusDays(1), importInstruction = "Replace")
-        val app: Application = new GuiceApplicationBuilder().build()
-
-        running(app) {
-          val repo: SubmissionDetailsRepository = app.injector.instanceOf[SubmissionDetailsRepository]
-
-          database.flatMap(_.drop()).futureValue
-          await(repo.storeSubmissionDetails(firstSubmissionDetails))
-          await(repo.storeSubmissionDetails(secondSubmissionDetails))
-
-          whenReady(repo.retrieveFirstOrReplacedDisclosureForArrangementId(arrangementID, disclosureID)) {
-            _ mustBe Some(secondSubmissionDetails)
-          }
-        }
-      }
-
-      "must return None if there is no first or replaced disclosure for arrangement ID" in {
-        val app: Application = new GuiceApplicationBuilder().build()
-
-        running(app) {
-          val repo: SubmissionDetailsRepository = app.injector.instanceOf[SubmissionDetailsRepository]
-
-          database.flatMap(_.drop()).futureValue
-
-          whenReady(repo.retrieveFirstOrReplacedDisclosureForArrangementId(arrangementID, disclosureID)) {
-            _ mustBe None
-          }
-        }
-      }
-    }
-
-    "calling retrieveFirstDisclosureForArrangementId" - {
+     "calling retrieveFirstDisclosureForArrangementId" - {
       "must retrieve submission details for the first disclosure for arrangement ID" in {
         val firstSubmissionDetails = submissionDetails.copy(importInstruction = "New", initialDisclosureMA = true)
         val secondSubmissionDetails = submissionDetails.copy(submissionTime = LocalDateTime.now().plusDays(1))

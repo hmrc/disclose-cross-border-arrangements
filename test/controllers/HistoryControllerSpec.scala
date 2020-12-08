@@ -99,8 +99,6 @@ class HistoryControllerSpec extends SpecBase
     "must return a NOT_FOUND if there is no first disclosure" in {
       when(mockSubmissionDetailsRepository.retrieveFirstDisclosureForArrangementId(""))
         .thenReturn(Future.successful(None))
-      when(mockSubmissionDetailsRepository.retrieveFirstOrReplacedDisclosureForArrangementId(""))
-        .thenReturn(Future.successful(None))
 
       val request = FakeRequest(GET, routes.HistoryController.retrieveFirstDisclosure("").url)
 
@@ -111,8 +109,6 @@ class HistoryControllerSpec extends SpecBase
 
     "must return an OK if there is a first disclosure available for the given arrangement ID" in {
       when(mockSubmissionDetailsRepository.retrieveFirstDisclosureForArrangementId(arrangementID))
-        .thenReturn(Future.successful(None))
-      when(mockSubmissionDetailsRepository.retrieveFirstOrReplacedDisclosureForArrangementId(arrangementID))
         .thenReturn(Future.successful(Some(initialSubmissionDetails)))
 
       val request = FakeRequest(GET, routes.HistoryController.retrieveFirstDisclosure(arrangementID).url)
@@ -123,31 +119,6 @@ class HistoryControllerSpec extends SpecBase
       contentAsJson(result) mustEqual Json.toJson(initialSubmissionDetails)
     }
 
-    "must return an OK if there is a replaced first disclosure available for the given arrangement ID" in {
-      val submissionDetails =
-        SubmissionDetails(
-          enrolmentID = "enrolmentID",
-          submissionTime = LocalDateTime.now().plusDays(1),
-          fileName = "fileName.xml",
-          arrangementID = Some(arrangementID),
-          disclosureID = Some(disclosureID),
-          importInstruction = "Replace",
-          initialDisclosureMA = false,
-          messageRefId = messageRefId
-        )
-
-      when(mockSubmissionDetailsRepository.retrieveFirstDisclosureForArrangementId(arrangementID))
-        .thenReturn(Future.successful(Some(initialSubmissionDetails)))
-      when(mockSubmissionDetailsRepository.retrieveFirstOrReplacedDisclosureForArrangementId(arrangementID, disclosureID))
-        .thenReturn(Future.successful(Some(submissionDetails)))
-
-      val request = FakeRequest(GET, routes.HistoryController.retrieveFirstDisclosure(arrangementID).url)
-
-      val result = route(application, request).value
-
-      status(result) mustEqual OK
-      contentAsJson(result) mustEqual Json.toJson(submissionDetails)
-    }
   }
 
   "searchSubmissions" - {
