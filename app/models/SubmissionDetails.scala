@@ -47,7 +47,8 @@ case class SubmissionDetails(enrolmentID: String,
                              arrangementID: Option[String],
                              disclosureID: Option[String],
                              importInstruction: String,
-                             initialDisclosureMA: Boolean)
+                             initialDisclosureMA: Boolean,
+                             messageRefId: String)
 
 object SubmissionDetails extends MongoDateTimeFormats {
 
@@ -58,7 +59,8 @@ object SubmissionDetails extends MongoDateTimeFormats {
             importInstruction: ImportInstruction,
             disclosureID: String,
             submissionTime: LocalDateTime,
-            initialDisclosureMA: Boolean): SubmissionDetails = {
+            initialDisclosureMA: Boolean,
+            messageRefId: String): SubmissionDetails = {
 
     val arrID = Option {
       ids.arrangementID.map(_.value)
@@ -77,7 +79,8 @@ object SubmissionDetails extends MongoDateTimeFormats {
       arrangementID = arrID,
       disclosureID = discID,
       importInstruction = importInstruction.toString,
-      initialDisclosureMA = initialDisclosureMA
+      initialDisclosureMA = initialDisclosureMA,
+      messageRefId = messageRefId
     )
   }
 
