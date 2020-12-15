@@ -12,3 +12,8 @@ GET        /history/search-submissions/:searchCriteria  controllers.HistoryContr
 
 POST       /subscription/display-subscription           controllers.SubscriptionController.displaySubscriptionDetails
 POST       /subscription/update-subscription            controllers.SubscriptionController.updateSubscription
+
+POST       /callback                                    controllers.UploadCallbackController.callback
+GET        /upscan/details/:uploadId                    controllers.UploadFormController.getDetails(uploadId: String)
+GET        /upscan/status/:uploadId                     controllers.UploadFormController.getStatus(uploadId: String)
+POST       /upscan/upload                               controllers.UploadFormController.requestUpload
