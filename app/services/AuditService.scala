@@ -16,43 +16,86 @@
 
 package services
 
+import config.AppConfig
+
 import javax.inject.Inject
 import models.SaxParseError
+import org.slf4j.LoggerFactory
+import play.api.libs.json.Json
 import uk.gov.hmrc.http.HeaderCarrier
-import uk.gov.hmrc.play.audit.http.connector.AuditConnector
+import uk.gov.hmrc.play.audit.AuditExtensions
+import uk.gov.hmrc.play.audit.http.connector.{AuditConnector, AuditResult}
+import uk.gov.hmrc.play.audit.http.connector.AuditResult.{Disabled, Failure}
+import uk.gov.hmrc.play.audit.model.ExtendedDataEvent
 
 import scala.concurrent.ExecutionContext
 import scala.xml.NodeSeq
 
-class AuditService @Inject()(auditConnector: AuditConnector)(implicit ec: ExecutionContext) {
-  private val auditType = "disclosureFileSubmission"
-  private val emptyMap: Map[String, String] = Map.empty
-
-  type MapCont = Map[String, String] => Map[String, String]
-
-  def withSubmissionFile(submissionFile: NodeSeq): MapCont = _ + ("submissionFile" -> submissionFile.toString)
-  def withTransformedFile(transformedFile: NodeSeq): MapCont = _ + ("transformedFile" -> transformedFile.toString)
+class AuditService @Inject()(appConfig: AppConfig, auditConnector: AuditConnector)(implicit ec: ExecutionContext) {
+  private val logger = LoggerFactory.getLogger(getClass)
 
   def submissionAudit(submissionFile: NodeSeq, transformedFile: NodeSeq)(implicit hc: HeaderCarrier): Unit = {
+    val auditType = "Transform"
+    val transactionName = "/disclose-cross-border-arrangements/transform"
+    val path = "/disclose-cross-border-arrangements/transform"
 
-    val auditMap: Map[String, String] = (
-      withSubmissionFile(submissionFile) andThen
-        withTransformedFile(transformedFile)
-      )(emptyMap)
+    val json = Json.obj(
+      "submissionFile" -> submissionFile.toString,
+            "transformedFile" -> transformedFile.toString
+            )
 
-    auditConnector.sendExplicitAudit(auditType, auditMap)
+    auditConnector.sendExtendedEvent(ExtendedDataEvent(
+      auditSource = appConfig.appName,
+      auditType = auditType,
+      detail = json,
+      tags = AuditExtensions.auditHeaderCarrier(hc).toAuditDetails()
+        ++ AuditExtensions.auditHeaderCarrier(hc).toAuditTags(transactionName, path)
+    )) map { ar: AuditResult => ar match {
+      case Failure(msg, ex) =>
+        ex match {
+          case Some(throwable) =>
+            logger.warn(s"The attempt to issue audit event $auditType failed with message : $msg", throwable)
+          case None =>
+            logger.warn(s"The attempt to issue audit event $auditType failed with message : $msg")
+        }
+        ar
+      case Disabled =>
+        logger.warn(s"The attempt to issue audit event $auditType was unsuccessful, as auditing is currently disabled in config"); ar
+      case _ => logger.debug(s"Audit event $auditType issued successfully."); ar
+    }}
   }
 
   def auditValidationFailures(subscriptionID: String, errors: Seq[SaxParseError])(implicit hc: HeaderCarrier): Unit = {
+    val auditType = "Validation"
+    val transactionName = "/disclose-cross-border-arrangements/validation"
+    val path = "/disclose-cross-border-arrangements/validation"
 
-    val auditMap: Map[String, String] = Map(
+    val auditJson = Json.obj(
       "subscriptionID" -> subscriptionID,
       "validationErrors" -> errors
         .map(error => s"${error.lineNumber}: ${error.errorMessage}")
         .mkString(",")
     )
 
-    auditConnector.sendExplicitAudit(auditType, auditMap)
+    auditConnector.sendExtendedEvent(ExtendedDataEvent(
+      auditSource = appConfig.appName,
+      auditType = auditType,
+      detail = auditJson,
+      tags = AuditExtensions.auditHeaderCarrier(hc).toAuditDetails()
+      ++ AuditExtensions.auditHeaderCarrier(hc).toAuditTags(transactionName, path)
+    )) map { ar: AuditResult => ar match {
+        case Failure(msg, ex) =>
+        ex match {
+        case Some(throwable) =>
+        logger.warn(s"The attempt to issue audit event $auditType failed with message : $msg", throwable)
+        case None =>
+        logger.warn(s"The attempt to issue audit event $auditType failed with message : $msg")
+      }
+        ar
+        case Disabled =>
+        logger.warn(s"The attempt to issue audit event $auditType was unsuccessful, as auditing is currently disabled in config"); ar
+        case _ => logger.debug(s"Audit event $auditType issued successsfully."); ar
+      }}
   }
 
 }

@@ -22,10 +22,12 @@ import org.mockito.Mockito.{times, verify, _}
 import org.scalatestplus.mockito.MockitoSugar
 import play.api.inject
 import play.api.inject.guice.GuiceApplicationBuilder
+import play.api.libs.json.Json
 import uk.gov.hmrc.http.HeaderCarrier
-import uk.gov.hmrc.play.audit.http.connector.AuditConnector
+import uk.gov.hmrc.play.audit.http.connector.{AuditConnector, AuditResult}
+import uk.gov.hmrc.play.audit.model.ExtendedDataEvent
 
-import scala.concurrent.ExecutionContext
+import scala.concurrent.{ExecutionContext, Future}
 
 class AuditServiceSpec extends SpecBase with MockitoSugar {
 
@@ -57,16 +59,22 @@ class AuditServiceSpec extends SpecBase with MockitoSugar {
 
           val auditService = app.injector.instanceOf[AuditService]
 
-          val argumentCaptorData: ArgumentCaptor[Map[String, String]] = ArgumentCaptor.forClass(classOf[Map[String, String]])
+          val argumentCaptorData: ArgumentCaptor[ExtendedDataEvent] = ArgumentCaptor.forClass(classOf[ExtendedDataEvent])
 
-          doNothing().when(auditConnector).sendExplicitAudit(any[String], any[Map[String, String]])(any[HeaderCarrier], any[ExecutionContext])
+          when(auditConnector.sendExtendedEvent(any())(any[HeaderCarrier], any[ExecutionContext]))
+            .thenReturn(Future.successful(AuditResult.Success))
 
           auditService.submissionAudit(xml, xml)
 
           verify(auditConnector, times(1))
-            .sendExplicitAudit(any[String], argumentCaptorData.capture())(any[HeaderCarrier], any[ExecutionContext])
+            .sendExtendedEvent(argumentCaptorData.capture())(any[HeaderCarrier], any[ExecutionContext])
 
-          argumentCaptorData.getValue mustBe Map("submissionFile" -> xml.toString, "transformedFile" -> xml.toString)
+          val expectedJson = Json.obj(
+            "submissionFile" -> xml.toString,
+            "transformedFile" -> xml.toString
+          )
+
+          argumentCaptorData.getValue.detail mustBe expectedJson
 
         }
     }
