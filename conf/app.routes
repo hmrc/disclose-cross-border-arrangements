@@ -12,6 +12,8 @@ GET        /history/search-submissions/:searchCriteria  controllers.HistoryContr
 
 POST       /subscription/display-subscription           controllers.SubscriptionController.displaySubscriptionDetails
 POST       /subscription/update-subscription            controllers.SubscriptionController.updateSubscription
+POST       /subscription/cache-subscription             controllers.CacheController.storeSubscriptionDetails
+POST       /subscription/retrieve-subscription          controllers.CacheController.retrieveSubscription
 
 POST       /callback                                    controllers.UploadCallbackController.callback
 GET        /upscan/details/:uploadId                    controllers.UploadFormController.getDetails(uploadId: String)

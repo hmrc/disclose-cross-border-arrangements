@@ -26,30 +26,12 @@ import uk.gov.hmrc.http.HeaderCarrier
 
 import scala.concurrent.{ExecutionContext, Future}
 
-class ContactService @Inject()(subscriptionConnector: SubscriptionConnector) {
+class ContactService @Inject()(subscriptionCacheService: SubscriptionCacheService,
+                               subscriptionConnector: SubscriptionConnector) {
 
-  //TODO: find where to get latest contact data from
-  def getLatestContacts(enrolmentID: String)(implicit hc: HeaderCarrier, ex: ExecutionContext): Future[SubscriptionDetails] = {
+  def getLatestContacts(enrolmentID: String)(implicit request: UserRequest[_], hc:HeaderCarrier, ex: ExecutionContext): Future[SubscriptionDetails] = {
 
-
-    val subscriptionForDACRequest: DisplaySubscriptionForDACRequest =
-      DisplaySubscriptionForDACRequest(DisplaySubscriptionDetails(
-        RequestCommon.createRequestCommon,
-        RequestDetail(
-          IDType = "DAC",
-          IDNumber = enrolmentID)
-      ))
-
-    subscriptionConnector.displaySubscriptionForDAC(subscriptionForDACRequest).map {
-      response =>
-        response.status match {
-          case OK => response.json.validate[DisplaySubscriptionForDACResponse] match {
-            case JsSuccess(response, _) => Some(response)
-            case JsError(_) => None
-          }
-          case _ => None
-        }
-    } map {
+    retrieveContactFromCacheOrHOD(enrolmentID: String) map {
       retrievedSubscription =>
         retrievedSubscription.map {
           sub =>
@@ -64,7 +46,30 @@ class ContactService @Inject()(subscriptionConnector: SubscriptionConnector) {
           )
 
         } getOrElse(throw new Exception("Failed to retrieve and convert subscription"))
+    }
+  }
 
+  def retrieveContactFromCacheOrHOD(enrolmentID: String)(implicit request: UserRequest[_], hc:HeaderCarrier, ex: ExecutionContext):Future[Option[DisplaySubscriptionForDACResponse]] = {
+    val subscriptionForDACRequest: DisplaySubscriptionForDACRequest =
+      DisplaySubscriptionForDACRequest(DisplaySubscriptionDetails(
+        RequestCommon.createRequestCommon,
+        RequestDetail(
+          IDType = "DAC",
+          IDNumber = enrolmentID)
+      ))
+
+    subscriptionCacheService.retrieveSubscriptionDetails(request.identifier).flatMap {
+      case Some(a) => Future.successful(Some(a))
+      case None => subscriptionConnector.displaySubscriptionForDAC(subscriptionForDACRequest).map {
+        response =>
+          response.status match {
+            case OK => response.json.validate[DisplaySubscriptionForDACResponse] match {
+              case JsSuccess(response, _) => Some(response)
+              case JsError(_) => None
+            }
+            case _ => None
+          }
+      }
     }
   }
 

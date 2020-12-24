@@ -18,10 +18,9 @@ package controllers
 
 import java.time.LocalDateTime
 import java.util.UUID
-
 import base.SpecBase
 import connectors.SubmissionConnector
-import controllers.auth.{AuthAction, FakeAuthAction}
+import controllers.auth.{AuthAction, FakeAuthAction, FakeIdentifierAuthAction, IdentifierAuthAction}
 import helpers.SubmissionFixtures.{minimalPassing, oneError}
 import helpers.{ContactFixtures, DateHelper}
 import models.{DisclosureId, GeneratedIDs, SubmissionDetails, SubmissionMetaData}
@@ -77,7 +76,7 @@ class SubmissionControllerSpec extends SpecBase
         bind[SubmissionDetailsRepository].toInstance(mockSubmissionDetailsRepository),
         bind[SubmissionConnector].toInstance(mockSubmissionConnector),
         bind[ContactService].toInstance(mockContactService),
-        bind[AuthAction].to[FakeAuthAction]
+        bind[IdentifierAuthAction].to[FakeIdentifierAuthAction]
       )
       .build()
 
@@ -90,7 +89,7 @@ class SubmissionControllerSpec extends SpecBase
       when(mockDateHelper.now).thenReturn(testDateTime)
       when(mockSubmissionDetailsRepository.storeSubmissionDetails(any()))
         .thenReturn(Future.successful(true))
-      when(mockContactService.getLatestContacts(any())(any(), any()))
+      when(mockContactService.getLatestContacts(any())(any(), any(), any()))
         .thenReturn(Future.successful(ContactFixtures.contact))
       when(mockSubmissionConnector.submitDisclosure(any())(any()))
         .thenReturn(Future.successful(HttpResponse(OK, "")))
@@ -117,7 +116,7 @@ class SubmissionControllerSpec extends SpecBase
       when(mockSubmissionService.generateIDsForInstruction(any()))
         .thenReturn(Future.successful(GeneratedIDs(None, Some(DisclosureId("GBD", "20200601", "AAA000")))))
       when(mockDateHelper.now).thenReturn(testDateTime)
-      when(mockContactService.getLatestContacts(any())(any(), any()))
+      when(mockContactService.getLatestContacts(any())(any(), any(), any()))
         .thenReturn(Future.failed(new Exception("Failed to retrieve and convert subscription")))
       when(mockSubmissionConnector.submitDisclosure(any())(any()))
         .thenReturn(Future.failed(UpstreamErrorResponse("", INTERNAL_SERVER_ERROR)))
@@ -135,7 +134,7 @@ class SubmissionControllerSpec extends SpecBase
       when(mockSubmissionService.generateIDsForInstruction(any()))
         .thenReturn(Future.successful(GeneratedIDs(None, Some(DisclosureId("GBD", "20200601", "AAA000")))))
       when(mockDateHelper.now).thenReturn(testDateTime)
-      when(mockContactService.getLatestContacts(any())(any(), any()))
+      when(mockContactService.getLatestContacts(any())(any(), any(), any()))
         .thenReturn(Future.successful(ContactFixtures.contact))
       when(mockSubmissionConnector.submitDisclosure(any())(any()))
         .thenReturn(Future.failed(UpstreamErrorResponse("", INTERNAL_SERVER_ERROR)))
@@ -153,7 +152,7 @@ class SubmissionControllerSpec extends SpecBase
       when(mockSubmissionService.generateIDsForInstruction(any()))
         .thenReturn(Future.successful(GeneratedIDs(None, Some(DisclosureId("GBD", "20200601", "AAA000")))))
       when(mockDateHelper.now).thenReturn(testDateTime)
-      when(mockContactService.getLatestContacts(any())(any(), any()))
+      when(mockContactService.getLatestContacts(any())(any(), any(), any()))
         .thenReturn(Future.successful(ContactFixtures.contact))
       when(mockSubmissionConnector.submitDisclosure(any())(any()))
         .thenReturn(Future.failed(UpstreamErrorResponse("", INTERNAL_SERVER_ERROR)))
@@ -173,7 +172,7 @@ class SubmissionControllerSpec extends SpecBase
       when(mockDateHelper.now).thenReturn(testDateTime)
       when(mockSubmissionDetailsRepository.storeSubmissionDetails(any()))
         .thenReturn(Future.successful(false))
-      when(mockContactService.getLatestContacts(any())(any(), any()))
+      when(mockContactService.getLatestContacts(any())(any(), any(), any()))
         .thenReturn(Future.successful(ContactFixtures.contact))
       when(mockSubmissionConnector.submitDisclosure(any())(any()))
         .thenReturn(Future.successful(HttpResponse(OK, "")))
@@ -198,14 +197,14 @@ class SubmissionControllerSpec extends SpecBase
           bind[SubmissionConnector].toInstance(mockSubmissionConnector),
           bind[ContactService].toInstance(mockContactService),
           bind[TransformService].toInstance(mockTransformService),
-          bind[AuthAction].to[FakeAuthAction]
+          bind[IdentifierAuthAction].to[FakeIdentifierAuthAction]
         )
         .build()
 
       when(mockSubmissionService.generateIDsForInstruction(any()))
         .thenReturn(Future.successful(GeneratedIDs(None, Some(DisclosureId("GBD", "20200601", "AAA000")))))
       when(mockDateHelper.now).thenReturn(testDateTime)
-      when(mockContactService.getLatestContacts(any())(any(), any()))
+      when(mockContactService.getLatestContacts(any())(any(), any(), any()))
         .thenReturn(Future.successful(ContactFixtures.contact))
       when(mockSubmissionConnector.submitDisclosure(any())(any()))
         .thenReturn(Future.failed(UpstreamErrorResponse("", INTERNAL_SERVER_ERROR)))
@@ -236,14 +235,14 @@ class SubmissionControllerSpec extends SpecBase
           bind[SubmissionConnector].toInstance(mockSubmissionConnector),
           bind[ContactService].toInstance(mockContactService),
           bind[TransformService].toInstance(mockTransformService),
-          bind[AuthAction].to[FakeAuthAction]
+          bind[IdentifierAuthAction].to[FakeIdentifierAuthAction]
         )
         .build()
 
       when(mockSubmissionService.generateIDsForInstruction(any()))
         .thenReturn(Future.successful(GeneratedIDs(None, Some(DisclosureId("GBD", "20200601", "AAA000")))))
       when(mockDateHelper.now).thenReturn(testDateTime)
-      when(mockContactService.getLatestContacts(any())(any(), any()))
+      when(mockContactService.getLatestContacts(any())(any(), any(), any()))
         .thenReturn(Future.successful(ContactFixtures.contact))
       when(mockSubmissionConnector.submitDisclosure(any())(any()))
         .thenReturn(Future.failed(UpstreamErrorResponse("", INTERNAL_SERVER_ERROR)))

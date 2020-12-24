@@ -17,10 +17,10 @@
 package controllers
 
 import java.util.UUID
-
 import connectors.SubmissionConnector
-import controllers.auth.AuthAction
+import controllers.auth.{AuthAction, IdentifierAuthAction}
 import helpers.DateHelper
+
 import javax.inject.Inject
 import models._
 import org.slf4j.LoggerFactory
@@ -37,7 +37,7 @@ import scala.util.{Success, Try}
 import scala.xml.NodeSeq
 
 class SubmissionController @Inject()(
-                                      authenticate: AuthAction,
+                                      authenticate: IdentifierAuthAction,
                                       cc: ControllerComponents,
                                       submissionService: SubmissionService,
                                       transformService: TransformService,

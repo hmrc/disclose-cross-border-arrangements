@@ -17,7 +17,6 @@
 package generators
 
 import java.time.LocalDateTime
-
 import models._
 import models.subscription._
 import org.scalacheck.Arbitrary.arbitrary

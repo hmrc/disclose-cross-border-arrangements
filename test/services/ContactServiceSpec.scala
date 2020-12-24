@@ -16,39 +16,49 @@
 
 package services
 
+import models.UserRequest
 import base.SpecBase
 import connectors.SubscriptionConnector
 import helpers.JsonFixtures.contactsResponse
 import models.SubscriptionDetails
-import models.subscription.{ContactInformationForIndividual, ContactInformationForOrganisation, IndividualDetails, OrganisationDetails}
+import models.subscription.{ContactInformationForIndividual, ContactInformationForOrganisation, DisplaySubscriptionForDACResponse, IndividualDetails, OrganisationDetails, PrimaryContact, ResponseCommon, ResponseDetail, SecondaryContact, SubscriptionForDACResponse}
 import org.mockito.Matchers.any
-import org.mockito.Mockito.when
+import org.mockito.Mockito.{reset, times, verify, when}
+import org.scalatest.BeforeAndAfterEach
 import org.scalatestplus.mockito.MockitoSugar
 import play.api.http.Status._
 import play.api.inject.bind
+import play.api.test.FakeRequest
 import uk.gov.hmrc.http.HttpResponse
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
 class ContactServiceSpec extends SpecBase
-  with MockitoSugar {
+  with MockitoSugar
+  with BeforeAndAfterEach {
+
+  override def beforeEach(): Unit = reset(mockSubscriptionConnector, mockSubscriptionCacheService)
 
   val mockSubscriptionConnector = mock[SubscriptionConnector]
+  val mockSubscriptionCacheService = mock[SubscriptionCacheService]
 
   "Contact Service Spec" - {
     val application = applicationBuilder()
       .overrides(
-        bind[SubscriptionConnector].toInstance(mockSubscriptionConnector)
+        bind[SubscriptionConnector].toInstance(mockSubscriptionConnector),
+        bind[SubscriptionCacheService].toInstance(mockSubscriptionCacheService)
       )
       .build()
 
-    "must correctly retrieve subscription" in {
+    "must correctly retrieve subscription from connector when not present in cache" in {
       val service = application.injector.instanceOf[ContactService]
 
       when(mockSubscriptionConnector.displaySubscriptionForDAC(any())(any(), any()))
         .thenReturn(Future.successful(HttpResponse(OK, contactsResponse)))
 
+      when(mockSubscriptionCacheService.retrieveSubscriptionDetails(any())(any()))
+        .thenReturn(Future.successful(None))
 
       val expectedSubscriptionDetails = SubscriptionDetails("111111111",
         Some(""),
@@ -56,10 +66,49 @@ class ContactServiceSpec extends SpecBase
         ContactInformationForIndividual(IndividualDetails("First", "Last", None), "", Some(""), Some("")),
         Some(ContactInformationForOrganisation(OrganisationDetails(""), "", None, None)))
 
+      implicit val userRequest = UserRequest("", FakeRequest())
+
       val result = service.getLatestContacts("111111111")
 
       whenReady(result) {
-        sub => sub mustBe expectedSubscriptionDetails
+        sub =>
+          sub mustBe expectedSubscriptionDetails
+          verify(mockSubscriptionCacheService, times(1)).retrieveSubscriptionDetails(any())(any())
+          verify(mockSubscriptionConnector, times(1)).displaySubscriptionForDAC(any())(any(), any())
+      }
+    }
+
+    "must correctly retrieve subscription when present in cache" in {
+      val service = application.injector.instanceOf[ContactService]
+
+      when(mockSubscriptionConnector.displaySubscriptionForDAC(any())(any(), any()))
+        .thenReturn(Future.successful(HttpResponse(OK, contactsResponse)))
+
+      when(mockSubscriptionCacheService.retrieveSubscriptionDetails(any())(any()))
+        .thenReturn(Future.successful(Some(DisplaySubscriptionForDACResponse(
+          SubscriptionForDACResponse(
+            ResponseCommon("", None, "", None),
+            ResponseDetail("111111111",Some(""),
+              true,
+              PrimaryContact(Seq(ContactInformationForIndividual(IndividualDetails("First", "Last", None), "", Some(""), Some("")))),
+              Some(SecondaryContact(Seq(ContactInformationForOrganisation(OrganisationDetails(""), "", None, None)))))
+          )))))
+
+      val subscriptionDetails = SubscriptionDetails("111111111",
+        Some(""),
+        true,
+        ContactInformationForIndividual(IndividualDetails("First", "Last", None), "", Some(""), Some("")),
+        Some(ContactInformationForOrganisation(OrganisationDetails(""), "", None, None)))
+
+      implicit val userRequest = UserRequest("", FakeRequest())
+
+      val result = service.getLatestContacts("111111111")
+
+      whenReady(result) {
+        sub =>
+          sub mustBe subscriptionDetails
+          verify(mockSubscriptionCacheService, times(1)).retrieveSubscriptionDetails(any())(any())
+          verify(mockSubscriptionConnector, times(0)).displaySubscriptionForDAC(any())(any(), any())
       }
     }
   }
