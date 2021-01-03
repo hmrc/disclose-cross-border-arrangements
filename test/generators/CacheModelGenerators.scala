@@ -16,6 +16,7 @@
 
 package generators
 
+import models.subscription.{DisplaySubscriptionDetails, DisplaySubscriptionForDACRequest}
 import models.subscription.cache._
 import org.scalacheck.Arbitrary.arbitrary
 import org.scalacheck.{Arbitrary, Gen}
@@ -107,5 +108,34 @@ trait CacheModelGenerators extends BaseGenerators with JavaTimeGenerators {
       originatingSystem <- arbitrary[String]
       requestParameters <- arbitrary[Option[Seq[RequestParameter]]]
     } yield RequestCommonForSubscription(regime, receiptDate, acknowledgementReference, originatingSystem, requestParameters)
+  }
+
+  implicit lazy val arbitraryDisplaySubscriptionForDACRequest: Arbitrary[DisplaySubscriptionForDACRequest] = {
+    Arbitrary {
+      for {
+        idNumber <- stringsWithMaxLength(30)
+        conversationID <- Gen.option(stringsWithMaxLength(36))
+        receiptDate <- arbitrary[String]
+        acknowledgementReference <- arbitrary[String]
+        originatingSystem <- arbitrary[String]
+      } yield {
+        DisplaySubscriptionForDACRequest(
+          DisplaySubscriptionDetails(
+            requestCommon = models.subscription.RequestCommon(
+              regime = "DAC",
+              conversationID = conversationID,
+              receiptDate = receiptDate,
+              acknowledgementReference = acknowledgementReference,
+              originatingSystem = originatingSystem,
+              requestParameters = None
+            ),
+            requestDetail = models.subscription.RequestDetail(
+              IDType = "DAC",
+              IDNumber = idNumber
+            )
+          )
+        )
+      }
+    }
   }
 }
