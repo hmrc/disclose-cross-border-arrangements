@@ -1,5 +1,5 @@
 /*
- * Copyright 2020 HM Revenue & Customs
+ * Copyright 2021 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -48,7 +48,7 @@ class CacheController @Inject()(
       subscriptionRequest.fold(
         invalid = errors => Future.successful(BadRequest("")),
         valid = createSubscription =>
-          subscriptionCacheService.storeSubscriptionDetails(request.identifier, createSubscription).map {
+          subscriptionCacheService.storeSubscriptionDetails(createSubscription.subscriptionID, createSubscription).map {
             _ => Ok
           }
       )
@@ -63,7 +63,7 @@ class CacheController @Inject()(
       displaySubscriptionResult.fold(
         invalid = _ => Future.successful(BadRequest("")),
         valid = subResult =>
-          subscriptionCacheService.retrieveSubscriptionDetails(request.identifier).flatMap {
+          subscriptionCacheService.retrieveSubscriptionDetails(subResult.displaySubscriptionForDACRequest.requestDetail.IDNumber).flatMap {
             case Some(result) => Future.successful(Ok(Json.toJson(result)))
             case None => for {
               httpResponse <- subscriptionConnector.displaySubscriptionForDAC(subResult)
