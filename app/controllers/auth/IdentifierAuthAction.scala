@@ -18,28 +18,31 @@ package controllers.auth
 
 import com.google.inject.ImplementedBy
 import controllers.Assets.Status
-import javax.inject.Inject
+import models.UserRequest
 import org.slf4j.LoggerFactory
 import play.api.http.Status.UNAUTHORIZED
-import play.api.mvc._
+import play.api.mvc.{ActionBuilder, ActionFunction, AnyContent, BodyParsers, Request, Result}
 import uk.gov.hmrc.auth.core.{AuthConnector, AuthorisedFunctions, NoActiveSession}
+import uk.gov.hmrc.auth.core.retrieve.v2.Retrievals
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.play.HeaderCarrierConverter
 
+import javax.inject.Inject
 import scala.concurrent.{ExecutionContext, Future}
 
-class AuthActionImpl @Inject()(override val authConnector: AuthConnector,
-                               val parser: BodyParsers.Default
+class IdentifierAuthActionImpl @Inject()(
+                                          override val authConnector: AuthConnector,
+                                          val parser: BodyParsers.Default
                               )(implicit val executionContext: ExecutionContext)
-extends AuthAction with AuthorisedFunctions {
+  extends IdentifierAuthAction with AuthorisedFunctions {
   private val logger = LoggerFactory.getLogger(getClass)
 
-  override def invokeBlock[A](request: Request[A], block: Request[A] => Future[Result]): Future[Result] = {
-
+  override def invokeBlock[A](request: Request[A], block: UserRequest[A] => Future[Result]): Future[Result] = {
     implicit val hc: HeaderCarrier = HeaderCarrierConverter.fromHeadersAndSession(request.headers)
 
-    authorised() {
-      block(request)
+    authorised().retrieve(Retrievals.internalId) {
+      case Some(internalID) => block(UserRequest(internalID, request))
+      case None => Future.successful(Status(UNAUTHORIZED))
     } recover {
       case _: NoActiveSession =>
         Status(UNAUTHORIZED)
@@ -48,5 +51,5 @@ extends AuthAction with AuthorisedFunctions {
 
 }
 
-@ImplementedBy(classOf[AuthActionImpl])
-trait AuthAction extends ActionBuilder[Request, AnyContent] with ActionFunction[Request, Request]
+@ImplementedBy(classOf[IdentifierAuthActionImpl])
+trait IdentifierAuthAction extends ActionBuilder[UserRequest, AnyContent] with ActionFunction[Request, UserRequest]

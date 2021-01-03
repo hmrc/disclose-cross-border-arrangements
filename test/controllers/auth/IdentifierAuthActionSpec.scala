@@ -18,26 +18,26 @@ package controllers.auth
 
 import akka.util.Timeout
 import org.mockito.Matchers.any
-import org.mockito.Mockito._
+import org.mockito.Mockito.when
 import org.scalatestplus.mockito.MockitoSugar
 import org.scalatestplus.play.PlaySpec
 import org.scalatestplus.play.guice.GuiceOneAppPerSuite
-import play.api.http.Status.{OK, UNAUTHORIZED}
+import play.api.{Application, Configuration}
 import play.api.inject.bind
 import play.api.inject.guice.GuiceApplicationBuilder
 import play.api.mvc.{Action, AnyContent, InjectedController}
 import play.api.test.FakeRequest
 import play.api.test.Helpers.status
-import play.api.{Application, Configuration}
 import uk.gov.hmrc.auth.core.{AuthConnector, MissingBearerToken}
+import play.api.http.Status.{OK, UNAUTHORIZED}
 
 import scala.concurrent.Future
 import scala.concurrent.duration._
 import scala.language.postfixOps
 
-class AuthActionSpec extends PlaySpec with GuiceOneAppPerSuite with MockitoSugar {
+class IdentifierAuthActionSpec extends PlaySpec with GuiceOneAppPerSuite with MockitoSugar {
 
-  class Harness(authAction: AuthAction) extends InjectedController {
+  class Harness(authAction: IdentifierAuthAction) extends InjectedController {
     def onPageLoad(): Action[AnyContent] = authAction { _ =>
       Ok
     }
@@ -53,13 +53,13 @@ class AuthActionSpec extends PlaySpec with GuiceOneAppPerSuite with MockitoSugar
       bind[AuthConnector].toInstance(mockAuthConnector)
     ).build()
 
-  "Auth Action" when {
+  "Identifier Auth Action" when {
     "the user is not logged in" must {
       "must return unauthorised" in {
         when(mockAuthConnector.authorise(any(), any())(any(), any()))
           .thenReturn(Future.failed(new MissingBearerToken))
 
-        val authAction = application.injector.instanceOf[AuthAction]
+        val authAction = application.injector.instanceOf[IdentifierAuthAction]
         val controller = new Harness(authAction)
         val result = controller.onPageLoad()(FakeRequest("", ""))
         status(result) mustBe UNAUTHORIZED
@@ -69,10 +69,10 @@ class AuthActionSpec extends PlaySpec with GuiceOneAppPerSuite with MockitoSugar
 
     "the user is logged in" must {
       "must return the request" in {
-        when(mockAuthConnector.authorise[Unit](any(), any())(any(), any()))
-          .thenReturn(Future.successful(()))
+        when(mockAuthConnector.authorise[Option[String]](any(), any())(any(), any()))
+          .thenReturn(Future.successful(Some("internalID")))
 
-        val authAction = application.injector.instanceOf[AuthAction]
+        val authAction = application.injector.instanceOf[IdentifierAuthAction]
         val controller = new Harness(authAction)
 
         val result = controller.onPageLoad()(FakeRequest("", ""))

@@ -1,5 +1,5 @@
 /*
- * Copyright 2020 HM Revenue & Customs
+ * Copyright 2021 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,6 +16,8 @@
 
 package controllers.auth
 
+import models.UserRequest
+
 import javax.inject.Inject
 import play.api.mvc.{BodyParsers, Request, Result}
 
@@ -26,4 +28,13 @@ class FakeAuthAction @Inject()(
                               )(implicit val executionContext: ExecutionContext) extends AuthAction {
   override def invokeBlock[A](request: Request[A], block: Request[A] => Future[Result]): Future[Result] =
     block(request)
+}
+
+
+
+class FakeIdentifierAuthAction @Inject()(
+                                val parser: BodyParsers.Default
+                              )(implicit val executionContext: ExecutionContext) extends IdentifierAuthAction {
+  override def invokeBlock[A](request: Request[A], block: UserRequest[A] => Future[Result]): Future[Result] =
+    block(UserRequest("internal-id", request))
 }

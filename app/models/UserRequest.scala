@@ -14,12 +14,8 @@
  * limitations under the License.
  */
 
-import uk.gov.hmrc.http.{HttpReads, HttpResponse}
+package models
 
-package object connectors {
-  implicit val httpReads: HttpReads[HttpResponse] =
-    new HttpReads[HttpResponse] {
-      override def read(method: String, url: String, response: HttpResponse): HttpResponse =
-        response
-    }
-}
+import play.api.mvc.{Request, WrappedRequest}
+
+case class UserRequest[+A](identifier: String, request: Request[A]) extends WrappedRequest[A](request)

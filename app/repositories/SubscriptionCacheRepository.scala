@@ -16,29 +16,30 @@
 
 package repositories
 
-import models.upscan._
+import models.subscription.cache.CreateSubscriptionForDACRequest
 import play.api.Configuration
-import play.api.libs.json._
+import play.api.libs.json.Json
 import play.modules.reactivemongo.ReactiveMongoApi
 import reactivemongo.api.indexes.IndexType
-import reactivemongo.play.json.ImplicitBSONHandlers.JsObjectDocumentWriter
 import reactivemongo.play.json.collection.JSONCollection
+import reactivemongo.play.json.ImplicitBSONHandlers.JsObjectDocumentWriter
 
+import java.time.LocalDateTime
 import javax.inject.Inject
 import scala.concurrent.{ExecutionContext, Future}
 
-class UploadSessionRepository @Inject()(mongo: ReactiveMongoApi,
-                                        config: Configuration)(implicit ec: ExecutionContext) {
+class SubscriptionCacheRepository @Inject()(mongo: ReactiveMongoApi,
+                                            config: Configuration)(implicit ec: ExecutionContext) {
 
-  private val collectionName = "uploadSessionRepository"
-  private val cacheTtl = config.get[Int]("mongodb.timeToLiveInSeconds")
+  private val collectionName = "subscriptionCacheRepository"
+  private val cacheTtl = config.get[Int]("mongodb.subscriptionCacheTTLInSeconds")
 
   private def collection: Future[JSONCollection] =
     mongo.database.map(_.collection[JSONCollection](collectionName))
 
   private val lastUpdatedIndex = IndexUtils.index(
     key     = Seq("lastUpdated" -> IndexType.Ascending),
-    name    = Some("upload-last-updated-index"),
+    name    = Some("subscription-last-updated-index"),
     expireAfterSeconds = Some(cacheTtl)
   )
 
@@ -47,15 +48,18 @@ class UploadSessionRepository @Inject()(mongo: ReactiveMongoApi,
       _.indexesManager.ensure(lastUpdatedIndex)
     }.map(_ => ())
 
-  def findByUploadId(uploadId: UploadId): Future[Option[UploadSessionDetails]] = {
-    collection.flatMap(_.find(Json.obj("uploadId" -> Json.toJson(uploadId)), None).one[UploadSessionDetails])
-  }
+  def get(id: String): Future[Option[CreateSubscriptionForDACRequest]] =
+    collection.flatMap(_.find(Json.obj("_id" -> id), None).one[CreateSubscriptionForDACRequest])
 
-  def updateStatus(reference : Reference, newStatus : UploadStatus): Future[Boolean] = {
+  def set(id: String, subscription: CreateSubscriptionForDACRequest): Future[Boolean] = {
 
-    implicit val referenceFormatter = Json.format[Reference]
-    val selector = Json.obj("reference" -> Json.toJson(reference))
-    val modifier = Json.obj("$set" -> Json.obj("status" -> Json.toJson(newStatus)))
+    val selector = Json.obj(
+      "_id" -> id
+    )
+
+    val modifier = Json.obj(
+      "$set" -> (subscription copy (lastUpdated = LocalDateTime.now))
+    )
 
     collection.flatMap {
       _.update(ordered = false)
@@ -65,11 +69,5 @@ class UploadSessionRepository @Inject()(mongo: ReactiveMongoApi,
       }
     }
   }
-
-  def insert(uploadDetails: UploadSessionDetails): Future[Boolean] = {
-    collection.flatMap(_.insert.one(uploadDetails)).map {
-      lastError =>
-        lastError.ok
-    }
-  }
 }
+

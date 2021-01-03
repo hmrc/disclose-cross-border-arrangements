@@ -17,64 +17,59 @@
 package controllers
 
 import connectors.SubscriptionConnector
-import controllers.auth.AuthAction
-import javax.inject.Inject
+import controllers.auth.IdentifierAuthAction
 import models.ErrorDetails
-import models.subscription.{DisplaySubscriptionForDACRequest, UpdateSubscriptionForDACRequest}
+import models.subscription.DisplaySubscriptionForDACRequest
+import models.subscription.cache.CreateSubscriptionForDACRequest
 import play.api.Logger
 import play.api.libs.json.{JsResult, JsSuccess, JsValue, Json}
 import play.api.mvc.{Action, ControllerComponents, Result}
-import uk.gov.hmrc.http.{HeaderCarrier, HttpResponse}
-import uk.gov.hmrc.play.HeaderCarrierConverter
+import services.SubscriptionCacheService
+import uk.gov.hmrc.http.HttpResponse
 import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
 
+import javax.inject.Inject
 import scala.concurrent.{ExecutionContext, Future}
 import scala.util.{Success, Try}
 
-class SubscriptionController @Inject()(
-                                        authenticate: AuthAction,
-                                        subscriptionConnector: SubscriptionConnector,
-                                        cc: ControllerComponents
-                                      )(implicit ec: ExecutionContext) extends BackendController(cc) {
+class CacheController @Inject()(
+                                 authenticate: IdentifierAuthAction,
+                                 subscriptionCacheService: SubscriptionCacheService,
+                                 subscriptionConnector: SubscriptionConnector,
+                                 cc: ControllerComponents
+                               )(implicit ec: ExecutionContext) extends BackendController(cc) {
 
   private val logger: Logger = Logger(this.getClass)
 
-  def displaySubscriptionDetails: Action[JsValue] = authenticate(parse.json).async {
+  def storeSubscriptionDetails: Action[JsValue] = authenticate(parse.json).async {
     implicit request =>
+      val subscriptionRequest = request.request.body.validate[CreateSubscriptionForDACRequest]
 
-      implicit val hc: HeaderCarrier =
-        HeaderCarrierConverter.fromHeadersAndSession(request.headers, Some(request.session))
+      subscriptionRequest.fold(
+        invalid = errors => Future.successful(BadRequest("")),
+        valid = createSubscription =>
+          subscriptionCacheService.storeSubscriptionDetails(createSubscription.subscriptionID, createSubscription).map {
+            _ => Ok
+          }
+      )
+  }
+
+  def retrieveSubscription: Action[JsValue] = authenticate(parse.json).async {
+    implicit request =>
 
       val displaySubscriptionResult: JsResult[DisplaySubscriptionForDACRequest] =
         request.body.validate[DisplaySubscriptionForDACRequest]
 
       displaySubscriptionResult.fold(
         invalid = _ => Future.successful(BadRequest("")),
-        valid = request =>
-          for {
-            httpResponse <- subscriptionConnector.displaySubscriptionForDAC(request)
-          } yield {
-            convertToResult(httpResponse)
-          }
-      )
-  }
-
-  def updateSubscription(): Action[JsValue] = Action(parse.json).async {
-    implicit request =>
-
-      implicit val hc: HeaderCarrier =
-        HeaderCarrierConverter.fromHeadersAndSession(request.headers, Some(request.session))
-
-      val displaySubscriptionResult: JsResult[UpdateSubscriptionForDACRequest] =
-        request.body.validate[UpdateSubscriptionForDACRequest]
-
-      displaySubscriptionResult.fold(
-        invalid = _ => Future.successful(BadRequest("")),
-        valid = request =>
-          for {
-            httpResponse <- subscriptionConnector.updateSubscriptionForDAC(request)
-          } yield {
-            convertToResult(httpResponse)
+        valid = subResult =>
+          subscriptionCacheService.retrieveSubscriptionDetails(subResult.displaySubscriptionForDACRequest.requestDetail.IDNumber).flatMap {
+            case Some(result) => Future.successful(Ok(Json.toJson(result)))
+            case None => for {
+              httpResponse <- subscriptionConnector.displaySubscriptionForDAC(subResult)
+            } yield {
+              convertToResult(httpResponse)
+            }
           }
       )
   }
