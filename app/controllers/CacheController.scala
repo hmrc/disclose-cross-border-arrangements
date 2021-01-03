@@ -63,7 +63,7 @@ class CacheController @Inject()(
       displaySubscriptionResult.fold(
         invalid = _ => Future.successful(BadRequest("")),
         valid = subResult =>
-          subscriptionCacheService.retrieveSubscriptionDetails(request.identifier).flatMap {
+          subscriptionCacheService.retrieveSubscriptionDetails(subResult.displaySubscriptionForDACRequest.requestDetail.IDNumber).flatMap {
 
 
             case Some(result) =>  println("*******************************")
