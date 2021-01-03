@@ -1,5 +1,5 @@
 /*
- * Copyright 2020 HM Revenue & Customs
+ * Copyright 2021 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -30,6 +30,12 @@ class SubscriptionCacheService @Inject()(cacheRepository: SubscriptionCacheRepos
 
   def retrieveSubscriptionDetails(id: String)(implicit ec: ExecutionContext): Future[Option[DisplaySubscriptionForDACResponse]] = {
     //Fake response message from our cached details
+    println("***************************** ")
+    println("***************************** ")
+    println("retreiving sub details, id = " + id)
+    println("***************************** ")
+    println("***************************** ")
+
     cacheRepository.get(id).map {
       result => result.map {
         subRequest =>

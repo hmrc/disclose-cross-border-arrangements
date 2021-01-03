@@ -1,5 +1,5 @@
 /*
- * Copyright 2020 HM Revenue & Customs
+ * Copyright 2021 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -64,8 +64,18 @@ class CacheController @Inject()(
         invalid = _ => Future.successful(BadRequest("")),
         valid = subResult =>
           subscriptionCacheService.retrieveSubscriptionDetails(request.identifier).flatMap {
-            case Some(result) => Future.successful(Ok(Json.toJson(result)))
-            case None => for {
+
+
+            case Some(result) =>  println("*******************************")
+                                  println("result = " + result )
+              println("*******************************")
+                                  Future.successful(Ok(Json.toJson(result)))
+            case None =>
+              println("*******************************")
+              println("in None")
+              println("*******************************")
+
+              for {
               httpResponse <- subscriptionConnector.displaySubscriptionForDAC(subResult)
             } yield {
               convertToResult(httpResponse)
