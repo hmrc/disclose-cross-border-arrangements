@@ -58,7 +58,7 @@ class ContactService @Inject()(subscriptionCacheService: SubscriptionCacheServic
           IDNumber = enrolmentID)
       ))
 
-    subscriptionCacheService.retrieveSubscriptionDetails(request.identifier).flatMap {
+    subscriptionCacheService.retrieveSubscriptionDetails(enrolmentID).flatMap {
       case Some(a) => Future.successful(Some(a))
       case None => subscriptionConnector.displaySubscriptionForDAC(subscriptionForDACRequest).map {
         response =>
