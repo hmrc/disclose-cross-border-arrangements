@@ -48,7 +48,7 @@ class CacheController @Inject()(
       subscriptionRequest.fold(
         invalid = errors => Future.successful(BadRequest("")),
         valid = createSubscription =>
-          subscriptionCacheService.storeSubscriptionDetails(request.identifier, createSubscription).map {
+          subscriptionCacheService.storeSubscriptionDetails(createSubscription.subscriptionID, createSubscription).map {
             _ => Ok
           }
       )
