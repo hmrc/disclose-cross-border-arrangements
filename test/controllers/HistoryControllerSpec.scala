@@ -121,6 +121,33 @@ class HistoryControllerSpec extends SpecBase
 
   }
 
+  "isMarketableArrangement" - {
+
+    "must return a NOT_FOUND if there is no first disclosure" in {
+      when(mockSubmissionDetailsRepository.retrieveFirstDisclosureForArrangementId(""))
+        .thenReturn(Future.successful(None))
+
+      val request = FakeRequest(GET, routes.HistoryController.isMarketableArrangement("").url)
+
+      val result = route(application, request).value
+
+      status(result) mustEqual NOT_FOUND
+    }
+
+    "must return an OK with the answer if there is a first disclosure available for the given arrangement ID" in {
+      when(mockSubmissionDetailsRepository.retrieveFirstDisclosureForArrangementId(arrangementID))
+        .thenReturn(Future.successful(Some(initialSubmissionDetails)))
+
+      val request = FakeRequest(GET, routes.HistoryController.isMarketableArrangement(arrangementID).url)
+
+      val result = route(application, request).value
+
+      status(result) mustEqual OK
+      contentAsJson(result).as[Boolean] mustEqual true
+    }
+
+  }
+
   "searchSubmissions" - {
     "must return an OK with the submission history if the search has found submissions" in {
       val search = "fileName"

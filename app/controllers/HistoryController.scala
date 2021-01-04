@@ -63,6 +63,18 @@ class HistoryController @Inject()(
 
   }
 
+  def isMarketableArrangement(arrangementId: String): Action[AnyContent] = authenticate.async {
+    implicit request =>
+      submissionDetailsRepository.retrieveFirstDisclosureForArrangementId(arrangementId).map {
+        submissionDetails =>
+          Ok(submissionDetails.exists(_.initialDisclosureMA).toString)
+      }.recover {
+        case _ =>
+          NotFound(s"No first disclosure found for $arrangementId")
+      }
+
+  }
+
   def searchSubmissions(searchCriteria: String): Action[AnyContent] = authenticate.async {
     implicit request =>
       submissionDetailsRepository.searchSubmissions(searchCriteria).map {
