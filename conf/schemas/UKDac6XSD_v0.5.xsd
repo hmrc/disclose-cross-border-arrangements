@@ -133,23 +133,23 @@
 		<xsd:restriction base="xsd:string">
 			<xsd:enumeration value="DAC6NEW">
 				<xsd:annotation>
-					<xsd:documentation>Submit a new disclosure (No submitted version of this Disclosure already exists). The ArrangementID and DisclosureID should be blank in the case of a DAC6NEW,</xsd:documentation>
+					<xsd:documentation>Submit a new disclosure (No submitted version of this Arrangement or Disclosure already exists). The ArrangementID and DisclosureID should be blank in the case of a DAC6NEW.</xsd:documentation>
 				</xsd:annotation>
 			</xsd:enumeration>
 			<xsd:enumeration value="DAC6ADD">
 				<xsd:annotation>
-					<xsd:documentation>Submit an additional disclosure for a previously submitted valid Arrangement.The relevant ArrangementID must be provided and the DisclosureID must be blank in the case of a DAC6ADD.</xsd:documentation>
+					<xsd:documentation>Submit an additional disclosure for an existing valid Arrangement. The relevant ArrangementID must be provided and the DisclosureID must be blank in the case of a DAC6ADD.</xsd:documentation>
 				</xsd:annotation>
 			</xsd:enumeration>
 			<xsd:enumeration value="DAC6REP">
 				<xsd:annotation>
-					<xsd:documentation>Submit a complete replacement for a previously submitted valid DAC6NEW and or DAC6REP. The entire existing submitted Disclosure will be overwritten when identified by ArrangementID/DisclosureID/MessageRefID where DAC6REP is used. The relevant ArrangementID, DisclosureID and MessageRefID must be provided in the case of a DAC6REP.
+					<xsd:documentation>Submit a complete replacement for a previously submitted valid DAC6NEW / DAC6ADD / DAC6REP. The entire existing submitted Disclosure will be overwritten when identified by ArrangementID/DisclosureID where DAC6REP is used. The relevant ArrangementID, DisclosureID must be provided in the case of a DAC6REP.
 </xsd:documentation>
 				</xsd:annotation>
 			</xsd:enumeration>
 			<xsd:enumeration value="DAC6DEL">
 				<xsd:annotation>
-					<xsd:documentation>Submit a deletion of an existing submitted Disclosure. The entire existing submitted Disclosure will be deleted when identified by ArrangementID/DisclosureID/MessageRefID where DAC6DEL is used. Default value "X" must be used in mandatory data elements. The relevant ArrangementID and the DisclosureID must be provided in the case of a DAC6DEL.
+					<xsd:documentation>Submit a deletion of an existing submitted Disclosure. The entire existing submitted Disclosure will be deleted when identified by ArrangementID/DisclosureID where DAC6DEL is used. Default values should be used in mandatory data elements. The relevant ArrangementID and the DisclosureID must be provided in the case of a DAC6DEL.
 </xsd:documentation>
 				</xsd:annotation>
 			</xsd:enumeration>
@@ -496,7 +496,7 @@ This data type is to be used whenever monetary amounts are to be communicated. S
 		<xsd:sequence>
 			<xsd:element name="MessageRefId" type="dac6:StringMin2Max200_Type">
 				<xsd:annotation>
-					<xsd:documentation xml:lang="en">MessageRefID must be unique in time and space for DAC6NEW and DAC6ADD. Must begin "GB", relevant UserID then "XXX" to ensure uniqueness.</xsd:documentation>
+					<xsd:documentation xml:lang="en">MessageRefID must be unique in time and space for DAC6NEW / DAC6ADD / DAC6REP / DAC6DEL. MessageRefID must begin "GB", relevant UserID then "XXX" to ensure uniqueness.</xsd:documentation>
 				</xsd:annotation>
 			</xsd:element>
 			<xsd:element name="Timestamp" type="xsd:dateTime"/>

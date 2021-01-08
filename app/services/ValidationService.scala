@@ -68,7 +68,7 @@ trait XMLValidatingParser {
 class XMLDacXSDValidatingParser extends XMLValidatingParser {
   val schemaLang: String = javax.xml.XMLConstants.W3C_XML_SCHEMA_NS_URI
   val isoXsdUrl: URL = getClass.getResource("/schemas/IsoTypes_v1.01.xsd")
-  val ukDAC6XsdUrl: URL = getClass.getResource("/schemas/UKDac6XSD_v0.4.xsd")
+  val ukDAC6XsdUrl: URL = getClass.getResource("/schemas/UKDac6XSD_v0.5.xsd")
   val ukDCT06XsdUrl: URL = getClass.getResource("/schemas/DCT06_EIS_UK_schema.xsd")
   val isoXsdStream: StreamSource = new StreamSource(isoXsdUrl.openStream())
   val ukDAC6XsdStream: StreamSource = new StreamSource(ukDAC6XsdUrl.openStream())
