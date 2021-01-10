@@ -33,4 +33,6 @@ class AppConfig @Inject()(config: Configuration, servicesConfig: ServicesConfig)
   lazy val bearerToken: String = config.get[String]("microservice.services.submission.bearer-token")
   lazy val eisEnvironment: String = config.get[String]("microservice.services.submission.environment")
   lazy val submissionUrl: String = s"${config.get[Service]("microservice.services.submission").baseUrl}${config.get[String]("microservice.services.submission.startUrl")}"
+  lazy val validationAuditToggle: Boolean = config.get[Boolean]("validationAuditToggle")
+
 }

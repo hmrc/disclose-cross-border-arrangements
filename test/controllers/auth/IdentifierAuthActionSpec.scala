@@ -28,14 +28,19 @@ import play.api.inject.guice.GuiceApplicationBuilder
 import play.api.mvc.{Action, AnyContent, InjectedController}
 import play.api.test.FakeRequest
 import play.api.test.Helpers.status
-import uk.gov.hmrc.auth.core.{AuthConnector, MissingBearerToken}
+import uk.gov.hmrc.auth.core.{AuthConnector, Enrolment, EnrolmentIdentifier, Enrolments, MissingBearerToken}
 import play.api.http.Status.{OK, UNAUTHORIZED}
+import uk.gov.hmrc.auth.core.retrieve.~
 
 import scala.concurrent.Future
 import scala.concurrent.duration._
 import scala.language.postfixOps
 
 class IdentifierAuthActionSpec extends PlaySpec with GuiceOneAppPerSuite with MockitoSugar {
+
+  private implicit class HelperOps[A](a: A) {
+    def ~[B](b: B) = new ~(a, b)
+  }
 
   class Harness(authAction: IdentifierAuthAction) extends InjectedController {
     def onPageLoad(): Action[AnyContent] = authAction { _ =>
@@ -69,8 +74,9 @@ class IdentifierAuthActionSpec extends PlaySpec with GuiceOneAppPerSuite with Mo
 
     "the user is logged in" must {
       "must return the request" in {
-        when(mockAuthConnector.authorise[Option[String]](any(), any())(any(), any()))
-          .thenReturn(Future.successful(Some("internalID")))
+        val retrieval = Some("internalID") ~ Enrolments(Set(Enrolment("HMRC-DAC6-ORG", Seq(EnrolmentIdentifier("DAC6ID", "thisismyenrolmentID")), "ACTIVE")))
+        when(mockAuthConnector.authorise[Option[String] ~ Enrolments](any(), any())(any(), any()))
+          .thenReturn(Future.successful(retrieval))
 
         val authAction = application.injector.instanceOf[IdentifierAuthAction]
         val controller = new Harness(authAction)

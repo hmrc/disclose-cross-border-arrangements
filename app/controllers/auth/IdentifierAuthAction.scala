@@ -22,8 +22,9 @@ import models.UserRequest
 import org.slf4j.LoggerFactory
 import play.api.http.Status.UNAUTHORIZED
 import play.api.mvc.{ActionBuilder, ActionFunction, AnyContent, BodyParsers, Request, Result}
-import uk.gov.hmrc.auth.core.{AuthConnector, AuthorisedFunctions, NoActiveSession}
+import uk.gov.hmrc.auth.core.{AuthConnector, AuthorisedFunctions, Enrolments, NoActiveSession}
 import uk.gov.hmrc.auth.core.retrieve.v2.Retrievals
+import uk.gov.hmrc.auth.core.retrieve.~
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.play.HeaderCarrierConverter
 
@@ -37,18 +38,30 @@ class IdentifierAuthActionImpl @Inject()(
   extends IdentifierAuthAction with AuthorisedFunctions {
   private val logger = LoggerFactory.getLogger(getClass)
 
+  private val enrolmentKey: String = "HMRC-DAC6-ORG"
+  private val enrolmentIDKey: String = "DAC6ID"
+
   override def invokeBlock[A](request: Request[A], block: UserRequest[A] => Future[Result]): Future[Result] = {
     implicit val hc: HeaderCarrier = HeaderCarrierConverter.fromHeadersAndSession(request.headers)
 
-    authorised().retrieve(Retrievals.internalId) {
-      case Some(internalID) => block(UserRequest(internalID, request))
-      case None => Future.successful(Status(UNAUTHORIZED))
+    authorised().retrieve(Retrievals.internalId and Retrievals.authorisedEnrolments) {
+      case Some(internalID) ~ Enrolments(enrolments) => {
+        val enrolmentID = {
+          (for {
+            enrolment <- enrolments.find(_.key.equals(enrolmentKey))
+            enrolmentIdentifier <- enrolment.getIdentifier(enrolmentIDKey)
+          } yield enrolmentIdentifier.value)
+            .getOrElse(throw new Exception("EnrolmentID Required for DAC6"))
+        }
+
+        block(UserRequest(internalID, enrolmentID, request))
+      }
+      case None ~ _ => Future.successful(Status(UNAUTHORIZED))
     } recover {
       case _: NoActiveSession =>
         Status(UNAUTHORIZED)
     }
   }
-
 }
 
 @ImplementedBy(classOf[IdentifierAuthActionImpl])
