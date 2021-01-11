@@ -131,5 +131,4 @@ class AuditService @Inject()(appConfig: AppConfig, auditConnector: AuditConnecto
       logger.warn(s"Validation has failed and auditing currently disabled for this event type")
     }
   }
-
 }

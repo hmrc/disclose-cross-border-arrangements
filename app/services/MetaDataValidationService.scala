@@ -45,11 +45,9 @@ class MetaDataValidationService @Inject()(
     }
 
     verifyMetaData(metaDataWithEnhancedMessageRefId, enrolmentId).flatMap{
-
       case Seq() if metaDataWithEnhancedMessageRefId.isDefined => Future(Right(metaDataWithEnhancedMessageRefId.get.messageRefId))
       case Seq(Validation("metaDataRules.messageRefId.notUnique", false, _))  => verifyMetaDataForManualSubmission(dac6MetaData, enrolmentId)
-      case Seq(errors)  => Future(Left(Seq(errors).map(_.key)))
-
+      case errors  => Future(Left(errors.map(_.key)))
     }
   }
 

@@ -22,7 +22,7 @@ import models.UserRequest
 import org.slf4j.LoggerFactory
 import play.api.http.Status.UNAUTHORIZED
 import play.api.mvc.{ActionBuilder, ActionFunction, AnyContent, BodyParsers, Request, Result}
-import uk.gov.hmrc.auth.core.{AuthConnector, AuthorisedFunctions, Enrolments, NoActiveSession}
+import uk.gov.hmrc.auth.core.{AuthConnector, AuthorisedFunctions, Enrolment, Enrolments, NoActiveSession}
 import uk.gov.hmrc.auth.core.retrieve.v2.Retrievals
 import uk.gov.hmrc.auth.core.retrieve.~
 import uk.gov.hmrc.http.HeaderCarrier
@@ -44,7 +44,7 @@ class IdentifierAuthActionImpl @Inject()(
   override def invokeBlock[A](request: Request[A], block: UserRequest[A] => Future[Result]): Future[Result] = {
     implicit val hc: HeaderCarrier = HeaderCarrierConverter.fromHeadersAndSession(request.headers)
 
-    authorised().retrieve(Retrievals.internalId and Retrievals.authorisedEnrolments) {
+    authorised(Enrolment(enrolmentKey)).retrieve(Retrievals.internalId and Retrievals.authorisedEnrolments) {
       case Some(internalID) ~ Enrolments(enrolments) => {
         val enrolmentID = {
           (for {
