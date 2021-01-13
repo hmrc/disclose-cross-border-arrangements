@@ -3,7 +3,7 @@
 GET        /verify-arrangement-id/:arrangementId        controllers.IdController.verifyArrangementId(arrangementId: String)
 
 POST       /submit                                      controllers.SubmissionController.submitDisclosure
-GET       /get-history/:enrolmentId                     controllers.SubmissionController.getHistory(enrolmentId: String)
+GET        /get-history/:enrolmentId                     controllers.SubmissionController.getHistory(enrolmentId: String)
 
 GET        /history/count/:enrolmentId                        controllers.HistoryController.noOfPreviousSubmissions(enrolmentId: String)
 GET        /history/submissions/:enrolmentId                  controllers.HistoryController.submissionDetails(enrolmentId: String)
@@ -20,3 +20,5 @@ POST       /callback                                    controllers.UploadCallba
 GET        /upscan/details/:uploadId                    controllers.UploadFormController.getDetails(uploadId: String)
 GET        /upscan/status/:uploadId                     controllers.UploadFormController.getStatus(uploadId: String)
 POST       /upscan/upload                               controllers.UploadFormController.requestUpload
+
+POST       /validate-manual-submission                  controllers.ManualSubmissionValidationController.validateManualSubmission

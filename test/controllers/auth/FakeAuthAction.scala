@@ -36,5 +36,5 @@ class FakeIdentifierAuthAction @Inject()(
                                 val parser: BodyParsers.Default
                               )(implicit val executionContext: ExecutionContext) extends IdentifierAuthAction {
   override def invokeBlock[A](request: Request[A], block: UserRequest[A] => Future[Result]): Future[Result] =
-    block(UserRequest("internal-id", request))
+    block(UserRequest("internal-id", "enrolmentID", request))
 }

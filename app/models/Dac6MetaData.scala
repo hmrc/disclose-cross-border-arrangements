@@ -16,6 +16,15 @@
 
 package models
 
-import play.api.mvc.{Request, WrappedRequest}
+import play.api.libs.json.Json
 
-case class UserRequest[+A](identifier: String, enrolmentID: String, request: Request[A]) extends WrappedRequest[A](request)
+case class Dac6MetaData(importInstruction: String,
+                        arrangementID: Option[String] = None,
+                        disclosureID: Option[String] = None,
+                        disclosureInformationPresent: Boolean,
+                        initialDisclosureMA: Boolean,
+                        messageRefId: String)
+
+object Dac6MetaData {
+  implicit val format = Json.format[Dac6MetaData]
+}

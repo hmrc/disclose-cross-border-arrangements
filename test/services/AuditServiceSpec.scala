@@ -16,9 +16,11 @@
 
 package services
 import base.SpecBase
+import models.SaxParseError
 import org.mockito.ArgumentCaptor
 import org.mockito.Matchers.any
 import org.mockito.Mockito.{times, verify, _}
+import org.scalatest.BeforeAndAfterEach
 import org.scalatestplus.mockito.MockitoSugar
 import play.api.inject
 import play.api.inject.guice.GuiceApplicationBuilder
@@ -27,12 +29,26 @@ import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.play.audit.http.connector.{AuditConnector, AuditResult}
 import uk.gov.hmrc.play.audit.model.ExtendedDataEvent
 
+import scala.collection.mutable.ListBuffer
 import scala.concurrent.{ExecutionContext, Future}
 
-class AuditServiceSpec extends SpecBase with MockitoSugar {
+class AuditServiceSpec extends SpecBase with MockitoSugar with BeforeAndAfterEach {
+  val auditConnector =  mock[AuditConnector]
+
+  override def beforeEach() = {
+    reset(auditConnector)
+  }
+
+  override lazy val app = new GuiceApplicationBuilder()
+    .overrides(
+      inject.bind[AuditConnector].toInstance(auditConnector)
+    )
+    .build()
+
+  val auditService = app.injector.instanceOf[AuditService]
 
   val xml =
-    <DAC6_Arrangement version="First" xmlns="urn:ukdac6:v0.1">
+  <DAC6_Arrangement version="First" xmlns="urn:ukdac6:v0.1">
       <Header>
         <MessageRefId>GB0000000XXX</MessageRefId>
         <Timestamp>2020-05-14T17:10:00</Timestamp>
@@ -43,21 +59,9 @@ class AuditServiceSpec extends SpecBase with MockitoSugar {
       </DAC6Disclosures>
     </DAC6_Arrangement>
 
-
-   val auditType = "disclosureFileSubmission"
-
-      "Audit service must" - {
-        "send audit information with the correct value" in {
-
-          val auditConnector =  mock[AuditConnector]
-
-          val app = new GuiceApplicationBuilder()
-            .overrides(
-              inject.bind[AuditConnector].toInstance(auditConnector)
-            )
-            .build()
-
-          val auditService = app.injector.instanceOf[AuditService]
+  val auditType = "disclosureFileSubmission"
+  "Audit service must" - {
+    "send audit information with the correct value" in {
 
           val argumentCaptorData: ArgumentCaptor[ExtendedDataEvent] = ArgumentCaptor.forClass(classOf[ExtendedDataEvent])
 
@@ -76,8 +80,26 @@ class AuditServiceSpec extends SpecBase with MockitoSugar {
 
           argumentCaptorData.getValue.detail mustBe expectedJson
 
-        }
-    }
+      }
+
+      "must generate correct payload for failed Manual Submission parsing" in {
+          when(auditConnector.sendExtendedEvent(any())(any(), any()))
+            .thenReturn(Future.successful(AuditResult.Success))
+
+          val xml = <dummyTag></dummyTag>
+          val parseErrors = ListBuffer(SaxParseError(1, "errorMessage"))
+          auditService.auditManualSubmissionParseFailure(xml, parseErrors)
+
+          val expectedjson = Json.obj("xml" -> xml.toString(),
+            "errors" -> parseErrors.toString())
+
+          val eventCaptor = ArgumentCaptor.forClass(classOf[ExtendedDataEvent])
+
+          verify(auditConnector, times(1)).sendExtendedEvent(eventCaptor.capture())(any(),any())
+
+          eventCaptor.getValue.detail mustBe expectedjson
+      }
+  }
 }
 
 

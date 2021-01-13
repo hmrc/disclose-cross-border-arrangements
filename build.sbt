@@ -14,6 +14,7 @@ lazy val microservice = Project(appName, file("."))
     libraryDependencies      ++= AppDependencies.compile ++ AppDependencies.test
   )
   .settings(publishingSettings: _*)
+  .settings(inConfig(Test)(testSettings): _*)
   .configs(IntegrationTest)
   .settings(inConfig(IntegrationTest)(itSettings): _*)
   .settings(
@@ -24,6 +25,13 @@ lazy val microservice = Project(appName, file("."))
     ScoverageKeys.coverageFailOnMinimum := true,
     ScoverageKeys.coverageHighlighting := true,
     resolvers += Resolver.jcenterRepo)
+
+lazy val testSettings: Seq[Def.Setting[_]] = Seq(
+  fork        := true,
+  javaOptions ++= Seq(
+    "-Dconfig.resource=test.application.conf"
+  )
+)
 
 lazy val itSettings = Defaults.itSettings ++ Seq(
   unmanagedSourceDirectories := Seq(

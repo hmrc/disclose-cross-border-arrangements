@@ -21,15 +21,16 @@ import config.AppConfig
 import javax.inject.Inject
 import models.SaxParseError
 import org.slf4j.LoggerFactory
-import play.api.libs.json.Json
+import play.api.libs.json.{JsObject, Json}
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.play.audit.AuditExtensions
 import uk.gov.hmrc.play.audit.http.connector.{AuditConnector, AuditResult}
 import uk.gov.hmrc.play.audit.http.connector.AuditResult.{Disabled, Failure}
 import uk.gov.hmrc.play.audit.model.ExtendedDataEvent
 
+import scala.collection.mutable.ListBuffer
 import scala.concurrent.ExecutionContext
-import scala.xml.NodeSeq
+import scala.xml.{Elem, NodeSeq}
 
 class AuditService @Inject()(appConfig: AppConfig, auditConnector: AuditConnector)(implicit ec: ExecutionContext) {
   private val logger = LoggerFactory.getLogger(getClass)
@@ -98,4 +99,36 @@ class AuditService @Inject()(appConfig: AppConfig, auditConnector: AuditConnecto
       }}
   }
 
+  def auditManualSubmissionParseFailure(xml: Elem, errors: ListBuffer[SaxParseError])(implicit hc: HeaderCarrier): Unit = {
+
+    val auditType = "ManualSubmissionParseFailure"
+
+    val auditMap: JsObject = Json.obj("xml" -> xml.toString(),
+      "errors" -> errors.toString())
+
+    if(appConfig.validationAuditToggle) {
+      auditConnector.sendExtendedEvent(ExtendedDataEvent(
+        auditSource = appConfig.appName,
+        auditType = auditType,
+        detail = auditMap,
+        tags = AuditExtensions.auditHeaderCarrier(hc).toAuditDetails()
+      )) map { ar: AuditResult =>
+        ar match {
+          case Failure(msg, ex) =>
+            ex match {
+              case Some(throwable) =>
+                logger.warn(s"The attempt to issue audit event $auditType failed with message : $msg", throwable)
+              case None =>
+                logger.warn(s"The attempt to issue audit event $auditType failed with message : $msg")
+            }
+            ar
+          case Disabled =>
+            logger.warn(s"The attempt to issue audit event $auditType was unsuccessful, as auditing is currently disabled in config"); ar
+          case _ => logger.debug(s"Audit event $auditType issued successfully."); ar
+        }
+      }
+    } else {
+      logger.warn(s"Validation has failed and auditing currently disabled for this event type")
+    }
+  }
 }

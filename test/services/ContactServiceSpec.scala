@@ -66,7 +66,7 @@ class ContactServiceSpec extends SpecBase
         ContactInformationForIndividual(IndividualDetails("First", "Last", None), "", Some(""), Some("")),
         Some(ContactInformationForOrganisation(OrganisationDetails(""), "", None, None)))
 
-      implicit val userRequest = UserRequest("", FakeRequest())
+      implicit val userRequest = UserRequest("", "", FakeRequest())
 
       val result = service.getLatestContacts("111111111")
 
@@ -100,7 +100,7 @@ class ContactServiceSpec extends SpecBase
         ContactInformationForIndividual(IndividualDetails("First", "Last", None), "", Some(""), Some("")),
         Some(ContactInformationForOrganisation(OrganisationDetails(""), "", None, None)))
 
-      implicit val userRequest = UserRequest("", FakeRequest())
+      implicit val userRequest = UserRequest("", "", FakeRequest())
 
       val result = service.getLatestContacts("111111111")
 
