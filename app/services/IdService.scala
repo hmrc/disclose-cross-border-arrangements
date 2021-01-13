@@ -31,7 +31,7 @@ class IdService @Inject()(val dateHelper: DateHelper,
                           arrangementIdRepository: ArrangementIdRepository,
                           disclosureIdRepository: DisclosureIdRepository){
 
-  def date : String = dateHelper.today.format(DateTimeFormatter.ofPattern("YYYYMMdd"))
+  def date : String = dateHelper.today.format(DateTimeFormatter.ofPattern("yyyyMMdd"))
 
   val arrangementIdRegEx = "[A-Z]{2}[A]([2]\\d{3}(0[1-9]|1[0-2])(0[1-9]|[12]\\d|3[01]))([A-Z0-9]{6})"
 
