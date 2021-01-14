@@ -156,17 +156,6 @@ class BusinessRuleValidationService @Inject()(submissionDetailsRepository: Submi
       }
   }
 
-  def validateMainBenefitTestHasASpecifiedHallmark(): ReaderT[Option, NodeSeq, Validation] = {
-    for {
-      mainBenefitTest1 <- hasMainBenefitTest1
-      hallmarks <- hallmarks
-    } yield Validation(
-      key = "businessrules.mainBenefitTest1.oneOfSpecificHallmarksMustBePresent",
-      value = if (!mainBenefitTest1)
-        hallmarks.toSet.intersect(hallmarksForMainBenefitTest).isEmpty
-      else true
-    )
-  }
 
   def validateDAC6D1OtherInfoHasNecessaryHallmark(): ReaderT[Option, NodeSeq, Validation] = {
     for {
@@ -289,6 +278,31 @@ class BusinessRuleValidationService @Inject()(submissionDetailsRepository: Submi
     }
   }
 
+
+  def validateHallmarks(): ReaderT[Option, NodeSeq, Validation] = {
+
+    val valuesForHallmarkD = Set("DAC6D1Other", "DAC6D1a", "DAC6D1b", "DAC6D1c",
+      "DAC6D1d", "DAC6D1e", "DAC6D1f", "DAC6D2")
+
+    for {
+      hallmarks <- hallmarks
+    } yield {
+      val nonHallMarkDExists = hallmarks.exists(value => !valuesForHallmarkD.contains(value))
+      val hallmarkDValues = hallmarks.toSet.intersect(valuesForHallmarkD)
+      if (nonHallMarkDExists && hallmarkDValues.nonEmpty) {
+        Validation(key = "businessrules.hallmarks.dHallmarkWithOtherHallmarks",
+          value = false)
+      }
+      else {
+        Validation(
+          key = "businessrules.hallmarks.dHallmarkNotProvided",
+          value = if (hallmarks.nonEmpty) {
+            hallmarkDValues.nonEmpty
+          } else true)
+      }
+    }
+  }
+
   def extractDac6MetaData(): ReaderT[Option, NodeSeq, Dac6MetaData] = {
     for {
       disclosureImportInstruction <- disclosureImportInstruction
@@ -319,19 +333,19 @@ class BusinessRuleValidationService @Inject()(submissionDetailsRepository: Submi
       v4 <- validateAllTaxpayerImplementingDatesAreAfterStart()
       v5 <- validateAllImplementingDatesAreAfterStart()
       v6 <- validateDisclosureImportInstruction()
-      v7 <- validateMainBenefitTestHasASpecifiedHallmark()
-      v8 <- validateDAC6D1OtherInfoHasNecessaryHallmark()
-      v9 <- validateDisclosureImportInstructionAndInitialDisclosureFlag()
-      v10 <- validateTaxPayerImplementingDateAgainstMarketableArrangementStatus()
-      v11 <- validateRelevantTaxPayerDatesOfBirths()
-      v12 <- validateDisclosingDatesOfBirth()
-      v13 <- validateIntermediaryDatesOfBirth()
-      v14 <- validateAffectedPersonsDatesOfBirth()
-      v15 <- validateAssociatedEnterprisesDatesOfBirth()
+      v7 <- validateDAC6D1OtherInfoHasNecessaryHallmark()
+      v8 <- validateDisclosureImportInstructionAndInitialDisclosureFlag()
+      v9 <- validateTaxPayerImplementingDateAgainstMarketableArrangementStatus()
+      v10 <- validateRelevantTaxPayerDatesOfBirths()
+      v11 <- validateDisclosingDatesOfBirth()
+      v12 <- validateIntermediaryDatesOfBirth()
+      v13 <- validateAffectedPersonsDatesOfBirth()
+      v14 <- validateAssociatedEnterprisesDatesOfBirth()
+      v15 <- validateHallmarks()
     } yield {
       v1.flatMap { v1Validation =>
-        v10.map { v10Validation =>
-          Seq(v1Validation, v2, v3, v4, v5, v6, v7, v8, v9, v10Validation, v11, v12, v13, v14, v15).filterNot(_.value)
+        v9.map { v9Validation =>
+          Seq(v1Validation, v2, v3, v4, v5, v6, v7, v8, v9Validation, v10, v11, v12, v13, v14, v15).filterNot(_.value)
         }
       }
     }
@@ -341,7 +355,6 @@ object BusinessRuleValidationService {
   val dateFormat = new SimpleDateFormat("yyyy-MM-dd")
   val implementationStartDate: Date = new GregorianCalendar(2018, Calendar.JUNE, 25).getTime
   val maxBirthDate: Date = new GregorianCalendar(1900, Calendar.JANUARY, 1).getTime
-  val hallmarksForMainBenefitTest: Set[String] = Set("DAC6A1","DAC6A2","DAC6A2b","DAC6A3","DAC6B1","DAC6B2","DAC6B3","DAC6C1bi","DAC6C1c","DAC6C1d")
 
   val isInitialDisclosureMA: ReaderT[Option, NodeSeq, Boolean] =
     ReaderT[Option, NodeSeq, Boolean](xml => {
@@ -468,15 +481,6 @@ object BusinessRuleValidationService {
   val messageRefID: ReaderT[Option, NodeSeq, String] =
     ReaderT[Option, NodeSeq, String](xml => {
       Some((xml \\ "MessageRefId").text)
-    })
-
-  val hasMainBenefitTest1: ReaderT[Option, NodeSeq, Boolean] =
-    ReaderT[Option, NodeSeq, Boolean](xml => {
-      (xml \\ "MainBenefitTest1").text match {
-        case "true" => Some(true)
-        case "false" => Some(false)
-        case _ => Some(false)
-      }
     })
 
   val hallmarks: ReaderT[Option, NodeSeq, Seq[String]] =
