@@ -16,15 +16,14 @@
 
 package services
 
-import java.time.format.DateTimeFormatter
-
-import javax.inject.Inject
 import helpers.{DateHelper, SuffixHelper}
 import models.{ArrangementId, DisclosureId}
 import repositories.{ArrangementIdRepository, DisclosureIdRepository}
 
-import scala.concurrent.Future
+import java.time.format.DateTimeFormatter
+import javax.inject.Inject
 import scala.concurrent.ExecutionContext.Implicits.global
+import scala.concurrent.Future
 
 class IdService @Inject()(val dateHelper: DateHelper,
                           val suffixHelper: SuffixHelper,
@@ -34,9 +33,14 @@ class IdService @Inject()(val dateHelper: DateHelper,
   def date : String = dateHelper.today.format(DateTimeFormatter.ofPattern("yyyyMMdd"))
 
   val arrangementIdRegEx = "[A-Z]{2}[A]([2]\\d{3}(0[1-9]|1[0-2])(0[1-9]|[12]\\d|3[01]))([A-Z0-9]{6})"
+  val disclosureIdRegEx = "[A-Z]{2}[D]([2]\\d{3}(0[1-9]|1[0-2])(0[1-9]|[12]\\d|3[01]))([A-Z0-9]{6})"
 
   val nonUkPrefixes = List("ATA", "BEA", "BGA", "CYA", "CZA", "DKA", "EEA", "FIA", "FRA", "DEA", "GRA", "HUA", "HRA",
                            "IEA", "ITA", "LVA", "LTA", "LUA", "MTA", "NLA", "PLA", "PTA", "ROA", "SKA", "SIA", "ESA", "SEA")
+
+  //TODO Is this all of them?
+  val nonUkDisclosurePrefixes = List("ATD", "BED", "BGD", "CYD", "CZD", "DKD", "EED", "FID", "FRD", "DED", "GRD", "HUD", "HRD",
+    "IED", "ITD", "LVD", "LTD", "LUD", "MTD", "NLD", "PLD", "PTD", "ROD", "SKD", "SID", "ESD", "SED")
 
   def generateArrangementId(): Future[ArrangementId] = {
 
@@ -66,6 +70,15 @@ class IdService @Inject()(val dateHelper: DateHelper,
                                        result => Some(result))
       case _ => Future(None)
     }
+//TODO Use the enrolment id to verify
+  def verifyDisclosureId(suppliedDisclosureId: String): Future[Option[Boolean]] =
+
+    createDisclosureIdFromSuppliedString(suppliedDisclosureId) match {
+      case Some(validDisclosureId) if nonUkDisclosurePrefixes.contains(validDisclosureId.prefix) =>  Future(Some(true))
+      case Some(validDisclosureId) if validDisclosureId.prefix.equals("GBD") => disclosureIdRepository.doesDisclosureIdExist(validDisclosureId).map(
+        result => Some(result))
+      case _ => Future(None)
+    }
 
 
   def createArrangementIdFromSuppliedString(suppliedString: String): Option[ArrangementId] = {
@@ -74,6 +87,16 @@ class IdService @Inject()(val dateHelper: DateHelper,
     Some(ArrangementId(prefix = suppliedString.substring(0,3),
                        dateString = suppliedString.substring(3, 11),
                        suffix = suppliedString.substring(11)))
+    } else None
+
+  }
+
+  def createDisclosureIdFromSuppliedString(suppliedString: String): Option[DisclosureId] = {
+
+    if(suppliedString.matches(disclosureIdRegEx)) {
+      Some(DisclosureId(prefix = suppliedString.substring(0,3),
+        dateString = suppliedString.substring(3, 11),
+        suffix = suppliedString.substring(11)))
     } else None
 
   }
