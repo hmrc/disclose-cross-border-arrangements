@@ -18,7 +18,7 @@ package services
 
 import helpers.{DateHelper, SuffixHelper}
 import models.{ArrangementId, DisclosureId}
-import repositories.{ArrangementIdRepository, DisclosureIdRepository}
+import repositories.{ArrangementIdRepository, DisclosureIdRepository, SubmissionDetailsRepository}
 
 import java.time.format.DateTimeFormatter
 import javax.inject.Inject
@@ -28,7 +28,8 @@ import scala.concurrent.Future
 class IdService @Inject()(val dateHelper: DateHelper,
                           val suffixHelper: SuffixHelper,
                           arrangementIdRepository: ArrangementIdRepository,
-                          disclosureIdRepository: DisclosureIdRepository){
+                          disclosureIdRepository: DisclosureIdRepository,
+                          submissionDetailsRepository: SubmissionDetailsRepository){
 
   def date : String = dateHelper.today.format(DateTimeFormatter.ofPattern("yyyyMMdd"))
 
@@ -70,16 +71,16 @@ class IdService @Inject()(val dateHelper: DateHelper,
                                        result => Some(result))
       case _ => Future(None)
     }
-//TODO Use the enrolment id to verify
-  def verifyDisclosureId(suppliedDisclosureId: String): Future[Option[Boolean]] =
+
+  def verifyDisclosureId(suppliedDisclosureId: String, enrolmentId: String): Future[Option[Boolean]] =
 
     createDisclosureIdFromSuppliedString(suppliedDisclosureId) match {
       case Some(validDisclosureId) if nonUkDisclosurePrefixes.contains(validDisclosureId.prefix) =>  Future(Some(true))
-      case Some(validDisclosureId) if validDisclosureId.prefix.equals("GBD") => disclosureIdRepository.doesDisclosureIdExist(validDisclosureId).map(
-        result => Some(result))
+      case Some(validDisclosureId) if validDisclosureId.prefix.equals("GBD") =>
+        submissionDetailsRepository.doesDisclosureIdMatchEnrolmentID(validDisclosureId.value, enrolmentId).map(
+          result => Some(result))
       case _ => Future(None)
     }
-
 
   def createArrangementIdFromSuppliedString(suppliedString: String): Option[ArrangementId] = {
 

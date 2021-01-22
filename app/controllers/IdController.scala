@@ -44,7 +44,7 @@ extends BackendController(cc) {
 
   def verifyDisclosureId(disclosureId: String, enrolmentId: String): Action[AnyContent] = authenticate.async {
     implicit request =>
-      idService.verifyDisclosureId(disclosureId) map {
+      idService.verifyDisclosureId(disclosureId, enrolmentId) map {
         case Some(true) => NoContent
         case Some(false) => NotFound("Disclosure Id does not exist")
         case None => BadRequest("invalid format")
