@@ -61,28 +61,7 @@ class AuditServiceSpec extends SpecBase with MockitoSugar with BeforeAndAfterEac
 
   val auditType = "disclosureFileSubmission"
   "Audit service must" - {
-    "send audit information with the correct value" in {
-
-          val argumentCaptorData: ArgumentCaptor[ExtendedDataEvent] = ArgumentCaptor.forClass(classOf[ExtendedDataEvent])
-
-          when(auditConnector.sendExtendedEvent(any())(any[HeaderCarrier], any[ExecutionContext]))
-            .thenReturn(Future.successful(AuditResult.Success))
-
-          auditService.submissionAudit(xml, xml)
-
-          verify(auditConnector, times(1))
-            .sendExtendedEvent(argumentCaptorData.capture())(any[HeaderCarrier], any[ExecutionContext])
-
-          val expectedJson = Json.obj(
-            "submissionFile" -> xml.toString,
-            "transformedFile" -> xml.toString
-          )
-
-          argumentCaptorData.getValue.detail mustBe expectedJson
-
-      }
-
-      "must generate correct payload for failed Manual Submission parsing" in {
+       "must generate correct payload for failed Manual Submission parsing" in {
           when(auditConnector.sendExtendedEvent(any())(any(), any()))
             .thenReturn(Future.successful(AuditResult.Success))
 
