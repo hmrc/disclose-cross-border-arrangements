@@ -35,37 +35,6 @@ import scala.xml.{Elem, NodeSeq}
 class AuditService @Inject()(appConfig: AppConfig, auditConnector: AuditConnector)(implicit ec: ExecutionContext) {
   private val logger = LoggerFactory.getLogger(getClass)
 
-  def submissionAudit(submissionFile: NodeSeq, transformedFile: NodeSeq)(implicit hc: HeaderCarrier): Unit = {
-    val auditType = "Transform"
-    val transactionName = "/disclose-cross-border-arrangements/transform"
-    val path = "/disclose-cross-border-arrangements/transform"
-
-    val json = Json.obj(
-      "submissionFile" -> submissionFile.toString,
-            "transformedFile" -> transformedFile.toString
-            )
-
-    auditConnector.sendExtendedEvent(ExtendedDataEvent(
-      auditSource = appConfig.appName,
-      auditType = auditType,
-      detail = json,
-      tags = AuditExtensions.auditHeaderCarrier(hc).toAuditDetails()
-        ++ AuditExtensions.auditHeaderCarrier(hc).toAuditTags(transactionName, path)
-    )) map { ar: AuditResult => ar match {
-      case Failure(msg, ex) =>
-        ex match {
-          case Some(throwable) =>
-            logger.warn(s"The attempt to issue audit event $auditType failed with message : $msg", throwable)
-          case None =>
-            logger.warn(s"The attempt to issue audit event $auditType failed with message : $msg")
-        }
-        ar
-      case Disabled =>
-        logger.warn(s"The attempt to issue audit event $auditType was unsuccessful, as auditing is currently disabled in config"); ar
-      case _ => logger.debug(s"Audit event $auditType issued successfully."); ar
-    }}
-  }
-
   def auditValidationFailures(subscriptionID: String, errors: Seq[SaxParseError])(implicit hc: HeaderCarrier): Unit = {
     val auditType = "Validation"
     val transactionName = "/disclose-cross-border-arrangements/validation"

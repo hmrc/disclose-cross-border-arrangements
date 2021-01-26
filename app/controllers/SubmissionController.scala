@@ -104,8 +104,6 @@ class SubmissionController @Inject()(
 
         } yield {
           if(response.status == OK) {
-            auditService.submissionAudit(submissionFile, transformedFile)
-
             val submissionDetails = SubmissionDetails.build(
               xml = xml,
               ids = ids,
