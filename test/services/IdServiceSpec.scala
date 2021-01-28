@@ -16,18 +16,17 @@
 
 package services
 
-import java.time.LocalDate
 import base.SpecBase
 import helpers.{DateHelper, SuffixHelper}
 import models.{ArrangementId, DisclosureId}
 import org.mockito.Matchers.any
-import org.mockito.Mockito._
-import org.mockito.Mockito.{times, verify, when}
+import org.mockito.Mockito.{times, verify, when, _}
 import org.scalatest.BeforeAndAfterEach
 import org.scalatestplus.mockito.MockitoSugar
 import org.scalatestplus.scalacheck.ScalaCheckPropertyChecks
 import repositories.{ArrangementIdRepository, DisclosureIdRepository, SubmissionDetailsRepository}
 
+import java.time.LocalDate
 import scala.concurrent.Future
 
 class IdServiceSpec extends SpecBase
@@ -64,6 +63,9 @@ class IdServiceSpec extends SpecBase
 
   val arrangementIdPrefix = "GBA"
   val disclosureIdPrefix = "GBD"
+
+  val arrangementID: String = arrangementIdPrefix + expectedDateString + newSuffix
+  val disclosureID: String = disclosureIdPrefix + expectedDateString + newSuffix
 
   "IdService"- {
 
@@ -131,11 +133,10 @@ class IdServiceSpec extends SpecBase
       "must return true if arrangementId is in correct format and exists" in {
         when(mockArrangementIdRepository.doesArrangementIdExist(any())).thenReturn(Future.successful(true))
 
-        val idAsString = "GBA" + expectedDateString + newSuffix
         val formattedArrangementId = ArrangementId(prefix = "GBA",
                                                    dateString = expectedDateString,
                                                    suffix = newSuffix)
-        service.verifyArrangementId(idAsString).futureValue mustBe Some(true)
+        service.verifyArrangementId(arrangementID).futureValue mustBe Some(true)
 
         verify(mockArrangementIdRepository, times(1)).doesArrangementIdExist(formattedArrangementId)
 
@@ -158,18 +159,17 @@ class IdServiceSpec extends SpecBase
 
       "must false for uk suffix that is not a valid prefix" in {
 
-            val idAsString = s"ZZA" + expectedDateString + newSuffix
-            service.verifyArrangementId(idAsString).futureValue mustBe None
+        val idAsString = s"ZZA" + expectedDateString + newSuffix
+        service.verifyArrangementId(idAsString).futureValue mustBe None
 
-            verify(mockArrangementIdRepository, times(0)).doesArrangementIdExist(any())
+        verify(mockArrangementIdRepository, times(0)).doesArrangementIdExist(any())
 
       }
 
       "must return false arrangementId if arrangement id is in the correct format but does not exist" in {
         when(mockArrangementIdRepository.doesArrangementIdExist(any())).thenReturn(Future.successful(false))
 
-        val id = "GBA" + expectedDateString + newSuffix
-        service.verifyArrangementId(id).futureValue mustBe Some(false)
+        service.verifyArrangementId(arrangementID).futureValue mustBe Some(false)
         verify(mockArrangementIdRepository, times(1)).doesArrangementIdExist(any())
 
       }
@@ -177,13 +177,12 @@ class IdServiceSpec extends SpecBase
     }
 
     "does disclosureId exist" - {
-      "must return true if disclosureId is in correct format and exists" in {
+      "must return true if disclosureId is in correct format and matches the enrolment id in the submission" in {
         when(mockSubmissionDetailsRepository.doesDisclosureIdMatchEnrolmentID(any(), any())).thenReturn(Future.successful(true))
 
-        val idAsString = "GBD" + expectedDateString + newSuffix
         val formattedArrangementId = DisclosureId(dateString = expectedDateString, suffix = newSuffix)
 
-        service.verifyDisclosureId(idAsString, enrolmentID).futureValue mustBe Some(true)
+        service.verifyDisclosureId(disclosureID, enrolmentID).futureValue mustBe Some(true)
 
         verify(mockSubmissionDetailsRepository, times(1)).doesDisclosureIdMatchEnrolmentID(formattedArrangementId.value, enrolmentID)
       }
@@ -202,8 +201,8 @@ class IdServiceSpec extends SpecBase
         }
       }
 
-      "must false for uk suffix that is not a valid prefix" in {
-        val idAsString = s"ZZD" + expectedDateString + newSuffix
+      "must return false for uk suffix that is not a valid prefix" in {
+        val idAsString = "ZZD" + expectedDateString + newSuffix
         service.verifyDisclosureId(idAsString, enrolmentID).futureValue mustBe None
 
         verify(mockSubmissionDetailsRepository, times(0)).doesDisclosureIdMatchEnrolmentID(any(), any())
@@ -212,10 +211,57 @@ class IdServiceSpec extends SpecBase
       "must return false if disclosureId is in the correct format but does not match enrolment id in the submission" in {
         when(mockSubmissionDetailsRepository.doesDisclosureIdMatchEnrolmentID(any(), any())).thenReturn(Future.successful(false))
 
-        val id = "GBD" + expectedDateString + newSuffix
-        service.verifyDisclosureId(id, enrolmentID).futureValue mustBe Some(false)
+        service.verifyDisclosureId(disclosureID, enrolmentID).futureValue mustBe Some(false)
       }
 
+    }
+
+    "verifyIDs" - {
+      "must return (Some(true), Some(true)) if arrangement, disclosure and enrolment IDs are from the same submission" in {
+        when(mockArrangementIdRepository.doesArrangementIdExist(any())).thenReturn(Future.successful(true))
+        when(mockSubmissionDetailsRepository.doesDisclosureIdMatchEnrolmentID(any(), any())).thenReturn(Future.successful(true))
+        when(mockSubmissionDetailsRepository.doesDisclosureIdMatchArrangementID(any(), any())).thenReturn(Future.successful(true))
+
+        service.verifyIDs(arrangementID, disclosureID, enrolmentID).futureValue mustBe Tuple2(Some(true), Some(true))
+
+        verify(mockArrangementIdRepository, times(1)).doesArrangementIdExist(any())
+        verify(mockSubmissionDetailsRepository, times(1)).doesDisclosureIdMatchEnrolmentID(any(), any())
+        verify(mockSubmissionDetailsRepository, times(1)).doesDisclosureIdMatchArrangementID(any(), any())
+      }
+
+      "must return (Some(false), Some(false)) if arrangement and disclosure IDs aren't from the same submission" in {
+        when(mockArrangementIdRepository.doesArrangementIdExist(any())).thenReturn(Future.successful(true))
+        when(mockSubmissionDetailsRepository.doesDisclosureIdMatchEnrolmentID(any(), any())).thenReturn(Future.successful(true))
+        when(mockSubmissionDetailsRepository.doesDisclosureIdMatchArrangementID(any(), any())).thenReturn(Future.successful(false))
+
+        service.verifyIDs(arrangementID, disclosureID, enrolmentID).futureValue mustBe Tuple2(Some(false), Some(false))
+
+        verify(mockArrangementIdRepository, times(1)).doesArrangementIdExist(any())
+        verify(mockSubmissionDetailsRepository, times(1)).doesDisclosureIdMatchEnrolmentID(any(), any())
+        verify(mockSubmissionDetailsRepository, times(1)).doesDisclosureIdMatchArrangementID(any(), any())
+      }
+
+      "must return (Some(false), Some(true)) if arrangement ID doesn't exist" in {
+        when(mockArrangementIdRepository.doesArrangementIdExist(any())).thenReturn(Future.successful(false))
+        when(mockSubmissionDetailsRepository.doesDisclosureIdMatchEnrolmentID(any(), any())).thenReturn(Future.successful(true))
+
+        service.verifyIDs(arrangementID, disclosureID, enrolmentID).futureValue mustBe Tuple2(Some(false), Some(true))
+
+        verify(mockArrangementIdRepository, times(1)).doesArrangementIdExist(any())
+        verify(mockSubmissionDetailsRepository, times(1)).doesDisclosureIdMatchEnrolmentID(any(), any())
+        verify(mockSubmissionDetailsRepository, times(0)).doesDisclosureIdMatchArrangementID(any(), any())
+      }
+
+      "must return (Some(true), Some(false)) if disclosure ID doesn't exist" in {
+        when(mockArrangementIdRepository.doesArrangementIdExist(any())).thenReturn(Future.successful(true))
+        when(mockSubmissionDetailsRepository.doesDisclosureIdMatchEnrolmentID(any(), any())).thenReturn(Future.successful(false))
+
+        service.verifyIDs(arrangementID, disclosureID, enrolmentID).futureValue mustBe Tuple2(Some(true), Some(false))
+
+        verify(mockArrangementIdRepository, times(1)).doesArrangementIdExist(any())
+        verify(mockSubmissionDetailsRepository, times(1)).doesDisclosureIdMatchEnrolmentID(any(), any())
+        verify(mockSubmissionDetailsRepository, times(0)).doesDisclosureIdMatchArrangementID(any(), any())
+      }
     }
   }
 }

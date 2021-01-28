@@ -60,7 +60,7 @@ extends BackendController(cc) {
       val idsDoNotMatch = "Arrangement ID and Disclosure ID are not from the same submission"
       val idsNotFound = "IDs not found"
 
-        idService.verifyIDs(arrangementId, disclosureId, enrolmentId) map {
+      idService.verifyIDs(arrangementId, disclosureId, enrolmentId) map {
         case (Some(true), Some(true)) => NoContent
         case (Some(false), Some(false)) => NotFound(idsDoNotMatch)
         case (Some(false), _) => NotFound(arrangementIDNotFound)

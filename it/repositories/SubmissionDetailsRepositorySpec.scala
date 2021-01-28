@@ -20,9 +20,10 @@ class SubmissionDetailsRepositorySpec
 
     val arrangementID = "GBA20200904AAAAAA"
     val disclosureID = "GBD20200601AAA000"
+    val enrolmentID = "XADAC0001234567"
 
     val submissionDetails = SubmissionDetails(
-      enrolmentID = "enrolmentID",
+      enrolmentID = enrolmentID,
       submissionTime = LocalDateTime.now(),
       fileName = "fileName.xml",
       arrangementID = Some(arrangementID),
@@ -98,7 +99,7 @@ class SubmissionDetailsRepositorySpec
           await(repo.storeSubmissionDetails(diffSubmissionDetails))
           await(repo.storeSubmissionDetails(submissionDetails))
 
-          whenReady(repo.retrieveSubmissionHistory("enrolmentID")) {
+          whenReady(repo.retrieveSubmissionHistory(enrolmentID)) {
             _ mustEqual List(submissionDetails, olderSubmissionDetails)
           }
         }
@@ -115,7 +116,7 @@ class SubmissionDetailsRepositorySpec
           database.flatMap(_.drop()).futureValue
           await(repo.storeSubmissionDetails(submissionDetails))
 
-          whenReady(repo.countNoOfPreviousSubmissions("enrolmentID")) {
+          whenReady(repo.countNoOfPreviousSubmissions(enrolmentID)) {
             _ mustEqual 1
           }
         }
@@ -129,7 +130,7 @@ class SubmissionDetailsRepositorySpec
 
           database.flatMap(_.drop()).futureValue
 
-          whenReady(repo.countNoOfPreviousSubmissions("enrolmentID")) {
+          whenReady(repo.countNoOfPreviousSubmissions(enrolmentID)) {
             _ mustEqual 0
           }
         }
@@ -241,6 +242,70 @@ class SubmissionDetailsRepositorySpec
 
           whenReady(repo.searchSubmissions("other.xml")) {
             _ mustEqual List()
+          }
+        }
+      }
+    }
+
+    "doesDisclosureIdMatchEnrolmentID" - {
+      "must return true if disclosure ID and enrolment ID match a submission" in {
+        val app: Application = new GuiceApplicationBuilder().build()
+
+        running(app) {
+          val repo: SubmissionDetailsRepository = app.injector.instanceOf[SubmissionDetailsRepository]
+
+          database.flatMap(_.drop()).futureValue
+          await(repo.storeSubmissionDetails(submissionDetails))
+
+          whenReady(repo.doesDisclosureIdMatchEnrolmentID(disclosureID, enrolmentID)) {
+            _ mustEqual true
+          }
+        }
+      }
+
+      "must return false if disclosure ID and enrolment ID don't match a submission" in {
+        val app: Application = new GuiceApplicationBuilder().build()
+
+        running(app) {
+          val repo: SubmissionDetailsRepository = app.injector.instanceOf[SubmissionDetailsRepository]
+
+          database.flatMap(_.drop()).futureValue
+          await(repo.storeSubmissionDetails(submissionDetails))
+
+          whenReady(repo.doesDisclosureIdMatchEnrolmentID(disclosureID, "XADAC0001111111")) {
+            _ mustEqual false
+          }
+        }
+      }
+    }
+
+    "doesDisclosureIdMatchArrangementID" - {
+      "must return true if disclosure ID and arrangement ID match a submission" in {
+        val app: Application = new GuiceApplicationBuilder().build()
+
+        running(app) {
+          val repo: SubmissionDetailsRepository = app.injector.instanceOf[SubmissionDetailsRepository]
+
+          database.flatMap(_.drop()).futureValue
+          await(repo.storeSubmissionDetails(submissionDetails))
+
+          whenReady(repo.doesDisclosureIdMatchArrangementID(disclosureID, arrangementID)) {
+            _ mustEqual true
+          }
+        }
+      }
+
+      "must return false if disclosure ID and arrangement ID don't match a submission" in {
+        val app: Application = new GuiceApplicationBuilder().build()
+
+        running(app) {
+          val repo: SubmissionDetailsRepository = app.injector.instanceOf[SubmissionDetailsRepository]
+
+          database.flatMap(_.drop()).futureValue
+          await(repo.storeSubmissionDetails(submissionDetails))
+
+          whenReady(repo.doesDisclosureIdMatchArrangementID(disclosureID, "GBA20200904BBBBBB")) {
+            _ mustEqual false
           }
         }
       }
