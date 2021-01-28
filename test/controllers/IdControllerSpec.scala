@@ -18,7 +18,7 @@ package controllers
 
 import base.SpecBase
 import controllers.auth.{AuthAction, FakeAuthAction}
-import models.ArrangementId
+import models.{ArrangementId, DisclosureId}
 import org.mockito.Matchers.any
 import org.mockito.Mockito.when
 import org.scalatestplus.scalacheck.ScalaCheckPropertyChecks
@@ -44,9 +44,11 @@ with ScalaCheckPropertyChecks {
     ).build()
 
   val validArrangementId: ArrangementId = ArrangementId(dateString = "20200601", suffix = "A1B1C1")
+  val validDisclosureId: DisclosureId = DisclosureId(dateString = "20210101", suffix = "A1B1C1")
+  val enrolmentID: String = "XADAC0001234567"
 
-  "IdController"-{
-    "verifyArrangementId" -{
+  "IdController" - {
+    "verifyArrangementId" - {
       "return 204 for valid existing arrangement id" in {
 
         when(mockIdService.verifyArrangementId(any())).thenReturn(Future.successful(Some(true)))
@@ -74,6 +76,68 @@ with ScalaCheckPropertyChecks {
             status(result) mustEqual BAD_REQUEST
       }
 
+
+    }
+
+    "verifyDisclosureIDs" - {
+      "return 204 for valid arrangement and disclosure ids and if they are from the same submission" in {
+
+        when(mockIdService.verifyIDs(any(), any(), any())).thenReturn(Future.successful((Some(true), Some(true))))
+
+        val request =
+          FakeRequest(GET, routes.IdController.verifyDisclosureIDs(validArrangementId.value, validDisclosureId.value, enrolmentID).url)
+
+        val result = route(application, request).value
+        status(result) mustEqual NO_CONTENT
+      }
+
+      "return 404 for ids that aren't from the submission" in {
+
+        when(mockIdService.verifyIDs(any(), any(), any())).thenReturn(Future.successful((Some(false), Some(false))))
+
+        val request =
+          FakeRequest(GET, routes.IdController.verifyDisclosureIDs(validArrangementId.value, validDisclosureId.value, enrolmentID).url)
+
+        val result = route(application, request).value
+        status(result) mustEqual NOT_FOUND
+        contentAsString(result) mustEqual "Arrangement ID and Disclosure ID are not from the same submission"
+      }
+
+      "return 404 for invalid/missing arrangement id" in {
+
+        when(mockIdService.verifyIDs(any(), any(), any())).thenReturn(Future.successful((Some(false), Some(true))))
+
+        val request =
+          FakeRequest(GET, routes.IdController.verifyDisclosureIDs(validArrangementId.value, validDisclosureId.value, enrolmentID).url)
+
+        val result = route(application, request).value
+        status(result) mustEqual NOT_FOUND
+        contentAsString(result) mustEqual "Arrangement ID not found"
+      }
+
+      "return 404 for disclosure id that doesn't match the enrolment id in the submission" in {
+
+        when(mockIdService.verifyIDs(any(), any(), any())).thenReturn(Future.successful((Some(true), Some(false))))
+
+        val request =
+          FakeRequest(GET, routes.IdController.verifyDisclosureIDs(validArrangementId.value, validDisclosureId.value, enrolmentID).url)
+
+        val result = route(application, request).value
+        status(result) mustEqual NOT_FOUND
+        contentAsString(result) mustEqual "Disclosure ID doesn't match enrolment ID"
+      }
+
+      "return 400 for ids that do not exist or verification failed" in {
+
+        when(mockIdService.verifyIDs(any(), any(), any())).thenReturn(Future.successful((None, None)))
+
+        val request =
+          FakeRequest(GET, routes.IdController.verifyDisclosureIDs(validArrangementId.value, validDisclosureId.value, enrolmentID).url)
+
+        val result = route(application, request).value
+        status(result) mustEqual BAD_REQUEST
+        contentAsString(result) mustEqual "IDs not found"
+      }
 
     }
 

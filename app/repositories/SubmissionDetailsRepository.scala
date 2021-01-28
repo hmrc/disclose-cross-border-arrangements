@@ -136,10 +136,27 @@ class SubmissionDetailsRepository @Inject()(mongo: ReactiveMongoApi)
 
   }
 
-  def doesDisclosureIdMatchEnrolmentID(disclosureId: String, enrolmentId: String):Future[Boolean] = {
+  def doesDisclosureIdMatchEnrolmentID(disclosureId: String, enrolmentId: String): Future[Boolean] = {
     val selector = Json.obj(
       "enrolmentID" -> enrolmentId,
       "disclosureID" -> disclosureId
+    )
+
+    val sortByLatestSubmission = Json.obj(
+      "submissionTime" -> -1
+    )
+
+    submissionDetailsCollection.flatMap(
+      _.find(selector, None)
+        .sort(sortByLatestSubmission)
+        .one[SubmissionDetails]
+    ) map (_.isDefined)
+  }
+
+  def doesDisclosureIdMatchArrangementID(disclosureID: String, arrangementID: String): Future[Boolean] = {
+    val selector = Json.obj(
+      "arrangementID" -> arrangementID,
+      "disclosureID" -> disclosureID
     )
 
     val sortByLatestSubmission = Json.obj(

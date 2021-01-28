@@ -39,9 +39,8 @@ class IdService @Inject()(val dateHelper: DateHelper,
   val nonUkPrefixes = List("ATA", "BEA", "BGA", "CYA", "CZA", "DKA", "EEA", "FIA", "FRA", "DEA", "GRA", "HUA", "HRA",
                            "IEA", "ITA", "LVA", "LTA", "LUA", "MTA", "NLA", "PLA", "PTA", "ROA", "SKA", "SIA", "ESA", "SEA")
 
-  //TODO Is this all of them?
   val nonUkDisclosurePrefixes = List("ATD", "BED", "BGD", "CYD", "CZD", "DKD", "EED", "FID", "FRD", "DED", "GRD", "HUD", "HRD",
-    "IED", "ITD", "LVD", "LTD", "LUD", "MTD", "NLD", "PLD", "PTD", "ROD", "SKD", "SID", "ESD", "SED")
+                                     "IED", "ITD", "LVD", "LTD", "LUD", "MTD", "NLD", "PLD", "PTD", "ROD", "SKD", "SID", "ESD", "SED")
 
   def generateArrangementId(): Future[ArrangementId] = {
 
@@ -81,6 +80,26 @@ class IdService @Inject()(val dateHelper: DateHelper,
           result => Some(result))
       case _ => Future(None)
     }
+
+  def verifyIDs(suppliedArrangementId: String,
+                suppliedDisclosureId: String,
+                enrolmentId: String): Future[(Option[Boolean], Option[Boolean])] = {
+    val verifiedIDs = for {
+      arrangementID <- verifyArrangementId(suppliedArrangementId)
+      disclosureID <- verifyDisclosureId(suppliedDisclosureId, enrolmentId)
+    } yield (arrangementID, disclosureID)
+
+    verifiedIDs.flatMap {
+      case (Some(true), Some(true)) =>
+        submissionDetailsRepository.doesDisclosureIdMatchArrangementID(suppliedDisclosureId, suppliedArrangementId).map {
+          case true => (Some(true), Some(true))
+          case false => (Some(false), Some(false))
+        }
+      case ids => Future(ids._1, ids._2)
+    }
+
+  }
+
 
   def createArrangementIdFromSuppliedString(suppliedString: String): Option[ArrangementId] = {
 

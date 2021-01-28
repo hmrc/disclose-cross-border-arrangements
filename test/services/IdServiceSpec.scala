@@ -17,7 +17,6 @@
 package services
 
 import java.time.LocalDate
-
 import base.SpecBase
 import helpers.{DateHelper, SuffixHelper}
 import models.{ArrangementId, DisclosureId}
@@ -27,7 +26,7 @@ import org.mockito.Mockito.{times, verify, when}
 import org.scalatest.BeforeAndAfterEach
 import org.scalatestplus.mockito.MockitoSugar
 import org.scalatestplus.scalacheck.ScalaCheckPropertyChecks
-import repositories.{ArrangementIdRepository, DisclosureIdRepository}
+import repositories.{ArrangementIdRepository, DisclosureIdRepository, SubmissionDetailsRepository}
 
 import scala.concurrent.Future
 
@@ -40,10 +39,12 @@ class IdServiceSpec extends SpecBase
   val mockSuffixHelper: SuffixHelper = mock[SuffixHelper]
   val mockArrangementIdRepository: ArrangementIdRepository = mock[ArrangementIdRepository]
   val mockDisclosureIdRepository: DisclosureIdRepository = mock[DisclosureIdRepository]
+  val mockSubmissionDetailsRepository: SubmissionDetailsRepository = mock[SubmissionDetailsRepository]
 
   val service = new IdService(mockDateHelper, mockSuffixHelper, mockArrangementIdRepository,
-    mockDisclosureIdRepository)
-  val testDate = LocalDate.of(2020, 6, 1)
+    mockDisclosureIdRepository, mockSubmissionDetailsRepository)
+  val testDate: LocalDate = LocalDate.of(2020, 6, 1)
+  val enrolmentID: String = "XADAC0001234567"
 
   val newSuffix = "A1B2C3"
   when(mockDateHelper.today).thenReturn(testDate)
@@ -58,7 +59,7 @@ class IdServiceSpec extends SpecBase
   val newDisclosureId: DisclosureId = DisclosureId(dateString = expectedDateString, suffix = newSuffix)
 
   override def beforeEach(): Unit = {
-    reset(mockArrangementIdRepository, mockDisclosureIdRepository)
+    reset(mockArrangementIdRepository, mockDisclosureIdRepository, mockSubmissionDetailsRepository)
   }
 
   val arrangementIdPrefix = "GBA"
@@ -162,8 +163,8 @@ class IdServiceSpec extends SpecBase
 
             verify(mockArrangementIdRepository, times(0)).doesArrangementIdExist(any())
 
-
       }
+
       "must return false arrangementId if arrangement id is in the correct format but does not exist" in {
         when(mockArrangementIdRepository.doesArrangementIdExist(any())).thenReturn(Future.successful(false))
 
@@ -171,6 +172,48 @@ class IdServiceSpec extends SpecBase
         service.verifyArrangementId(id).futureValue mustBe Some(false)
         verify(mockArrangementIdRepository, times(1)).doesArrangementIdExist(any())
 
+      }
+
+    }
+
+    "does disclosureId exist" - {
+      "must return true if disclosureId is in correct format and exists" in {
+        when(mockSubmissionDetailsRepository.doesDisclosureIdMatchEnrolmentID(any(), any())).thenReturn(Future.successful(true))
+
+        val idAsString = "GBD" + expectedDateString + newSuffix
+        val formattedArrangementId = DisclosureId(dateString = expectedDateString, suffix = newSuffix)
+
+        service.verifyDisclosureId(idAsString, enrolmentID).futureValue mustBe Some(true)
+
+        verify(mockSubmissionDetailsRepository, times(1)).doesDisclosureIdMatchEnrolmentID(formattedArrangementId.value, enrolmentID)
+      }
+
+      "must return true for nonuk disclosureId in correct format" in {
+        val nonUkCodes = List("AT", "BE", "BG", "CY", "CZ", "DK", "EE", "FI", "FR", "DE", "GR", "HU", "HR", "IE", "IT",
+          "LV", "LT", "LU", "MT", "NL", "PL", "PT", "RO", "SK", "SI", "ES", "SE")
+
+        nonUkCodes.foreach {
+          code => {
+            val idAsString = s"${code}D" + expectedDateString + newSuffix
+            service.verifyDisclosureId(idAsString, enrolmentID).futureValue mustBe Some(true)
+
+            verify(mockSubmissionDetailsRepository, times(0)).doesDisclosureIdMatchEnrolmentID(any(), any())
+          }
+        }
+      }
+
+      "must false for uk suffix that is not a valid prefix" in {
+        val idAsString = s"ZZD" + expectedDateString + newSuffix
+        service.verifyDisclosureId(idAsString, enrolmentID).futureValue mustBe None
+
+        verify(mockSubmissionDetailsRepository, times(0)).doesDisclosureIdMatchEnrolmentID(any(), any())
+      }
+
+      "must return false if disclosureId is in the correct format but does not match enrolment id in the submission" in {
+        when(mockSubmissionDetailsRepository.doesDisclosureIdMatchEnrolmentID(any(), any())).thenReturn(Future.successful(false))
+
+        val id = "GBD" + expectedDateString + newSuffix
+        service.verifyDisclosureId(id, enrolmentID).futureValue mustBe Some(false)
       }
 
     }
