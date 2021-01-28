@@ -61,23 +61,23 @@ class AuditServiceSpec extends SpecBase with MockitoSugar with BeforeAndAfterEac
 
   val auditType = "disclosureFileSubmission"
   "Audit service must" - {
-       "must generate correct payload for failed Manual Submission parsing" in {
-          when(auditConnector.sendExtendedEvent(any())(any(), any()))
-            .thenReturn(Future.successful(AuditResult.Success))
-
-          val xml = <dummyTag></dummyTag>
-          val parseErrors = ListBuffer(SaxParseError(1, "errorMessage"))
-          auditService.auditManualSubmissionParseFailure(xml, parseErrors)
-
-          val expectedjson = Json.obj("xml" -> xml.toString(),
-            "errors" -> parseErrors.toString())
-
-          val eventCaptor = ArgumentCaptor.forClass(classOf[ExtendedDataEvent])
-
-          verify(auditConnector, times(1)).sendExtendedEvent(eventCaptor.capture())(any(),any())
-
-          eventCaptor.getValue.detail mustBe expectedjson
-      }
+//       "must generate correct payload for failed Manual Submission parsing" in {
+//          when(auditConnector.sendExtendedEvent(any())(any(), any()))
+//            .thenReturn(Future.successful(AuditResult.Success))
+//
+//          val xml = <dummyTag></dummyTag>
+//          val parseErrors = ListBuffer(SaxParseError(1, "errorMessage"))
+//          auditService.auditManualSubmissionParseFailure(xml, parseErrors)
+//
+//          val expectedjson = Json.obj("xml" -> xml.toString(),
+//            "errors" -> parseErrors.toString())
+//
+//          val eventCaptor = ArgumentCaptor.forClass(classOf[ExtendedDataEvent])
+//
+//          verify(auditConnector, times(1)).sendExtendedEvent(eventCaptor.capture())(any(),any())
+//
+//          eventCaptor.getValue.detail mustBe expectedjson
+//      }
   }
 }
 
