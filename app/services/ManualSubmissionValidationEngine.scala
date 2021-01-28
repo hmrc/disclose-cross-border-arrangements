@@ -50,8 +50,8 @@ class ManualSubmissionValidationEngine @Inject()(xmlValidationService: XMLValida
         combineResults(xmlAndXmlValidationStatus, businessRulesResult, metaDateResult) match {
 
           case None =>  auditService.auditManualSubmissionParseFailure(elem, xmlAndXmlValidationStatus)
-            None
-          case Some(Seq()) => Some(ManualSubmissionValidationSuccess("id"))
+                         None
+          case Some(Seq()) => Some(ManualSubmissionValidationSuccess(metaDateResult.right.getOrElse(metaData.fold("id")(_.messageRefId))))
           case Some(Seq(errors)) => Some(ManualSubmissionValidationFailure(Seq(errors)))
         }
       }
