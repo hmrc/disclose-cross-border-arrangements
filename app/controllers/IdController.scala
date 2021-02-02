@@ -17,11 +17,11 @@
 package controllers
 
 import controllers.auth.AuthAction
-import javax.inject.Inject
 import play.api.mvc.{Action, AnyContent, ControllerComponents}
 import services.IdService
 import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
 
+import javax.inject.Inject
 import scala.concurrent.ExecutionContext
 
 class IdController @Inject()(
@@ -39,6 +39,33 @@ extends BackendController(cc) {
         case Some(true) => NoContent
         case Some(false) => NotFound("Arrangement Id does not exist")
         case None => BadRequest("invalid format")
+      }
+  }
+
+  def verifyDisclosureId(disclosureId: String, enrolmentId: String): Action[AnyContent] = authenticate.async {
+    implicit request =>
+      idService.verifyDisclosureId(disclosureId, enrolmentId) map {
+        case Some(true) => NoContent
+        case Some(false) => NotFound("Disclosure Id does not exist")
+        case None => BadRequest("invalid format")
+      }
+  }
+
+  def verifyDisclosureIDs(arrangementId: String,
+                          disclosureId: String,
+                          enrolmentId: String): Action[AnyContent] = authenticate.async {
+    implicit request =>
+      val arrangementIDNotFound = "Arrangement ID not found"
+      val disclosureIDNotFound = "Disclosure ID doesn't match enrolment ID"
+      val idsDoNotMatch = "Arrangement ID and Disclosure ID are not from the same submission"
+      val idsNotFound = "IDs not found"
+
+      idService.verifyIDs(arrangementId, disclosureId, enrolmentId) map {
+        case (Some(true), Some(true)) => NoContent
+        case (Some(false), Some(false)) => NotFound(idsDoNotMatch)
+        case (Some(false), _) => NotFound(arrangementIDNotFound)
+        case (_, Some(false)) => NotFound(disclosureIDNotFound)
+        case _ => BadRequest(idsNotFound)
       }
   }
 }
