@@ -39,9 +39,6 @@ class IdService @Inject()(val dateHelper: DateHelper,
   val nonUkPrefixes = List("ATA", "BEA", "BGA", "CYA", "CZA", "DKA", "EEA", "FIA", "FRA", "DEA", "GRA", "HUA", "HRA",
                            "IEA", "ITA", "LVA", "LTA", "LUA", "MTA", "NLA", "PLA", "PTA", "ROA", "SKA", "SIA", "ESA", "SEA")
 
-  val nonUkDisclosurePrefixes = List("ATD", "BED", "BGD", "CYD", "CZD", "DKD", "EED", "FID", "FRD", "DED", "GRD", "HUD", "HRD",
-                                     "IED", "ITD", "LVD", "LTD", "LUD", "MTD", "NLD", "PLD", "PTD", "ROD", "SKD", "SID", "ESD", "SED")
-
   def generateArrangementId(): Future[ArrangementId] = {
 
     val newArrangementId =  ArrangementId(dateString = date, suffix = suffixHelper.generateSuffix())
@@ -74,7 +71,6 @@ class IdService @Inject()(val dateHelper: DateHelper,
   def verifyDisclosureId(suppliedDisclosureId: String, enrolmentId: String): Future[Option[Boolean]] =
 
     createDisclosureIdFromSuppliedString(suppliedDisclosureId) match {
-      case Some(validDisclosureId) if nonUkDisclosurePrefixes.contains(validDisclosureId.prefix) =>  Future(Some(true))
       case Some(validDisclosureId) if validDisclosureId.prefix.equals("GBD") =>
         submissionDetailsRepository.doesDisclosureIdMatchEnrolmentID(validDisclosureId.value, enrolmentId).map(
           result => Some(result))
@@ -95,7 +91,7 @@ class IdService @Inject()(val dateHelper: DateHelper,
           case true => (Some(true), Some(true))
           case false => (Some(false), Some(false))
         }
-      case ids => Future(ids._1, ids._2)
+      case ids => Future((ids._1, ids._2))
     }
 
   }
