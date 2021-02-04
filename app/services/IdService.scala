@@ -65,7 +65,7 @@ class IdService @Inject()(val dateHelper: DateHelper,
       case Some(validArrangementId) if nonUkPrefixes.contains(validArrangementId.prefix) =>  Future(Some(true))
       case Some(validArrangementId) if validArrangementId.prefix.equals("GBA") => arrangementIdRepository.doesArrangementIdExist(validArrangementId).map(
                                        result => Some(result))
-      case _ => Future(None)
+      case _ => Future.successful(None)
     }
 
   def verifyDisclosureId(suppliedDisclosureId: String, enrolmentId: String): Future[Option[Boolean]] =
@@ -74,7 +74,7 @@ class IdService @Inject()(val dateHelper: DateHelper,
       case Some(validDisclosureId) if validDisclosureId.prefix.equals("GBD") =>
         submissionDetailsRepository.doesDisclosureIdMatchEnrolmentID(validDisclosureId.value, enrolmentId).map(
           result => Some(result))
-      case _ => Future(None)
+      case _ => Future.successful(None)
     }
 
   def verifyIDs(suppliedArrangementId: String,
@@ -91,7 +91,7 @@ class IdService @Inject()(val dateHelper: DateHelper,
           case true => (Some(true), Some(true))
           case false => (Some(false), Some(false))
         }
-      case ids => Future((ids._1, ids._2))
+      case ids => Future.successful((ids._1, ids._2))
     }
 
   }
