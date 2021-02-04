@@ -114,9 +114,9 @@ class SubmissionDetailsRepository @Inject()(mongo: ReactiveMongoApi)
   def searchSubmissions(searchCriteria: String): Future[List[SubmissionDetails]] = {
     val selector = Json.obj(
       "$or" -> Json.arr(
-        Json.obj("fileName" -> Json.obj("$regex" -> s"$searchCriteria.*", "$options" -> "i")),
         Json.obj("arrangementID" -> Json.obj("$regex" -> s"$searchCriteria.*", "$options" -> "i")),
-        Json.obj("disclosureID" -> Json.obj("$regex" -> s"$searchCriteria.*", "$options" -> "i"))
+        Json.obj("disclosureID" -> Json.obj("$regex" -> s"$searchCriteria.*", "$options" -> "i")),
+        Json.obj("messageRefId" -> Json.obj("$regex" -> s"$searchCriteria.*", "$options" -> "i"))
       )
     )
 
