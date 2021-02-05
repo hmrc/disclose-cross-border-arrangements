@@ -30,7 +30,7 @@ class SubmissionDetailsRepositorySpec
       disclosureID = Some(disclosureID),
       importInstruction = "Add",
       initialDisclosureMA = false,
-      messageRefId = "GB0000000XXX")
+      messageRefId = "GBXADAC0001234567AAA00101")
 
     "calling getSubmissionDetails" - {
       "must get submission details" in {
@@ -193,9 +193,8 @@ class SubmissionDetailsRepositorySpec
         }
       }
 
-      "must search for the file name and return a list of matching submissions" in {
-        val submissionDetailsSameFileName = submissionDetails.copy(disclosureID = Some("GBD20200601BBB000"))
-        val submissionDetailsOther = submissionDetails.copy(fileName = "other.xml")
+      "must search for the message ref ID and return a list of matching submissions" in {
+        val submissionDetailsOther = submissionDetails.copy(messageRefId = "GBXADAC0001234567AAA00102")
         val app: Application = new GuiceApplicationBuilder().build()
 
         running(app) {
@@ -203,11 +202,10 @@ class SubmissionDetailsRepositorySpec
 
           database.flatMap(_.drop()).futureValue
           await(repo.storeSubmissionDetails(submissionDetails))
-          await(repo.storeSubmissionDetails(submissionDetailsSameFileName))
           await(repo.storeSubmissionDetails(submissionDetailsOther))
 
-          whenReady(repo.searchSubmissions("fileName.xml")) {
-            _ mustEqual List(submissionDetails, submissionDetailsSameFileName)
+          whenReady(repo.searchSubmissions("GBXADAC0001234567AAA00101")) {
+            _ mustEqual List(submissionDetails)
           }
         }
       }

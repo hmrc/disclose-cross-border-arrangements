@@ -187,20 +187,6 @@ class IdServiceSpec extends SpecBase
         verify(mockSubmissionDetailsRepository, times(1)).doesDisclosureIdMatchEnrolmentID(formattedArrangementId.value, enrolmentID)
       }
 
-      "must return true for nonuk disclosureId in correct format" in {
-        val nonUkCodes = List("AT", "BE", "BG", "CY", "CZ", "DK", "EE", "FI", "FR", "DE", "GR", "HU", "HR", "IE", "IT",
-          "LV", "LT", "LU", "MT", "NL", "PL", "PT", "RO", "SK", "SI", "ES", "SE")
-
-        nonUkCodes.foreach {
-          code => {
-            val idAsString = s"${code}D" + expectedDateString + newSuffix
-            service.verifyDisclosureId(idAsString, enrolmentID).futureValue mustBe Some(true)
-
-            verify(mockSubmissionDetailsRepository, times(0)).doesDisclosureIdMatchEnrolmentID(any(), any())
-          }
-        }
-      }
-
       "must return false for uk suffix that is not a valid prefix" in {
         val idAsString = "ZZD" + expectedDateString + newSuffix
         service.verifyDisclosureId(idAsString, enrolmentID).futureValue mustBe None
