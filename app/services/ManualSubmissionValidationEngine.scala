@@ -49,7 +49,7 @@ class ManualSubmissionValidationEngine @Inject()(xmlValidationService: XMLValida
       } yield {
         combineResults(xmlAndXmlValidationStatus, businessRulesResult, metaDateResult) match {
 
-          case None =>  auditService.auditManualSubmissionParseFailure(elem, xmlAndXmlValidationStatus)
+          case None =>  auditService.auditManualSubmissionParseFailure(enrolmentId, metaData, xmlAndXmlValidationStatus)
                          None
           case Some(Seq()) => Some(ManualSubmissionValidationSuccess(metaDateResult.right.getOrElse(metaData.fold("id")(_.messageRefId))))
           case Some(Seq(errors)) => Some(ManualSubmissionValidationFailure(Seq(errors)))
