@@ -17,9 +17,8 @@
 package services
 
 import config.AppConfig
-
 import javax.inject.Inject
-import models.SaxParseError
+import models.{Dac6MetaData, GenericError, SaxParseError}
 import org.slf4j.LoggerFactory
 import play.api.libs.json.{JsObject, Json}
 import uk.gov.hmrc.http.HeaderCarrier
@@ -68,38 +67,65 @@ class AuditService @Inject()(appConfig: AppConfig, auditConnector: AuditConnecto
       }}
   }
 
-  def auditManualSubmissionParseFailure(xml: Elem, errors: ListBuffer[SaxParseError])(implicit hc: HeaderCarrier): Unit = {
+  def auditManualSubmissionParseFailure(enrolmentID: String, metaData: Option[Dac6MetaData], errors: ListBuffer[SaxParseError])(implicit hc: HeaderCarrier): Unit = {
 
-//    val auditType = "ManualSubmissionParseFailure"
-//
-//    val auditMap: JsObject = Json.obj("xml" -> xml.toString(),
-//      "errors" -> errors.toString())
-//
-//    if(appConfig.validationAuditToggle) {
-//      auditConnector.sendExtendedEvent(ExtendedDataEvent(
-//        auditSource = appConfig.appName,
-//        auditType = auditType,
-//        detail = auditMap,
-//        tags = AuditExtensions.auditHeaderCarrier(hc).toAuditDetails()
-//      )) map { ar: AuditResult =>
-//        ar match {
-//          case Failure(msg, ex) =>
-//            ex match {
-//              case Some(throwable) =>
-//                logger.warn(s"The attempt to issue audit event $auditType failed with message : $msg", throwable)
-//              case None =>
-//                logger.warn(s"The attempt to issue audit event $auditType failed with message : $msg")
-//            }
-//            ar
-//          case Disabled =>
-//            logger.warn(s"The attempt to issue audit event $auditType was unsuccessful, as auditing is currently disabled in config"); ar
-//          case _ => logger.debug(s"Audit event $auditType issued successfully."); ar
-//        }
-//      }
-//    } else {
-//      logger.warn(s"Validation has failed and auditing currently disabled for this event type")
-//    }
+    val auditType = "ManualSubmissionParseFailure"
 
-    Unit
+    val noneProvided = "None Provided"
+
+    val auditMap: JsObject = Json.obj(
+      "enrolmentID" -> enrolmentID,
+      "arrangementID" -> metaData.fold(noneProvided)(data => data.arrangementID.getOrElse(noneProvided)),
+      "disclosureID" ->metaData.fold(noneProvided)(data => data.disclosureID.getOrElse(noneProvided)),
+      "messageRefID" -> metaData.fold(noneProvided)(data => data.messageRefId),
+      "disclosureImportInstruction" -> metaData.fold("Unknown Import Instruction")(data => data.importInstruction),
+      "initialDisclosureMA" -> metaData.fold("InitialDisclosureMA value not supplied")(data => data.initialDisclosureMA.toString),
+      "errors" -> buildErrorMessagePayload(errors))
+
+    if(appConfig.validationAuditToggle) {
+      auditConnector.sendExtendedEvent(ExtendedDataEvent(
+        auditSource = appConfig.appName,
+        auditType = auditType,
+        detail = auditMap,
+        tags = AuditExtensions.auditHeaderCarrier(hc).toAuditDetails()
+      )) map { ar: AuditResult =>
+        ar match {
+          case Failure(msg, ex) =>
+            ex match {
+              case Some(throwable) =>
+                logger.warn(s"The attempt to issue audit event $auditType failed with message : $msg", throwable)
+              case None =>
+                logger.warn(s"The attempt to issue audit event $auditType failed with message : $msg")
+            }
+            ar
+          case Disabled =>
+            logger.warn(s"The attempt to issue audit event $auditType was unsuccessful, as auditing is currently disabled in config"); ar
+          case _ => logger.debug(s"Audit event $auditType issued successfully."); ar
+        }
+      }
+    } else {
+      logger.warn(s"Validation has failed and auditing currently disabled for this event type")
+    }
+
+
+  }
+
+
+  private def buildErrorMessagePayload(errors: ListBuffer[SaxParseError]): String = {
+
+    val formattedErrors = errors.map {error =>
+
+
+      s"""|{
+          |"lineNumber" : ${error.lineNumber},
+          |"errorMessage" : ${error.errorMessage}
+          |}""".stripMargin
+    }.mkString(",")
+
+
+    s"""|[
+        |$formattedErrors
+        |]""".stripMargin.mkString
+
   }
 }

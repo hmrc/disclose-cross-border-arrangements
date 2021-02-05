@@ -16,12 +16,14 @@
 
 package services
 import base.SpecBase
-import models.SaxParseError
+import models.{Dac6MetaData, SaxParseError}
 import org.mockito.ArgumentCaptor
 import org.mockito.Matchers.any
 import org.mockito.Mockito.{times, verify, _}
+import org.scalacheck.Arbitrary.arbitrary
 import org.scalatest.BeforeAndAfterEach
 import org.scalatestplus.mockito.MockitoSugar
+import org.scalatestplus.scalacheck.ScalaCheckPropertyChecks.forAll
 import play.api.inject
 import play.api.inject.guice.GuiceApplicationBuilder
 import play.api.libs.json.Json
@@ -60,24 +62,56 @@ class AuditServiceSpec extends SpecBase with MockitoSugar with BeforeAndAfterEac
     </DAC6_Arrangement>
 
   val auditType = "disclosureFileSubmission"
+
+
   "Audit service must" - {
-//       "must generate correct payload for failed Manual Submission parsing" in {
-//          when(auditConnector.sendExtendedEvent(any())(any(), any()))
-//            .thenReturn(Future.successful(AuditResult.Success))
-//
-//          val xml = <dummyTag></dummyTag>
-//          val parseErrors = ListBuffer(SaxParseError(1, "errorMessage"))
-//          auditService.auditManualSubmissionParseFailure(xml, parseErrors)
-//
-//          val expectedjson = Json.obj("xml" -> xml.toString(),
-//            "errors" -> parseErrors.toString())
-//
-//          val eventCaptor = ArgumentCaptor.forClass(classOf[ExtendedDataEvent])
-//
-//          verify(auditConnector, times(1)).sendExtendedEvent(eventCaptor.capture())(any(),any())
-//
-//          eventCaptor.getValue.detail mustBe expectedjson
-//      }
+    "must generate correct payload for failed Manual Submission parsing" in {
+      forAll(arbitrary[String], arbitrary[Option[String]], arbitrary[Option[String]], arbitrary[String]) { (enrolmentID, arrangementID, disclosureID, messageRefID) =>
+        reset(auditConnector)
+
+        when(auditConnector.sendExtendedEvent(any())(any(), any()))
+          .thenReturn(Future.successful(AuditResult.Success))
+
+        val metaData = Dac6MetaData(importInstruction = "DAC6NEW",
+          arrangementID = arrangementID,
+          disclosureID = disclosureID,
+          disclosureInformationPresent = true,
+          initialDisclosureMA = true,
+          messageRefId = messageRefID)
+
+        val parseErrors = ListBuffer(SaxParseError(1, "error-message"), SaxParseError(2, "error-message2"))
+        auditService.auditManualSubmissionParseFailure(enrolmentID, Some(metaData), parseErrors)
+
+        val errorsArray =
+          s"""|[
+              |{
+              |"lineNumber" : 1,
+              |"errorMessage" : error-message
+              |},{
+              |"lineNumber" : 2,
+              |"errorMessage" : error-message2
+              |}
+              |]""".stripMargin
+
+        val arrangmentIdValue = arrangementID.getOrElse("None Provided")
+        val disclosureIdValue = disclosureID.getOrElse("None Provided")
+
+        val expectedjson = Json.obj(
+          "enrolmentID" -> enrolmentID,
+          "arrangementID" -> arrangmentIdValue,
+          "disclosureID" -> disclosureIdValue,
+          "messageRefID" -> metaData.messageRefId,
+          "disclosureImportInstruction" -> "DAC6NEW",
+          "initialDisclosureMA" -> "true",
+          "errors" -> errorsArray)
+
+        val eventCaptor = ArgumentCaptor.forClass(classOf[ExtendedDataEvent])
+
+        verify(auditConnector, times(1)).sendExtendedEvent(eventCaptor.capture())(any(), any())
+
+        eventCaptor.getValue.detail mustBe expectedjson
+      }
+    }
   }
 }
 

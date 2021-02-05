@@ -114,7 +114,7 @@ class ManualSubmissionValidationEngineSpec extends SpecBase with MockitoSugar {
 
       Await.result(validationEngine.validateManualSubmission(xml, enrolmentId), 10 seconds) mustBe Some(ManualSubmissionValidationSuccess("id"))
 
-      verify(mockAuditService, times(0)).auditManualSubmissionParseFailure(any(), any())(any())
+      verify(mockAuditService, times(0)).auditManualSubmissionParseFailure(any(), any(), any())(any())
 
     }
 
@@ -129,7 +129,7 @@ class ManualSubmissionValidationEngineSpec extends SpecBase with MockitoSugar {
 
       val expectedResult = Some(ManualSubmissionValidationFailure(Seq(defaultError)))
       Await.result(validationEngine.validateManualSubmission(xml, enrolmentId), 10 seconds) mustBe expectedResult
-      verify(mockAuditService, times(0)).auditManualSubmissionParseFailure(any(), any())(any())
+      verify(mockAuditService, times(0)).auditManualSubmissionParseFailure(any(), any(), any())(any())
 
     }
 
@@ -144,7 +144,7 @@ class ManualSubmissionValidationEngineSpec extends SpecBase with MockitoSugar {
 
       val expectedResult = Some(ManualSubmissionValidationFailure(Seq("metaDataRules.arrangementId.arrangementIdDoesNotMatchRecords")))
       Await.result(validationEngine.validateManualSubmission(xml, enrolmentId), 10 seconds) mustBe expectedResult
-      verify(mockAuditService, times(0)).auditManualSubmissionParseFailure(any(), any())(any())
+      verify(mockAuditService, times(0)).auditManualSubmissionParseFailure(any(), any(), any())(any())
 
     }
 
@@ -157,7 +157,7 @@ class ManualSubmissionValidationEngineSpec extends SpecBase with MockitoSugar {
 
       Await.result(validationEngine.validateManualSubmission(xml, enrolmentId), 10 seconds) mustBe None
 
-      verify(mockAuditService, times(1)).auditManualSubmissionParseFailure(any(), any())(any())
+      verify(mockAuditService, times(1)).auditManualSubmissionParseFailure(any(), any(), any())(any())
     }
   }
 }
