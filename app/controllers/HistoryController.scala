@@ -52,6 +52,17 @@ class HistoryController @Inject()(
         }
   }
 
+  def disclosureDetails(disclosureId: String): Action[AnyContent] = authenticate.async {
+    implicit request =>
+      submissionDetailsRepository.getSubmissionDetails(disclosureId)
+        .map {
+          details => Ok(Json.toJson(details))
+        }.recover {
+        case e =>
+          InternalServerError(s"Failed with the following error: $e")
+      }
+  }
+
   def retrieveFirstDisclosure(arrangementId: String): Action[AnyContent] = authenticate.async {
     implicit request =>
       submissionDetailsRepository.retrieveFirstDisclosureForArrangementId(arrangementId).map {

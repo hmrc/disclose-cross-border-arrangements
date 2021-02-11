@@ -8,6 +8,7 @@ GET        /get-history/:enrolmentId                     controllers.SubmissionC
 
 GET        /history/count/:enrolmentId                        controllers.HistoryController.noOfPreviousSubmissions(enrolmentId: String)
 GET        /history/submissions/:enrolmentId                  controllers.HistoryController.submissionDetails(enrolmentId: String)
+GET        /history/disclosures/:disclosureId                  controllers.HistoryController.disclosureDetails(disclosureId: String)
 GET        /history/first-disclosure/:arrangementId           controllers.HistoryController.retrieveFirstDisclosure(arrangementId: String)
 GET        /history/search-submissions/:searchCriteria        controllers.HistoryController.searchSubmissions(searchCriteria: String)
 GET        /history/is-marketable-arrangement/:arrangementId  controllers.HistoryController.isMarketableArrangement(arrangementId: String)
