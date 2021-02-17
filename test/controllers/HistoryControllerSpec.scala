@@ -95,6 +95,34 @@ class HistoryControllerSpec extends SpecBase
     }
   }
 
+  "disclosureDetails" - {
+    "must return OK with submission details" in {
+      forAll(listWithMaxLength[SubmissionDetails](15)){
+        details =>
+          when(mockSubmissionDetailsRepository.getSubmissionDetails(any()))
+            .thenReturn(Future.successful(details.headOption))
+
+          val request = FakeRequest(GET, routes.HistoryController.disclosureDetails("123").url)
+
+          val result = route(application, request).value
+
+          status(result) mustEqual OK
+          contentAsJson(result) mustEqual Json.toJson(details.headOption)
+      }
+    }
+
+    "must return Internal Service Error when there is a problem fetching results" in {
+      when(mockSubmissionDetailsRepository.getSubmissionDetails(any()))
+        .thenReturn(Future.failed(new Exception))
+
+      val request = FakeRequest(GET, routes.HistoryController.disclosureDetails("123").url)
+
+      val result = route(application, request).value
+
+      status(result) mustEqual INTERNAL_SERVER_ERROR
+    }
+  }
+
   "retrieveFirstDisclosure" - {
     "must return a NOT_FOUND if there is no first disclosure" in {
       when(mockSubmissionDetailsRepository.retrieveFirstDisclosureForArrangementId(""))
