@@ -79,7 +79,7 @@ class IdService @Inject()(val dateHelper: DateHelper,
 
   def verifyIDs(suppliedArrangementId: String,
                 suppliedDisclosureId: String,
-                enrolmentId: String): Future[(Option[Boolean], Option[Boolean])] = {
+                enrolmentId: String): Future[(Option[Boolean], Option[Boolean], Option[Boolean])] = {
     val verifiedIDs = for {
       arrangementID <- verifyArrangementId(suppliedArrangementId)
       disclosureID <- verifyDisclosureId(suppliedDisclosureId, enrolmentId)
@@ -88,10 +88,10 @@ class IdService @Inject()(val dateHelper: DateHelper,
     verifiedIDs.flatMap {
       case (Some(true), Some(true)) =>
         submissionDetailsRepository.doesDisclosureIdMatchArrangementID(suppliedDisclosureId, suppliedArrangementId).map {
-          case true => (Some(true), Some(true))
-          case false => (Some(false), Some(false))
+          case true => (Some(true), Some(true), Some(true))
+          case false => (Some(true), Some(true), Some(false))
         }
-      case ids => Future.successful((ids._1, ids._2))
+      case ids => Future.successful((ids._1, ids._2, None))
     }
 
   }

@@ -61,10 +61,10 @@ extends BackendController(cc) {
       val idsNotFound = "IDs not found"
 
       idService.verifyIDs(arrangementId, disclosureId, enrolmentId) map {
-        case (Some(true), Some(true)) => NoContent
-        case (Some(false), Some(false)) => NotFound(idsDoNotMatch)
-        case (Some(false), _) => NotFound(arrangementIDNotFound)
-        case (_, Some(false)) => NotFound(disclosureIDNotFound)
+        case (Some(true), Some(true), Some(true)) => NoContent
+        case (Some(true), Some(true), Some(false)) => NotFound(idsDoNotMatch)
+        case (Some(false), _, None) => NotFound(arrangementIDNotFound)
+        case (_, Some(false), None) => NotFound(disclosureIDNotFound)
         case _ => BadRequest(idsNotFound)
       }
   }
