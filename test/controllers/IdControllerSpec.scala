@@ -27,7 +27,7 @@ import play.api.inject.guice.GuiceApplicationBuilder
 import play.api.test.FakeRequest
 import play.api.test.Helpers.{GET, route, status, _}
 import play.api.{Application, Configuration}
-import services.IdService
+import services.{ArrangementIDNotFound, DisclosureIDNotFound, IdService, IdsCorrect, IdsInDifferentSubmissions, IdsNotFound}
 
 import scala.concurrent.Future
 
@@ -82,7 +82,7 @@ with ScalaCheckPropertyChecks {
     "verifyDisclosureIDs" - {
       "return 204 for valid arrangement and disclosure ids and if they are from the same submission" in {
 
-        when(mockIdService.verifyIDs(any(), any(), any())).thenReturn(Future.successful((Some(true), Some(true), Some(true))))
+        when(mockIdService.verifyIDs(any(), any(), any())).thenReturn(Future.successful(IdsCorrect))
 
         val request =
           FakeRequest(GET, routes.IdController.verifyDisclosureIDs(validArrangementId.value, validDisclosureId.value, enrolmentID).url)
@@ -93,7 +93,7 @@ with ScalaCheckPropertyChecks {
 
       "return 404 for ids that aren't from the submission" in {
 
-        when(mockIdService.verifyIDs(any(), any(), any())).thenReturn(Future.successful((Some(true), Some(true), Some(false))))
+        when(mockIdService.verifyIDs(any(), any(), any())).thenReturn(Future.successful(IdsInDifferentSubmissions))
 
         val request =
           FakeRequest(GET, routes.IdController.verifyDisclosureIDs(validArrangementId.value, validDisclosureId.value, enrolmentID).url)
@@ -105,7 +105,7 @@ with ScalaCheckPropertyChecks {
 
       "return 404 for invalid/missing arrangement id" in {
 
-        when(mockIdService.verifyIDs(any(), any(), any())).thenReturn(Future.successful((Some(false), Some(true), None)))
+        when(mockIdService.verifyIDs(any(), any(), any())).thenReturn(Future.successful(ArrangementIDNotFound))
 
         val request =
           FakeRequest(GET, routes.IdController.verifyDisclosureIDs(validArrangementId.value, validDisclosureId.value, enrolmentID).url)
@@ -117,7 +117,7 @@ with ScalaCheckPropertyChecks {
 
       "return 404 for disclosure id that doesn't match the enrolment id in the submission" in {
 
-        when(mockIdService.verifyIDs(any(), any(), any())).thenReturn(Future.successful((Some(true), Some(false), None)))
+        when(mockIdService.verifyIDs(any(), any(), any())).thenReturn(Future.successful(DisclosureIDNotFound))
 
         val request =
           FakeRequest(GET, routes.IdController.verifyDisclosureIDs(validArrangementId.value, validDisclosureId.value, enrolmentID).url)
@@ -129,7 +129,7 @@ with ScalaCheckPropertyChecks {
 
       "return 400 for ids that do not exist or verification failed" in {
 
-        when(mockIdService.verifyIDs(any(), any(), any())).thenReturn(Future.successful((None, None, None)))
+        when(mockIdService.verifyIDs(any(), any(), any())).thenReturn(Future.successful(IdsNotFound))
 
         val request =
           FakeRequest(GET, routes.IdController.verifyDisclosureIDs(validArrangementId.value, validDisclosureId.value, enrolmentID).url)

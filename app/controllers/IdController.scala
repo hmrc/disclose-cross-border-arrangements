@@ -18,7 +18,7 @@ package controllers
 
 import controllers.auth.AuthAction
 import play.api.mvc.{Action, AnyContent, ControllerComponents}
-import services.IdService
+import services._
 import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
 
 import javax.inject.Inject
@@ -61,11 +61,11 @@ extends BackendController(cc) {
       val idsNotFound = "IDs not found"
 
       idService.verifyIDs(arrangementId, disclosureId, enrolmentId) map {
-        case (Some(true), Some(true), Some(true)) => NoContent
-        case (Some(true), Some(true), Some(false)) => NotFound(idsDoNotMatch)
-        case (Some(false), _, None) => NotFound(arrangementIDNotFound)
-        case (_, Some(false), None) => NotFound(disclosureIDNotFound)
-        case _ => BadRequest(idsNotFound)
+        case IdsCorrect => NoContent
+        case IdsInDifferentSubmissions => NotFound(idsDoNotMatch)
+        case ArrangementIDNotFound => NotFound(arrangementIDNotFound)
+        case DisclosureIDNotFound => NotFound(disclosureIDNotFound)
+        case IdsNotFound => BadRequest(idsNotFound)
       }
   }
 }
