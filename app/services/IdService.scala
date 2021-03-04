@@ -79,23 +79,20 @@ class IdService @Inject()(val dateHelper: DateHelper,
 
   def verifyIDs(suppliedArrangementId: String,
                 suppliedDisclosureId: String,
-                enrolmentId: String): Future[(Option[Boolean], Option[Boolean])] = {
-    val verifiedIDs = for {
-      arrangementID <- verifyArrangementId(suppliedArrangementId)
-      disclosureID <- verifyDisclosureId(suppliedDisclosureId, enrolmentId)
-    } yield (arrangementID, disclosureID)
-
-    verifiedIDs.flatMap {
-      case (Some(true), Some(true)) =>
-        submissionDetailsRepository.doesDisclosureIdMatchArrangementID(suppliedDisclosureId, suppliedArrangementId).map {
-          case true => (Some(true), Some(true))
-          case false => (Some(false), Some(false))
-        }
-      case ids => Future.successful((ids._1, ids._2))
+                enrolmentId: String): Future[IdVerification] =
+    {
+      for {
+        arrangementID <- verifyArrangementId(suppliedArrangementId)
+        disclosureID <- verifyDisclosureId(suppliedDisclosureId, enrolmentId)
+        disclosureMatches <- submissionDetailsRepository.doesDisclosureIdMatchArrangementID(suppliedDisclosureId, suppliedArrangementId)
+      } yield (arrangementID, disclosureID, disclosureMatches)
+    } map {
+      case (Some(true), Some(true), true) =>  IdsCorrect
+      case (Some(true), Some(true), false) => IdsInDifferentSubmissions
+      case (Some(false), Some(true), _) => ArrangementIDNotFound
+      case (Some(true), Some(false), _) => DisclosureIDNotFound
+      case (Some(false),Some(false), _) => IdsNotFound
     }
-
-  }
-
 
   def createArrangementIdFromSuppliedString(suppliedString: String): Option[ArrangementId] = {
 
@@ -117,3 +114,10 @@ class IdService @Inject()(val dateHelper: DateHelper,
 
   }
 }
+
+sealed trait IdVerification
+case object IdsNotFound extends IdVerification
+case object ArrangementIDNotFound extends IdVerification
+case object DisclosureIDNotFound extends IdVerification
+case object IdsInDifferentSubmissions extends IdVerification
+case object IdsCorrect extends IdVerification

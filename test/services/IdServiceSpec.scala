@@ -203,50 +203,52 @@ class IdServiceSpec extends SpecBase
     }
 
     "verifyIDs" - {
-      "must return (Some(true), Some(true)) if arrangement, disclosure and enrolment IDs are from the same submission" in {
+      "must return IdsCorrect if arrangement, disclosure and enrolment IDs are from the same submission" in {
         when(mockArrangementIdRepository.doesArrangementIdExist(any())).thenReturn(Future.successful(true))
         when(mockSubmissionDetailsRepository.doesDisclosureIdMatchEnrolmentID(any(), any())).thenReturn(Future.successful(true))
         when(mockSubmissionDetailsRepository.doesDisclosureIdMatchArrangementID(any(), any())).thenReturn(Future.successful(true))
 
-        service.verifyIDs(arrangementID, disclosureID, enrolmentID).futureValue mustBe Tuple2(Some(true), Some(true))
+        service.verifyIDs(arrangementID, disclosureID, enrolmentID).futureValue mustBe IdsCorrect
 
         verify(mockArrangementIdRepository, times(1)).doesArrangementIdExist(any())
         verify(mockSubmissionDetailsRepository, times(1)).doesDisclosureIdMatchEnrolmentID(any(), any())
         verify(mockSubmissionDetailsRepository, times(1)).doesDisclosureIdMatchArrangementID(any(), any())
       }
 
-      "must return (Some(false), Some(false)) if arrangement and disclosure IDs aren't from the same submission" in {
+      "must return IdsInDifferentSubmissions if arrangement and disclosure IDs aren't from the same submission" in {
         when(mockArrangementIdRepository.doesArrangementIdExist(any())).thenReturn(Future.successful(true))
         when(mockSubmissionDetailsRepository.doesDisclosureIdMatchEnrolmentID(any(), any())).thenReturn(Future.successful(true))
         when(mockSubmissionDetailsRepository.doesDisclosureIdMatchArrangementID(any(), any())).thenReturn(Future.successful(false))
 
-        service.verifyIDs(arrangementID, disclosureID, enrolmentID).futureValue mustBe Tuple2(Some(false), Some(false))
+        service.verifyIDs(arrangementID, disclosureID, enrolmentID).futureValue mustBe IdsInDifferentSubmissions
 
         verify(mockArrangementIdRepository, times(1)).doesArrangementIdExist(any())
         verify(mockSubmissionDetailsRepository, times(1)).doesDisclosureIdMatchEnrolmentID(any(), any())
         verify(mockSubmissionDetailsRepository, times(1)).doesDisclosureIdMatchArrangementID(any(), any())
       }
 
-      "must return (Some(false), Some(true)) if arrangement ID doesn't exist" in {
+      "must return ArrangementIdNotFound if arrangement ID doesn't exist" in {
         when(mockArrangementIdRepository.doesArrangementIdExist(any())).thenReturn(Future.successful(false))
         when(mockSubmissionDetailsRepository.doesDisclosureIdMatchEnrolmentID(any(), any())).thenReturn(Future.successful(true))
+        when(mockSubmissionDetailsRepository.doesDisclosureIdMatchArrangementID(any(), any())).thenReturn(Future.successful(false))
 
-        service.verifyIDs(arrangementID, disclosureID, enrolmentID).futureValue mustBe Tuple2(Some(false), Some(true))
+        service.verifyIDs(arrangementID, disclosureID, enrolmentID).futureValue mustBe ArrangementIDNotFound
 
         verify(mockArrangementIdRepository, times(1)).doesArrangementIdExist(any())
         verify(mockSubmissionDetailsRepository, times(1)).doesDisclosureIdMatchEnrolmentID(any(), any())
-        verify(mockSubmissionDetailsRepository, times(0)).doesDisclosureIdMatchArrangementID(any(), any())
+        verify(mockSubmissionDetailsRepository, times(1)).doesDisclosureIdMatchArrangementID(any(), any())
       }
 
-      "must return (Some(true), Some(false)) if disclosure ID doesn't exist" in {
+      "must return DisclosureIDNotfound if disclosure ID doesn't exist" in {
         when(mockArrangementIdRepository.doesArrangementIdExist(any())).thenReturn(Future.successful(true))
         when(mockSubmissionDetailsRepository.doesDisclosureIdMatchEnrolmentID(any(), any())).thenReturn(Future.successful(false))
+        when(mockSubmissionDetailsRepository.doesDisclosureIdMatchArrangementID(any(), any())).thenReturn(Future.successful(false))
 
-        service.verifyIDs(arrangementID, disclosureID, enrolmentID).futureValue mustBe Tuple2(Some(true), Some(false))
+        service.verifyIDs(arrangementID, disclosureID, enrolmentID).futureValue mustBe DisclosureIDNotFound
 
         verify(mockArrangementIdRepository, times(1)).doesArrangementIdExist(any())
         verify(mockSubmissionDetailsRepository, times(1)).doesDisclosureIdMatchEnrolmentID(any(), any())
-        verify(mockSubmissionDetailsRepository, times(0)).doesDisclosureIdMatchArrangementID(any(), any())
+        verify(mockSubmissionDetailsRepository, times(1)).doesDisclosureIdMatchArrangementID(any(), any())
       }
     }
   }
