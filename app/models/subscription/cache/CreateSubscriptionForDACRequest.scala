@@ -93,11 +93,11 @@ object PrimaryContact {
   implicit lazy val reads: Reads[PrimaryContact] = {
     import play.api.libs.functional.syntax._
     (
-      (__ \ "organisation").readNullable[OrganisationDetails] and
-        (__ \ "individual").readNullable[IndividualDetails] and
-        (__ \ "email").read[String] and
-        (__ \ "phone").readNullable[String] and
-        (__ \ "mobile").readNullable[String]
+      (__ \\ "organisation").readNullable[OrganisationDetails] and
+        (__ \\ "individual").readNullable[IndividualDetails] and
+        (__ \\ "email").read[String] and
+        (__ \\ "phone").readNullable[String] and
+        (__ \\ "mobile").readNullable[String]
       ) (
       (organisation, individual, email, phone, mobile) => (organisation, individual) match {
         case (Some(_), Some(_)) => throw new Exception("PrimaryContact cannot have both and organisation or individual element")
@@ -122,11 +122,11 @@ object SecondaryContact {
   implicit lazy val reads: Reads[SecondaryContact] = {
     import play.api.libs.functional.syntax._
     (
-      (__ \ "organisation").readNullable[OrganisationDetails] and
-        (__ \ "individual").readNullable[IndividualDetails] and
-        (__ \ "email").read[String] and
-        (__ \ "phone").readNullable[String] and
-        (__ \ "mobile").readNullable[String]
+      (__ \\ "organisation").readNullable[OrganisationDetails] and
+        (__ \\ "individual").readNullable[IndividualDetails] and
+        (__ \\ "email").read[String] and
+        (__ \\ "phone").readNullable[String] and
+        (__ \\ "mobile").readNullable[String]
       ) (
       (organisation, individual, email, phone, mobile) => (organisation, individual) match {
         case (Some(_), Some(_)) => throw new Exception("SecondaryContact cannot have both and organisation or individual element")
