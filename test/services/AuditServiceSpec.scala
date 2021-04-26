@@ -27,12 +27,11 @@ import org.scalatestplus.scalacheck.ScalaCheckPropertyChecks.forAll
 import play.api.inject
 import play.api.inject.guice.GuiceApplicationBuilder
 import play.api.libs.json.Json
-import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.play.audit.http.connector.{AuditConnector, AuditResult}
 import uk.gov.hmrc.play.audit.model.ExtendedDataEvent
 
 import scala.collection.mutable.ListBuffer
-import scala.concurrent.{ExecutionContext, Future}
+import scala.concurrent.Future
 
 class AuditServiceSpec extends SpecBase with MockitoSugar with BeforeAndAfterEach {
   val auditConnector =  mock[AuditConnector]

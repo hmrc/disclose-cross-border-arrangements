@@ -16,11 +16,9 @@
 
 package controllers
 
-import java.time.LocalDateTime
-import java.util.UUID
 import base.SpecBase
 import connectors.SubmissionConnector
-import controllers.auth.{AuthAction, FakeAuthAction, FakeIdentifierAuthAction, IdentifierAuthAction}
+import controllers.auth.{FakeIdentifierAuthAction, IdentifierAuthAction}
 import helpers.SubmissionFixtures.{minimalPassing, oneError}
 import helpers.{ContactFixtures, DateHelper}
 import models.{DisclosureId, GeneratedIDs, SubmissionDetails, SubmissionMetaData}
@@ -37,8 +35,9 @@ import play.api.test.Helpers.{status, _}
 import repositories.SubmissionDetailsRepository
 import services.{ContactService, SubmissionService, TransformService}
 import uk.gov.hmrc.http.{HeaderNames, HttpResponse, UpstreamErrorResponse}
-import org.mockito.Matchers.{eq => meq}
 
+import java.time.LocalDateTime
+import java.util.UUID
 import scala.concurrent.Future
 import scala.xml.NodeSeq
 

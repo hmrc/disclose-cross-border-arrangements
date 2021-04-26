@@ -17,7 +17,7 @@
 package services
 
 import base.SpecBase
-import generators.{CacheModelGenerators, ModelGenerators}
+import generators.CacheModelGenerators
 import models.subscription.cache.CreateSubscriptionForDACRequest
 import org.mockito.Matchers.any
 import org.mockito.Mockito._

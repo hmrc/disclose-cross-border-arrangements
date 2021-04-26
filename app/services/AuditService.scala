@@ -17,19 +17,18 @@
 package services
 
 import config.AppConfig
-import javax.inject.Inject
-import models.{Dac6MetaData, GenericError, SaxParseError}
+import models.{Dac6MetaData, SaxParseError}
 import org.slf4j.LoggerFactory
 import play.api.libs.json.{JsObject, Json}
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.play.audit.AuditExtensions
-import uk.gov.hmrc.play.audit.http.connector.{AuditConnector, AuditResult}
 import uk.gov.hmrc.play.audit.http.connector.AuditResult.{Disabled, Failure}
+import uk.gov.hmrc.play.audit.http.connector.{AuditConnector, AuditResult}
 import uk.gov.hmrc.play.audit.model.ExtendedDataEvent
 
+import javax.inject.Inject
 import scala.collection.mutable.ListBuffer
 import scala.concurrent.ExecutionContext
-import scala.xml.{Elem, NodeSeq}
 
 class AuditService @Inject()(appConfig: AppConfig, auditConnector: AuditConnector)(implicit ec: ExecutionContext) {
   private val logger = LoggerFactory.getLogger(getClass)
