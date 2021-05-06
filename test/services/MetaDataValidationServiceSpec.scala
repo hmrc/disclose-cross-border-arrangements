@@ -18,7 +18,7 @@ package services
 
 import base.SpecBase
 import helpers.SuffixHelper
-import models.{Dac6MetaData, SubmissionDetails, SubmissionHistory, Validation}
+import models.{Dac6MetaData, SubmissionDetails, Validation}
 import org.mockito.Matchers.any
 import org.mockito.Mockito
 import org.mockito.Mockito.{times, verify, when}
