@@ -16,6 +16,9 @@
 
 package controllers
 
+import java.time.LocalDateTime
+import java.util.UUID
+
 import base.SpecBase
 import connectors.SubmissionConnector
 import controllers.auth.{FakeIdentifierAuthAction, IdentifierAuthAction}
@@ -36,8 +39,6 @@ import repositories.SubmissionDetailsRepository
 import services.{ContactService, SubmissionService, TransformService}
 import uk.gov.hmrc.http.{HeaderNames, HttpResponse, UpstreamErrorResponse}
 
-import java.time.LocalDateTime
-import java.util.UUID
 import scala.concurrent.Future
 import scala.xml.NodeSeq
 
@@ -50,6 +51,9 @@ class SubmissionControllerSpec extends SpecBase
   val mockSubmissionDetailsRepository: SubmissionDetailsRepository = mock[SubmissionDetailsRepository]
   val mockSubmissionConnector: SubmissionConnector = mock[SubmissionConnector]
   val mockContactService: ContactService = mock[ContactService]
+
+  val errorStatusCodes: Seq[Int] = Seq(BAD_REQUEST, FORBIDDEN, NOT_FOUND, METHOD_NOT_ALLOWED,
+    CONFLICT, INTERNAL_SERVER_ERROR, SERVICE_UNAVAILABLE)
 
   override def beforeEach(): Unit = {
     reset(mockSubmissionService, mockSubmissionDetailsRepository, mockSubmissionConnector, mockSubmissionConnector)

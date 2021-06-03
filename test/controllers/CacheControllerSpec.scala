@@ -45,8 +45,8 @@ class CacheControllerSpec extends SpecBase
   with BeforeAndAfterEach
   with ScalaCheckPropertyChecks {
 
-  val mockSubscriptionCacheService = mock[SubscriptionCacheService]
-  val mockSubscriptionConnector = mock[SubscriptionConnector]
+  val mockSubscriptionCacheService: SubscriptionCacheService = mock[SubscriptionCacheService]
+  val mockSubscriptionConnector: SubscriptionConnector = mock[SubscriptionConnector]
 
   val application: Application =
     applicationBuilder()
@@ -72,7 +72,7 @@ class CacheControllerSpec extends SpecBase
        .thenReturn(Future.successful(true))
 
      forAll(arbitrary[CreateSubscriptionForDACRequest]){
-       (subscriptionRequest) =>
+       subscriptionRequest =>
          val payload = Json.toJson(subscriptionRequest)
          val request = FakeRequest(POST, routes.CacheController.storeSubscriptionDetails().url)
            .withJsonBody(payload)
@@ -90,7 +90,7 @@ class CacheControllerSpec extends SpecBase
           SubscriptionForDACResponse(
             ResponseCommon("", None, "", None),
             ResponseDetail("111111111", Some(""),
-              true,
+              isGBUser = true,
               PrimaryContact(Seq(ContactInformationForIndividual(IndividualDetails("First", "Last", None), "", Some(""), Some("")))),
               Some(SecondaryContact(Seq(ContactInformationForOrganisation(OrganisationDetails(""), "", None, None)))))
           )))))

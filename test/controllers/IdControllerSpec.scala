@@ -76,7 +76,6 @@ with ScalaCheckPropertyChecks {
             status(result) mustEqual BAD_REQUEST
       }
 
-
     }
 
     "verifyDisclosureIDs" - {
