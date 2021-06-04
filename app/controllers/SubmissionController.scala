@@ -50,6 +50,8 @@ class SubmissionController @Inject()(
                                     )(implicit ec: ExecutionContext)
   extends BackendController(cc) {
 
+  import APIDateTimeFormats._
+
   private val logger = LoggerFactory.getLogger(getClass)
 
   def submitDisclosure: Action[NodeSeq] = authenticate.async(parse.xml) {
@@ -138,10 +140,10 @@ class SubmissionController @Inject()(
   def getHistory(enrolmentId: String): Action[AnyContent] = authenticate.async {
     implicit request =>
 
-      submissionDetailsRepository.retrieveSubmissionHistory(enrolmentId).map(
+      submissionDetailsRepository.retrieveSubmissionHistory(enrolmentId).map {
         history =>
           Ok(Json.toJson(SubmissionHistory(history)))
-      ).recover {
+      }.recover {
         case ex:Exception =>
           logger.error("Error retrieving submission history", ex)
           InternalServerError

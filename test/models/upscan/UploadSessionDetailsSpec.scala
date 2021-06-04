@@ -17,10 +17,23 @@
 package models.upscan
 
 import base.SpecBase
+import org.bson.types.ObjectId
 import play.api.libs.json.Json
-import reactivemongo.bson.BSONObjectID
+
 
 class UploadSessionDetailsSpec extends SpecBase {
+
+  def str2Hex(str: String): Array[Byte] = {
+    val bytes = new Array[Byte](str.length / 2)
+    var i = 0
+    while (i < bytes.length) {
+      bytes(i) = Integer.parseInt(str.substring(2 * i, 2 * i + 2), 16).toByte
+      i += 1
+    }
+    bytes
+  }
+
+  val objectId: ObjectId = new ObjectId(str2Hex("111111111111111111111111"))
 
   "Upload Session Details" - {
     "must be able to be marshalled correctly for status: NotStarted" in {
@@ -35,7 +48,7 @@ class UploadSessionDetailsSpec extends SpecBase {
           |}""".stripMargin
 
       val expectedUploadSessionDetails = UploadSessionDetails(
-        BSONObjectID.parse("111111111111111111111111").get,
+        objectId,
         UploadId("121"),
         Reference("ref"),
         NotStarted
@@ -46,7 +59,7 @@ class UploadSessionDetailsSpec extends SpecBase {
 
     "must be able to be written correctly for status: NotStarted" in {
       val uploadSessionDetails = UploadSessionDetails(
-        BSONObjectID.parse("111111111111111111111111").get,
+        objectId,
         UploadId("121"),
         Reference("ref"),
         NotStarted
@@ -77,7 +90,7 @@ class UploadSessionDetailsSpec extends SpecBase {
           |}""".stripMargin
 
       val expectedUploadSessionDetails = UploadSessionDetails(
-        BSONObjectID.parse("111111111111111111111111").get,
+        objectId,
         UploadId("121"),
         Reference("ref"),
         InProgress
@@ -98,7 +111,7 @@ class UploadSessionDetailsSpec extends SpecBase {
           |}""".stripMargin
 
       val uploadSessionDetails = UploadSessionDetails(
-        BSONObjectID.parse("111111111111111111111111").get,
+        objectId,
         UploadId("121"),
         Reference("ref"),
         InProgress
@@ -119,7 +132,7 @@ class UploadSessionDetailsSpec extends SpecBase {
           |}""".stripMargin
 
       val expectedUploadSessionDetails = UploadSessionDetails(
-        BSONObjectID.parse("111111111111111111111111").get,
+        objectId,
         UploadId("121"),
         Reference("ref"),
         Failed
@@ -140,7 +153,7 @@ class UploadSessionDetailsSpec extends SpecBase {
           |}""".stripMargin
 
       val uploadSessionDetails = UploadSessionDetails(
-        BSONObjectID.parse("111111111111111111111111").get,
+        objectId,
         UploadId("121"),
         Reference("ref"),
         Failed
@@ -163,7 +176,7 @@ class UploadSessionDetailsSpec extends SpecBase {
           |}""".stripMargin
 
       val uploadSessionDetails = UploadSessionDetails(
-        BSONObjectID.parse("111111111111111111111111").get,
+        objectId,
         UploadId("121"),
         Reference("ref"),
         UploadedSuccessfully("name", "downloadUrl")
@@ -186,7 +199,7 @@ class UploadSessionDetailsSpec extends SpecBase {
           |}""".stripMargin
 
       val expectedUploadSessionDetails = UploadSessionDetails(
-        BSONObjectID.parse("111111111111111111111111").get,
+        objectId,
         UploadId("121"),
         Reference("ref"),
         UploadedSuccessfully("name", "downloadUrl")

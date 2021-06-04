@@ -16,6 +16,7 @@
 
 package models.subscription.cache
 
+import controllers.APIDateTimeFormats.localDateTimeWrites
 import play.api.libs.functional.syntax.toFunctionalBuilderOps
 import play.api.libs.json._
 
@@ -28,6 +29,9 @@ case class CreateSubscriptionForDACRequest(
                                           )
 
 object CreateSubscriptionForDACRequest {
+
+  val format: OFormat[CreateSubscriptionForDACRequest] = OFormat(reads, writes)
+
   implicit lazy val reads: Reads[CreateSubscriptionForDACRequest] = {
     import play.api.libs.functional.syntax._
     (
@@ -39,10 +43,10 @@ object CreateSubscriptionForDACRequest {
     )
   }
 
-  implicit lazy val writes: Writes[CreateSubscriptionForDACRequest] = (
+  implicit lazy val writes: OWrites[CreateSubscriptionForDACRequest] = (
     (__ \ "createSubscriptionForDACRequest").write[SubscriptionForDACRequest] and
     (__ \ "subscriptionID").write[String] and
-      (__ \ "lastUpdated").write[LocalDateTime]
+      (__ \ "lastUpdated").write[LocalDateTime](localDateTimeWrites)
     )(r => (r.createSubscriptionForDACRequest, r.subscriptionID, r.lastUpdated))
 }
 

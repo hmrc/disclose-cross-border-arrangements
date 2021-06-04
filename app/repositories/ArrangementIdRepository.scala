@@ -16,57 +16,36 @@
 
 package repositories
 
-import akka.stream.Materializer
-import javax.inject.Inject
 import models.ArrangementId
-import play.api.libs.json._
-import play.modules.reactivemongo.ReactiveMongoApi
-import reactivemongo.api.indexes.IndexType
-import reactivemongo.play.json.collection.JSONCollection
+import org.mongodb.scala.model.Filters.and
+import org.mongodb.scala.model.Filters.equal
+import org.mongodb.scala.model.Indexes.ascending
+import org.mongodb.scala.model.{IndexModel, IndexOptions}
+import uk.gov.hmrc.mongo.MongoComponent
+import uk.gov.hmrc.mongo.play.json.PlayMongoRepository
 
+import javax.inject.Inject
 import scala.concurrent.{ExecutionContext, Future}
 
-class ArrangementIdRepository @Inject()(mongo: ReactiveMongoApi
-                                       )(implicit ec: ExecutionContext, m: Materializer) {
+object ArrangementIdRepository {
 
-  private val arrangementIdCollectionName: String = "arrangement-id"
+  def indexes = Seq(IndexModel(ascending("dateString")
+    , IndexOptions().name("arrangement-id-date-index") ))
+}
 
-  private val dateIndex = IndexUtils.index(
-    key     = Seq("dateString" -> IndexType.Ascending),
-    name    = Some("arrangement-id-date-index"),
-    expireAfterSeconds = None
-  )
+class ArrangementIdRepository @Inject()(mongo: MongoComponent)(implicit ec: ExecutionContext
+) extends PlayMongoRepository[ArrangementId] (
+  mongoComponent = mongo,
+  collectionName = "arrangement-id",
+  domainFormat   = ArrangementId.format,
+  indexes        = ArrangementIdRepository.indexes,
+  replaceIndexes = true
+) {
 
-  lazy val ensureIndexes: Future[Unit] =
-  for {
-    collection <- mongo.database.map(_.collection[JSONCollection](arrangementIdCollectionName))
-      _ <- collection.indexesManager.ensure(dateIndex)
-    } yield ()
-
-  private def arrangementIdCollection: Future[JSONCollection] =
-  for {
-    _ <- ensureIndexes
-      collection <- mongo.database.map(_.collection[JSONCollection](arrangementIdCollectionName))
-    } yield collection
-
-  def doesArrangementIdExist(arrangementId: ArrangementId):Future[Boolean] = {
-    val selector = Json.obj(
-      "dateString" -> arrangementId.dateString,
-      "suffix" -> arrangementId.suffix
-    )
-
-    arrangementIdCollection.flatMap {
-      _.find[JsObject, ArrangementId](selector, None).one[ArrangementId]
-    } map(_.isDefined)
-  }
+  def doesArrangementIdExist(arrangementId: ArrangementId):Future[Boolean] =
+    collection.find( and( equal("dateString", arrangementId.dateString), equal("suffix", arrangementId.suffix)))
+      .toFuture().map(_.nonEmpty)
 
   def storeArrangementId(arrangementId: ArrangementId): Future[ArrangementId] =
-    arrangementIdCollection.flatMap {
-      _.insert(ordered = false)
-        .one(arrangementId).map {
-        lastError =>
-          lastError.ok
-          arrangementId
-      }
-    }
+    collection.insertOne(arrangementId).toFuture().map(_ => arrangementId)
 }

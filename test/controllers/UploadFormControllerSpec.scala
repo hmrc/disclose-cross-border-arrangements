@@ -20,13 +20,13 @@ import base.SpecBase
 import controllers.auth.{AuthAction, FakeAuthAction}
 import generators.ModelGenerators
 import models.upscan.{InProgress, Reference, UploadId, UploadSessionDetails}
+import org.bson.types.ObjectId
 import org.scalatest.BeforeAndAfterEach
 import org.scalatestplus.scalacheck.ScalaCheckPropertyChecks
 import play.api.Application
 import play.api.inject.bind
 import play.api.test.FakeRequest
 import play.api.test.Helpers.{GET, route, status, _}
-import reactivemongo.bson.BSONObjectID
 import repositories.UploadSessionRepository
 import services.UploadProgressTracker
 
@@ -53,7 +53,7 @@ class UploadFormControllerSpec  extends SpecBase
     "must return ok with status" in {
 
       val uploadDetails = UploadSessionDetails(
-        BSONObjectID.generate(),
+        ObjectId.get(),
         UploadId("123"),
         Reference("123"),
         InProgress

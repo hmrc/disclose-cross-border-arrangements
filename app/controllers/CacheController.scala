@@ -39,6 +39,8 @@ class CacheController @Inject()(
                                  cc: ControllerComponents
                                )(implicit ec: ExecutionContext) extends BackendController(cc) {
 
+  import APIDateTimeFormats._
+
   private val logger: Logger = Logger(this.getClass)
 
   def storeSubscriptionDetails: Action[JsValue] = authenticate(parse.json).async {

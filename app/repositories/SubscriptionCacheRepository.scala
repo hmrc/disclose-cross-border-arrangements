@@ -17,57 +17,44 @@
 package repositories
 
 import models.subscription.cache.CreateSubscriptionForDACRequest
+import org.mongodb.scala.model.Filters.equal
+import org.mongodb.scala.model.Indexes.ascending
+import org.mongodb.scala.model.{IndexModel, IndexOptions, ReplaceOptions}
 import play.api.Configuration
-import play.api.libs.json.Json
-import play.modules.reactivemongo.ReactiveMongoApi
-import reactivemongo.api.indexes.IndexType
-import reactivemongo.play.json.collection.JSONCollection
-import reactivemongo.play.json.ImplicitBSONHandlers.JsObjectDocumentWriter
+import uk.gov.hmrc.mongo.MongoComponent
+import uk.gov.hmrc.mongo.play.json.PlayMongoRepository
 
 import java.time.LocalDateTime
+import java.util.concurrent.TimeUnit
 import javax.inject.Inject
 import scala.concurrent.{ExecutionContext, Future}
 
-class SubscriptionCacheRepository @Inject()(mongo: ReactiveMongoApi,
-                                            config: Configuration)(implicit ec: ExecutionContext) {
+object SubscriptionCacheRepository {
 
-  private val collectionName = "subscriptionCacheRepository"
-  private val cacheTtl = config.get[Int]("mongodb.subscriptionCacheTTLInSeconds")
+  def cacheTtl(config: Configuration): Int = config.get[Int]("mongodb.subscriptionCacheTTLInSeconds")
 
-  private def collection: Future[JSONCollection] =
-    mongo.database.map(_.collection[JSONCollection](collectionName))
+  def indexes(config: Configuration) = Seq(IndexModel(ascending("lastUpdated")
+    , IndexOptions().name("subscription-last-updated-index").expireAfter(cacheTtl(config), TimeUnit.SECONDS) ))
+}
 
-  private val lastUpdatedIndex = IndexUtils.index(
-    key     = Seq("lastUpdated" -> IndexType.Ascending),
-    name    = Some("subscription-last-updated-index"),
-    expireAfterSeconds = Some(cacheTtl)
-  )
-
-  val started: Future[Unit] =
-    collection.flatMap {
-      _.indexesManager.ensure(lastUpdatedIndex)
-    }.map(_ => ())
+class SubscriptionCacheRepository @Inject()(mongo: MongoComponent, config: Configuration)(implicit ec: ExecutionContext
+) extends PlayMongoRepository[CreateSubscriptionForDACRequest] (
+  mongoComponent = mongo,
+  collectionName = "subscriptionCacheRepository",
+  domainFormat   = CreateSubscriptionForDACRequest.format,
+  indexes        = SubscriptionCacheRepository.indexes(config),
+  replaceIndexes = true
+) {
 
   def get(id: String): Future[Option[CreateSubscriptionForDACRequest]] =
-    collection.flatMap(_.find(Json.obj("_id" -> id), None).one[CreateSubscriptionForDACRequest])
+    collection.find(equal("_id", id)).first().toFutureOption()
 
   def set(id: String, subscription: CreateSubscriptionForDACRequest): Future[Boolean] = {
 
-    val selector = Json.obj(
-      "_id" -> id
-    )
+    val filter = equal("_id", id)
+    val data = subscription copy (lastUpdated = LocalDateTime.now)
+    val options = ReplaceOptions().upsert(true)
 
-    val modifier = Json.obj(
-      "$set" -> (subscription copy (lastUpdated = LocalDateTime.now))
-    )
-
-    collection.flatMap {
-      _.update(ordered = false)
-        .one(selector, modifier, upsert = true).map {
-        lastError =>
-          lastError.ok
-      }
-    }
+    collection.replaceOne(filter, data, options).toFuture.map(_ => true)
   }
 }
-
