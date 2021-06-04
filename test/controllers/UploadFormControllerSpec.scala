@@ -19,7 +19,7 @@ package controllers
 import base.SpecBase
 import controllers.auth.{AuthAction, FakeAuthAction}
 import generators.ModelGenerators
-import models.upscan.{InProgress, Reference, UploadId}
+import models.upscan.{InProgress, Reference, UploadId, UploadSessionDetails}
 import org.mockito.Mockito.when
 import org.scalatest.BeforeAndAfterEach
 import org.scalatestplus.scalacheck.ScalaCheckPropertyChecks
@@ -27,7 +27,8 @@ import play.api.Application
 import play.api.inject.bind
 import play.api.libs.json.Json
 import play.api.test.FakeRequest
-import play.api.test.Helpers.{GET, contentAsJson, route, status, _}
+import play.api.test.Helpers.{GET, route, status, _}
+import reactivemongo.bson.BSONObjectID
 import repositories.UploadSessionRepository
 import services.UploadProgressTracker
 
@@ -50,20 +51,39 @@ class UploadFormControllerSpec  extends SpecBase
         bind[AuthAction].to[FakeAuthAction]
       ).build()
 
-  //    uploadProgressTracker.getUploadResult(UploadId(uploadId)).map {
-
-  "getStatus" - {
+  "getDetails" - {
     "must return ok with status" in {
 
-      when(mockUploadProgressTracker.getUploadResult(UploadId("123")))
-        .thenReturn(Future.successful(Some(InProgress)))
+      val uploadDetails = UploadSessionDetails(
+        BSONObjectID.generate(),
+        UploadId("123"),
+        Reference("123"),
+        InProgress
+      )
 
-      val request = FakeRequest(GET, routes.UploadFormController.getStatus("123").url)
+      when(mockUploadSessionRepository.findByUploadId(UploadId("uploadID")))
+        .thenReturn(Future.successful(Some(uploadDetails)))
+
+      val request = FakeRequest(GET, routes.UploadFormController.getDetails("uploadID").url)
 
       val result = route(application, request).value
 
       status(result) mustEqual OK
-      contentAsJson(result) mustEqual Json.toJson({"InProgress"})
+    }
+  }
+
+  "getStatus" - {
+    "must return ok with status" in {
+
+      when(mockUploadProgressTracker.getUploadResult(UploadId("uploadID")))
+        .thenReturn(Future.successful(Some(InProgress)))
+
+      val request = FakeRequest(GET, routes.UploadFormController.getStatus("uploadID").url)
+
+      val result = route(application, request).value
+
+      status(result) mustEqual OK
+//      contentAsJson(result) mustEqual Json.toJson({"InProgress"})
 
     }
   }

@@ -24,18 +24,22 @@ import connectors.SubmissionConnector
 import controllers.auth.{FakeIdentifierAuthAction, IdentifierAuthAction}
 import helpers.SubmissionFixtures.{minimalPassing, oneError}
 import helpers.{ContactFixtures, DateHelper}
+import models.subscription.{ContactInformationForIndividual, ContactInformationForOrganisation, DisplaySubscriptionForDACRequest, DisplaySubscriptionForDACResponse, IndividualDetails, OrganisationDetails, PrimaryContact, ResponseCommon, ResponseDetail, SecondaryContact, SubscriptionForDACResponse}
 import models.{DisclosureId, GeneratedIDs, SubmissionDetails, SubmissionMetaData}
 import org.mockito.Matchers.any
 import org.mockito.Mockito._
 import org.mockito.{ArgumentCaptor, Matchers}
+import org.scalacheck.Arbitrary.arbitrary
 import org.scalatest.BeforeAndAfterEach
 import org.scalatestplus.mockito.MockitoSugar
 import play.api.inject.bind
 import play.api.inject.guice.GuiceApplicationBuilder
+import play.api.libs.json.Json
 import play.api.mvc.Result
 import play.api.test.FakeRequest
 import play.api.test.Helpers.{status, _}
 import repositories.SubmissionDetailsRepository
+import services.BusinessRuleValidationService.arrangementID
 import services.{ContactService, SubmissionService, TransformService}
 import uk.gov.hmrc.http.{HeaderNames, HttpResponse, UpstreamErrorResponse}
 
@@ -264,5 +268,6 @@ class SubmissionControllerSpec extends SpecBase
       val conversationIDLength = submissionMetaData.conversationID.length
       conversationIDLength >= 1 && conversationIDLength <= 36 mustBe true
     }
+
   }
 }

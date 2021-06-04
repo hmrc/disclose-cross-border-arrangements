@@ -128,6 +128,25 @@ class CacheControllerSpec extends SpecBase
           status(result) mustBe statusCodes
       }
     }
+
+    "must retrieve a subscription and convert result for ok response" in {
+
+      forAll(arbitrary[DisplaySubscriptionForDACRequest], OK) {
+        (display, statusCodes) =>
+          when(mockSubscriptionCacheService.retrieveSubscriptionDetails(any())(any()))
+            .thenReturn(Future.successful(None))
+          when(mockSubscriptionConnector.displaySubscriptionForDAC(any())(any(), any()))
+            .thenReturn(Future.successful(HttpResponse(statusCodes, "")))
+
+          val payload = Json.toJson(display)
+          val request = FakeRequest(POST, routes.CacheController.retrieveSubscription().url)
+            .withJsonBody(payload)
+
+          val result: Future[Result] = route(application, request).value
+
+          status(result) mustBe OK
+      }
+    }
   }
 
 }
