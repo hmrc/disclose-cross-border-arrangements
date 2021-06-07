@@ -2891,5 +2891,4 @@ class BusinessRuleValidationServiceSpec extends SpecBase with MockitoSugar with 
       service.extractDac6MetaData()(xml)
     }
   }
-
 }

@@ -20,17 +20,19 @@ import java.time.LocalDateTime
 import java.util.UUID
 
 import base.SpecBase
-import connectors.SubmissionConnector
+import connectors.{SubmissionConnector, SubscriptionConnector}
 import controllers.auth.{FakeIdentifierAuthAction, IdentifierAuthAction}
+import generators.CacheModelGenerators
 import helpers.SubmissionFixtures.{minimalPassing, oneError}
 import helpers.{ContactFixtures, DateHelper}
-import models.subscription.{ContactInformationForIndividual, ContactInformationForOrganisation, DisplaySubscriptionForDACRequest, DisplaySubscriptionForDACResponse, IndividualDetails, OrganisationDetails, PrimaryContact, ResponseCommon, ResponseDetail, SecondaryContact, SubscriptionForDACResponse}
-import models.{DisclosureId, GeneratedIDs, SubmissionDetails, SubmissionMetaData}
+import models.subscription.DisplaySubscriptionForDACRequest
+import models.{DisclosureId, GeneratedIDs, SubmissionDetails, SubmissionHistory, SubmissionMetaData}
 import org.mockito.Matchers.any
 import org.mockito.Mockito._
 import org.mockito.{ArgumentCaptor, Matchers}
 import org.scalacheck.Arbitrary.arbitrary
 import org.scalatest.BeforeAndAfterEach
+import org.scalatest.prop.PropertyChecks.forAll
 import org.scalatestplus.mockito.MockitoSugar
 import play.api.inject.bind
 import play.api.inject.guice.GuiceApplicationBuilder
@@ -39,8 +41,7 @@ import play.api.mvc.Result
 import play.api.test.FakeRequest
 import play.api.test.Helpers.{status, _}
 import repositories.SubmissionDetailsRepository
-import services.BusinessRuleValidationService.arrangementID
-import services.{ContactService, SubmissionService, TransformService}
+import services.{ContactService, SubmissionService, SubscriptionCacheService, TransformService}
 import uk.gov.hmrc.http.{HeaderNames, HttpResponse, UpstreamErrorResponse}
 
 import scala.concurrent.Future
@@ -48,6 +49,7 @@ import scala.xml.NodeSeq
 
 class SubmissionControllerSpec extends SpecBase
   with MockitoSugar
+  with CacheModelGenerators
   with BeforeAndAfterEach {
 
   val mockSubmissionService: SubmissionService = mock[SubmissionService]
@@ -55,6 +57,9 @@ class SubmissionControllerSpec extends SpecBase
   val mockSubmissionDetailsRepository: SubmissionDetailsRepository = mock[SubmissionDetailsRepository]
   val mockSubmissionConnector: SubmissionConnector = mock[SubmissionConnector]
   val mockContactService: ContactService = mock[ContactService]
+  val mockSubscriptionCacheService: SubscriptionCacheService = mock[SubscriptionCacheService]
+  val mockSubscriptionConnector: SubscriptionConnector = mock[SubscriptionConnector]
+
 
   val errorStatusCodes: Seq[Int] = Seq(BAD_REQUEST, FORBIDDEN, NOT_FOUND, METHOD_NOT_ALLOWED,
     CONFLICT, INTERNAL_SERVER_ERROR, SERVICE_UNAVAILABLE)
@@ -269,5 +274,28 @@ class SubmissionControllerSpec extends SpecBase
       conversationIDLength >= 1 && conversationIDLength <= 36 mustBe true
     }
 
+//    "must retrieve a subscription and convert result for ok response" in {
+//      val submissionDetails = SubmissionDetails(enrolmentID = "enrolmentId",
+//        submissionTime = LocalDateTime.now,
+//        fileName = "fileName.xml",
+//        arrangementID = Some("arrangementId1"),
+//        disclosureID = Some("disclosureId1"),
+//        importInstruction = "DAC6REP",
+//        initialDisclosureMA = false,
+//        messageRefId = "messageRefId2")
+//
+//      val submissionHistory = List(submissionDetails)
+//
+//      forAll(arbitrary[DisplaySubscriptionForDACRequest], OK) {
+//          when(mockSubmissionDetailsRepository.retrieveSubmissionHistory(any()))
+//            .thenReturn(Future.successful(submissionHistory))
+//
+//          val request = FakeRequest(POST, routes.SubmissionController.getHistory("enrolmentId").url)
+//
+//          val result: Future[Result] = route(application, request).value
+//
+//          status(result) mustBe OK
+//      }
+//    }
   }
 }

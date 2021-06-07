@@ -14,31 +14,21 @@
  * limitations under the License.
  */
 
-package helpers
-
-import java.time.{LocalDate, LocalDateTime}
+package models
 
 import base.SpecBase
-//
-//class DateHelperSpec extends SpecBase {
-//
-//  val helper = new DateHelper
-//
-//  "DateHelper" - {
-//    "should generate the time" in {
-//
-//      val date = helper.today
-//
-//      date mustBe LocalDate.now()
-//
-//    }
-//
-//    "should generate the date time" in {
-//
-//      val dateTime = helper.now
-//
-//      dateTime mustBe LocalDateTime.now()
-//
-//    }
-//  }
-//}
+
+class GenericErrorSpec extends SpecBase {
+
+  val mockGenericErrorSeq = Seq(GenericError(4, "British Shorthair"), GenericError(1, "Maine Coon"),
+    GenericError(3, "Siamese Cat"), GenericError(2, "Ragdoll"))
+
+  "orderByLineNumber" - {
+
+    "must return a sequence of Generic Errors ordered by lineNumber" in {
+
+      mockGenericErrorSeq.sorted mustBe Seq(GenericError(1, "Maine Coon"), GenericError(2, "Ragdoll"), GenericError(3, "Siamese Cat"), GenericError(4, "British Shorthair"))
+
+    }
+  }
+}
