@@ -66,6 +66,20 @@ class HistoryControllerSpec extends SpecBase
         bind[AuthAction].to[FakeAuthAction]
       ).build()
 
+  "noOfPreviousSubmissions" - {
+    "must return ok with noOfPreviousSubmissions" in {
+      when(mockSubmissionDetailsRepository.countNoOfPreviousSubmissions(any()))
+        .thenReturn(Future.successful(2 : Long))
+
+      val request = FakeRequest(GET, routes.HistoryController.noOfPreviousSubmissions("123").url)
+
+      val result = route(application, request).value
+
+      status(result) mustEqual OK
+      contentAsJson(result) mustEqual Json.toJson(2)
+    }
+  }
+
   "submissionDetails" - {
     "must return ok with submission details" in {
       forAll(listWithMaxLength[SubmissionDetails](15)){

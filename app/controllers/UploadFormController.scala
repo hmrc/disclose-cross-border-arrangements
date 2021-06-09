@@ -43,7 +43,7 @@ class UploadFormController @Inject()(
         valid = identifiers =>
           uploadProgressTracker
             .requestUpload(identifiers.uploadId, identifiers.fileReference)
-            .map(b => Ok )
+            .map(_ => Ok )
       )
   }
 

@@ -124,7 +124,6 @@ class SubmissionController @Inject()(
                 }
             }
           } else {
-            //TODO: Can we release the generated ids for a downstream error?
             Future.successful(convertToResult(response))
           }
         }

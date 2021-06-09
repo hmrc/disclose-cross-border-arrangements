@@ -19,7 +19,8 @@ package models.upscan
 import java.time.Instant
 
 import base.SpecBase
-import play.api.libs.json.Json
+import models.FileName
+import play.api.libs.json.{JsError, JsResultException, Json}
 
 class UploadCallbackSpec extends SpecBase {
 
@@ -66,8 +67,6 @@ class UploadCallbackSpec extends SpecBase {
       )
 
       Json.parse(json).as[CallbackBody] mustBe expectedResult
-    }
-  }
-
-
+      }
+   }
 }

@@ -23,6 +23,7 @@ import org.mockito.Matchers.any
 import org.mockito.Mockito._
 import org.scalatest.BeforeAndAfterEach
 import org.scalatestplus.mockito.MockitoSugar
+import play.api.Application
 import play.api.inject.bind
 import play.api.libs.json.Json
 import play.api.mvc.Result
@@ -30,23 +31,24 @@ import play.api.test.FakeRequest
 import play.api.test.Helpers.{status, _}
 import services.ManualSubmissionValidationEngine
 
-import scala.concurrent.Future
+import scala.concurrent.{ExecutionContextExecutor, Future}
+import scala.xml.Elem
 
 class ManualSubmissionValidationControllerSpec extends SpecBase
   with MockitoSugar
   with BeforeAndAfterEach {
 
-  implicit val ec = scala.concurrent.ExecutionContext.global
+  implicit val ec: ExecutionContextExecutor = scala.concurrent.ExecutionContext.global
 
   override def beforeEach(): Unit = {
     reset()
   }
 
-  val xml = <dummyTag></dummyTag>
+  val xml: Elem = <dummyTag></dummyTag>
 
-  val mockValidationEngine = mock[ManualSubmissionValidationEngine]
+  val mockValidationEngine: ManualSubmissionValidationEngine = mock[ManualSubmissionValidationEngine]
 
-  val application = applicationBuilder()
+  val application: Application = applicationBuilder()
     .overrides(
       bind[ManualSubmissionValidationEngine].toInstance(mockValidationEngine),
       bind[IdentifierAuthAction].to[FakeIdentifierAuthAction]

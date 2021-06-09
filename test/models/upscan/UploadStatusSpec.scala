@@ -22,7 +22,7 @@ import play.api.libs.json.{JsError, Json}
 
 class UploadStatusSpec extends WordSpec with MustMatchers {
 
-  val statuses: List[UploadStatus] = List(NotStarted, Failed, InProgress, Quarantined)
+  val statuses: List[UploadStatus] = List(NotStarted, Failed, InProgress, Quarantined, Rejected)
 
   "UploadStatus json Reads" must {
 
