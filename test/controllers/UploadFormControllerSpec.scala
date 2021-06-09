@@ -25,7 +25,6 @@ import org.scalatest.BeforeAndAfterEach
 import org.scalatestplus.scalacheck.ScalaCheckPropertyChecks
 import play.api.Application
 import play.api.inject.bind
-import play.api.libs.json.Json
 import play.api.test.FakeRequest
 import play.api.test.Helpers.{GET, route, status, _}
 import reactivemongo.bson.BSONObjectID
@@ -70,6 +69,18 @@ class UploadFormControllerSpec  extends SpecBase
 
       status(result) mustEqual OK
     }
+
+    "must return 404 when none is returned" in {
+
+      when(mockUploadSessionRepository.findByUploadId(UploadId("uploadID")))
+        .thenReturn(Future.successful(None))
+
+      val request = FakeRequest(GET, routes.UploadFormController.getDetails("uploadID").url)
+
+      val result = route(application, request).value
+
+      status(result) mustEqual NOT_FOUND
+    }
   }
 
   "getStatus" - {
@@ -83,8 +94,18 @@ class UploadFormControllerSpec  extends SpecBase
       val result = route(application, request).value
 
       status(result) mustEqual OK
-//      contentAsJson(result) mustEqual Json.toJson({"InProgress"})
+    }
 
+    "must return 404 when none is returned" in {
+
+      when(mockUploadProgressTracker.getUploadResult(UploadId("uploadID")))
+        .thenReturn(Future.successful(None))
+
+      val request = FakeRequest(GET, routes.UploadFormController.getStatus("uploadID").url)
+
+      val result = route(application, request).value
+
+      status(result) mustEqual NOT_FOUND
     }
   }
 }

@@ -31,6 +31,7 @@ import org.mockito.Matchers.any
 import org.mockito.Mockito._
 import org.mockito.{ArgumentCaptor, Matchers}
 import org.scalacheck.Arbitrary.arbitrary
+import org.scalacheck.Gen
 import org.scalatest.BeforeAndAfterEach
 import org.scalatest.prop.PropertyChecks.forAll
 import org.scalatestplus.mockito.MockitoSugar
@@ -274,28 +275,65 @@ class SubmissionControllerSpec extends SpecBase
       conversationIDLength >= 1 && conversationIDLength <= 36 mustBe true
     }
 
-//    "must retrieve a subscription and convert result for ok response" in {
-//      val submissionDetails = SubmissionDetails(enrolmentID = "enrolmentId",
-//        submissionTime = LocalDateTime.now,
-//        fileName = "fileName.xml",
-//        arrangementID = Some("arrangementId1"),
-//        disclosureID = Some("disclosureId1"),
-//        importInstruction = "DAC6REP",
-//        initialDisclosureMA = false,
-//        messageRefId = "messageRefId2")
-//
-//      val submissionHistory = List(submissionDetails)
-//
-//      forAll(arbitrary[DisplaySubscriptionForDACRequest], OK) {
-//          when(mockSubmissionDetailsRepository.retrieveSubmissionHistory(any()))
-//            .thenReturn(Future.successful(submissionHistory))
-//
-//          val request = FakeRequest(POST, routes.SubmissionController.getHistory("enrolmentId").url)
-//
-//          val result: Future[Result] = route(application, request).value
-//
-//          status(result) mustBe OK
-//      }
-//    }
+    "must convert successfully when not a 200 response (400, 403, 404, 405, 409, 500, 503)" in {
+
+      val disclosureId = DisclosureId("GBD", "20200601", "AAA000")
+
+
+      forAll(Gen.oneOf(errorStatusCodes)) {
+        statusCode =>
+
+          when(mockSubmissionService.generateIDsForInstruction(any()))
+            .thenReturn(Future.successful(GeneratedIDs(None, Some(disclosureId))))
+          when(mockDateHelper.now).thenReturn(testDateTime)
+          when(mockSubmissionDetailsRepository.storeSubmissionDetails(any()))
+            .thenReturn(Future.successful(true))
+          when(mockContactService.getLatestContacts(any())(any(), any(), any()))
+            .thenReturn(Future.successful(ContactFixtures.contact))
+          when(mockSubmissionConnector.submitDisclosure(any())(any()))
+            .thenReturn(Future.successful(HttpResponse(statusCode, "")))
+
+        val submission = minimalPassing
+
+
+        val request = FakeRequest(POST, routes.SubmissionController.submitDisclosure().url).withXmlBody(submission)
+        val result: Future[Result] = route(application, request).value
+
+        status(result) mustBe statusCode
+      }
+
+    }
+
+    "must return an OK history for getHistory when enrolmentID provided" in {
+      val fileName = "fileName"
+
+      val arrangementID = "GBA20200904AAAAAA"
+      val disclosureID = "GBD20200904AAAAAA"
+      val messageRefId = "GB1234567"
+
+      val initialSubmissionDetails: SubmissionDetails =
+        SubmissionDetails(
+          enrolmentID = "enrolmentID",
+          submissionTime = LocalDateTime.now(),
+          fileName = "fileName.xml",
+          arrangementID = Some(arrangementID),
+          disclosureID = Some(disclosureID),
+          importInstruction = "New",
+          initialDisclosureMA = true,
+          messageRefId
+        )
+
+      val submissionDetailsList = List(initialSubmissionDetails)
+
+      when(mockSubmissionDetailsRepository.retrieveSubmissionHistory(fileName))
+        .thenReturn(Future.successful(submissionDetailsList))
+
+      val request = FakeRequest(GET, routes.SubmissionController.getHistory(fileName).url)
+
+      val result = route(application, request).value
+
+      status(result) mustEqual OK
+      contentAsJson(result) mustEqual Json.toJson(SubmissionHistory(submissionDetailsList))
+    }
   }
 }

@@ -80,7 +80,7 @@ class SubscriptionControllerSpec extends SpecBase
               .withJsonBody(Json.toJson(displaySubscriptionForDACRequest))
 
             val result = route(application, request).value
-            status(result) mustEqual statusCode
+            status(result) mustBe statusCode
         }
       }
     }

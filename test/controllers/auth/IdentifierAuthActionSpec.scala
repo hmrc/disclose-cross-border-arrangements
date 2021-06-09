@@ -72,6 +72,20 @@ class IdentifierAuthActionSpec extends PlaySpec with GuiceOneAppPerSuite with Mo
       }
     }
 
+    "the user has no internal ID" must {
+      "must return unauthorised" in {
+        val retrieval = None ~ Enrolments(Set(Enrolment("HMRC-DAC6-ORG", Seq(EnrolmentIdentifier("DAC6ID", "thisismyenrolmentID")), "ACTIVE")))
+        when(mockAuthConnector.authorise[Option[String] ~ Enrolments](any(), any())(any(), any()))
+          .thenReturn(Future.successful(retrieval))
+
+        val authAction = application.injector.instanceOf[IdentifierAuthAction]
+        val controller = new Harness(authAction)
+
+        val result = controller.onPageLoad()(FakeRequest("", ""))
+        status(result) mustBe UNAUTHORIZED
+      }
+    }
+
     "the user is logged in" must {
       "must return the request" in {
         val retrieval = Some("internalID") ~ Enrolments(Set(Enrolment("HMRC-DAC6-ORG", Seq(EnrolmentIdentifier("DAC6ID", "thisismyenrolmentID")), "ACTIVE")))
