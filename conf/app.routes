@@ -24,3 +24,4 @@ GET        /upscan/status/:uploadId                     controllers.UploadFormCo
 POST       /upscan/upload                               controllers.UploadFormController.requestUpload
 
 POST       /validate-manual-submission                  controllers.ManualSubmissionValidationController.validateManualSubmission
+POST       /validate-upload-submission                  controllers.UploadSubmissionValidationController.validateUploadSubmission

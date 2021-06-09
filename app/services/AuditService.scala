@@ -33,6 +33,8 @@ import scala.concurrent.ExecutionContext
 class AuditService @Inject() (appConfig: AppConfig, auditConnector: AuditConnector)(implicit ec: ExecutionContext) {
   private val logger = LoggerFactory.getLogger(getClass)
 
+  // match auditing with diclose-frontend - DAC6-858
+
   def auditValidationFailures(subscriptionID: String, errors: Seq[SaxParseError])(implicit hc: HeaderCarrier): Unit = {
     val auditType       = "Validation"
     val transactionName = "/disclose-cross-border-arrangements/validation"
