@@ -16,7 +16,7 @@
 
 package services
 
-import models.{Dac6MetaData, ManualSubmissionValidationFailure, ManualSubmissionValidationResult, ManualSubmissionValidationSuccess, SaxParseError, UploadSubmissionValidationFailure, UploadSubmissionValidationResult, UploadSubmissionValidationSuccess}
+import models._
 import org.slf4j.LoggerFactory
 import uk.gov.hmrc.http.HeaderCarrier
 
@@ -25,7 +25,7 @@ import scala.collection.mutable.ListBuffer
 import scala.concurrent.{ExecutionContext, Future}
 import scala.xml.{Elem, NodeSeq}
 
-class ManualSubmissionValidationEngine @Inject()(xmlValidationService: XMLValidationService,
+class UploadSubmissionValidationEngine @Inject()(xmlValidationService: XMLValidationService,
                                                  businessRuleValidationService: BusinessRuleValidationService,
                                                  metaDataValidationService: MetaDataValidationService,
                                                  auditService: AuditService) {
@@ -33,37 +33,8 @@ class ManualSubmissionValidationEngine @Inject()(xmlValidationService: XMLValida
   private val logger = LoggerFactory.getLogger(getClass)
   private val noErrors: Seq[String] = Seq()
 
-//TODO - Change name of method to validate submission - DAC6-858
-//TODO - Change output to submission Result - DAC6-858
+  //TODO - Change output to submission Result - DAC6-858
   //TODO - Pass back metadata instead of MessageRefID
-  def validateManualSubmission(xml: NodeSeq, enrolmentId: String)
-                              (implicit hc: HeaderCarrier, ec: ExecutionContext) : Future[Option[ManualSubmissionValidationResult]] = {
-
-    val elem = xml.asInstanceOf[Elem]
-
-    try {
-      val xmlAndXmlValidationStatus: ListBuffer[SaxParseError] = performXmlValidation(elem)
-      val metaData = businessRuleValidationService.extractDac6MetaData()(elem)
-
-      for {
-        metaDataResult <- metaDataValidationService.verifyMetaDataForManualSubmission(metaData, enrolmentId)
-        businessRulesResult <- performBusinessRulesValidation(elem)
-      } yield {
-        combineResults(xmlAndXmlValidationStatus, businessRulesResult, metaDataResult) match {
-
-          case None =>  auditService.auditManualSubmissionParseFailure(enrolmentId, metaData, xmlAndXmlValidationStatus)
-                         None
-          case Some(Seq()) => Some(ManualSubmissionValidationSuccess(metaDataResult.right.getOrElse(metaData.fold("id")(_.messageRefId))))
-          case Some(Seq(errors)) => Some(ManualSubmissionValidationFailure(Seq(errors)))
-        }
-      }
-    } catch {
-      case e: Exception =>
-        logger.warn(s"XML validation failed. The XML parser has thrown the exception: $e")
-        Future.successful(None)
-    }
-  }
-
   def validateUploadSubmission(xml: NodeSeq, enrolmentId: String)
                               (implicit hc: HeaderCarrier, ec: ExecutionContext) : Future[Option[UploadSubmissionValidationResult]] = {
 
@@ -81,17 +52,14 @@ class ManualSubmissionValidationEngine @Inject()(xmlValidationService: XMLValida
         println(s"\n\n@@@@@XML VALIDATIONSTATUS: $xmlAndXmlValidationStatus")
         println(s"\n\n@@@@@businessRulesResult: $businessRulesResult")
         println(s"\n\n@@@@@metaDataResult: $metaDataResult")
+        println(s"\n\ncombined Upload Results: ${combineUploadResults(xmlAndXmlValidationStatus, businessRulesResult, metaDataResult)}")
 
         combineUploadResults(xmlAndXmlValidationStatus, businessRulesResult, metaDataResult) match {
           case None =>  auditService.auditManualSubmissionParseFailure(enrolmentId, metaData, xmlAndXmlValidationStatus)
-            println("@@@@@None\n\n")
             None
           case Some(Seq()) =>
-            println("@@@@@Spe Seq\n\n")
-
             Some(UploadSubmissionValidationSuccess(metaDataResult.right.get))
           case Some(Seq(errors)) =>
-            println("@@@@@ERRORq\n\n")
             Some(UploadSubmissionValidationFailure(Seq(errors)))
         }
       }
@@ -102,19 +70,8 @@ class ManualSubmissionValidationEngine @Inject()(xmlValidationService: XMLValida
     }
   }
 
-  private def combineResults(xmlResult: ListBuffer[SaxParseError], businessRulesResult: Seq[String],
-                             metaDataResult:  Either[Seq[String], String]):  Option[Seq[String]] = {
-
-    if(xmlResult.isEmpty){
-      if(metaDataResult.isLeft) {
-        Some(businessRulesResult ++ metaDataResult.left.get)
-      } else Some(businessRulesResult)
-    } else None
-  }
-
   def performXmlValidation(elem: Elem): ListBuffer[SaxParseError] = {
     xmlValidationService.validateManualSubmission(elem)
-
   }
 
   def performBusinessRulesValidation(elem: Elem)
@@ -133,10 +90,14 @@ class ManualSubmissionValidationEngine @Inject()(xmlValidationService: XMLValida
   private def combineUploadResults(xmlResult: ListBuffer[SaxParseError], businessRulesResult: Seq[String],
                              metaDataResult:  Either[Seq[String], Dac6MetaData]):  Option[Seq[String]] = {
 
-    if(xmlResult.isEmpty){
+    if (xmlResult.isEmpty) {
       if(metaDataResult.isLeft) {
         Some(businessRulesResult ++ metaDataResult.left.get)
-      }else Some(businessRulesResult)
-    }else None
+      } else {
+        Some(businessRulesResult)
+      }
+    } else {
+      None
+    }
   }
 }

@@ -44,9 +44,20 @@ class MetaDataValidationService @Inject()(
       case _ =>  dac6MetaData
     }
 
-    verifyMetaData(metaDataWithEnhancedMessageRefId, enrolmentId).flatMap{
+    verifyMetaData(metaDataWithEnhancedMessageRefId, enrolmentId).flatMap {
       case Seq() if metaDataWithEnhancedMessageRefId.isDefined => Future(Right(metaDataWithEnhancedMessageRefId.get.messageRefId))
       case Seq(Validation("metaDataRules.messageRefId.notUnique", false, _))  => verifyMetaDataForManualSubmission(dac6MetaData, enrolmentId)
+      case errors  => Future(Left(errors.map(_.key)))
+    }
+  }
+
+  //TODO - create method to validation upload manual submission return DAC6METADATA - DAC6-858
+  def verifyMetaDataForUploadSubmission(dac6MetaData: Option[Dac6MetaData], enrolmentId: String)
+                                       (implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Either[Seq[String], Dac6MetaData]] = {
+
+    verifyMetaData(dac6MetaData, enrolmentId).flatMap {
+      case Seq() if dac6MetaData.isDefined => Future(Right(dac6MetaData.get))
+      case Seq(Validation("metaDataRules.messageRefId.notUnique", false, _))  => verifyMetaDataForUploadSubmission(dac6MetaData, enrolmentId)
       case errors  => Future(Left(errors.map(_.key)))
     }
   }
@@ -100,7 +111,6 @@ class MetaDataValidationService @Inject()(
 
       }
     }
-
   }
 
   private def verifyArrangementId(arrangementId: String, history: SubmissionHistory)
@@ -121,11 +131,11 @@ class MetaDataValidationService @Inject()(
 
     val submissionContainingDisclosureId = history.details.find(submission => submission.disclosureID.contains(disclosureId))
 
-
     submissionContainingDisclosureId match {
-      case Some(submission) => if (submission.arrangementID.contains(arrangementId)) {
-        dac6MetaData.importInstruction match {
+      case Some(submission) =>
+        if (submission.arrangementID.contains(arrangementId)) {
 
+        dac6MetaData.importInstruction match {
           case "DAC6REP" if submission.importInstruction.equals("New") && !dac6MetaData.disclosureInformationPresent =>
             Seq(Validation("metaDataRules.disclosureInformation.noInfoWhenReplacingDAC6NEW", false))
 
@@ -139,15 +149,11 @@ class MetaDataValidationService @Inject()(
             Seq(Validation("metaDataRules.initialDisclosureMA.arrangementNoLongerMarketable", false))
 
           case _ => Seq()
-
         }
-
-
-      } else Seq(Validation("metaDataRules.disclosureId.disclosureIDDoesNotMatchArrangementID", false))
-
-
+      } else {
+        Seq(Validation("metaDataRules.disclosureId.disclosureIDDoesNotMatchArrangementID", false))
+      }
       case None => Seq(Validation("metaDataRules.disclosureId.disclosureIDDoesNotMatchUser", false))
-
     }
   }
 
@@ -162,11 +168,8 @@ class MetaDataValidationService @Inject()(
       case "DAC6ADD" => if (!isMarketableArrangement(dac6MetaData, history.get) && !dac6MetaData.disclosureInformationPresent) {
         Seq(Validation("metaDataRules.disclosureInformation.disclosureInformationMissingFromDAC6ADD", false))
 
-
       } else Seq()
-
     }
-
   }
 
   private def verifyMessageRefId(dac6MetaData: Option[Dac6MetaData], enrolmentId: String,
@@ -186,8 +189,6 @@ class MetaDataValidationService @Inject()(
         Some("metaDataRules.messageRefId.wrongFormat")
       }
       else Some("metaDataRules.messageRefId.noUserId")
-
-
     }
 
     result match {
@@ -196,7 +197,6 @@ class MetaDataValidationService @Inject()(
       case _ =>   if(dac6MetaData.isDefined && dac6MetaData.get.messageRefId.trim.isEmpty) {Seq()
       }else Seq(Validation("metaDataRules.messageRefId.wrongFormat", false))
     }
-
   }
 
   private def isMessageRefIdUnique(messageRefId: String, history: SubmissionHistory): Boolean = {
@@ -211,8 +211,5 @@ class MetaDataValidationService @Inject()(
 
       case _ => false
     }
-
-
   }
-
 }

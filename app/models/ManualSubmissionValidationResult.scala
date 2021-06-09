@@ -31,3 +31,19 @@ case class ManualSubmissionValidationFailure(errors: Seq[String]) extends Manual
 object ManualSubmissionValidationFailure {
   implicit val format: OFormat[ManualSubmissionValidationFailure] = Json.format[ManualSubmissionValidationFailure]
 }
+
+//TODO - add models for UploadSubmissionResult - DAC6-858
+
+sealed trait UploadSubmissionValidationResult
+
+case class UploadSubmissionValidationSuccess(dac6MetaData: Dac6MetaData) extends UploadSubmissionValidationResult
+
+object UploadSubmissionValidationSuccess {
+  implicit val format: OFormat[UploadSubmissionValidationSuccess] = Json.format[UploadSubmissionValidationSuccess]
+}
+
+case class UploadSubmissionValidationFailure(errors: Seq[String]) extends UploadSubmissionValidationResult
+
+object UploadSubmissionValidationFailure {
+  implicit val format: OFormat[UploadSubmissionValidationFailure] = Json.format[UploadSubmissionValidationFailure]
+}

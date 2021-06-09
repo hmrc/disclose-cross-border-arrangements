@@ -36,8 +36,7 @@ class BusinessRuleValidationService @Inject()(submissionDetailsRepository: Submi
 
   private val logger = LoggerFactory.getLogger(getClass)
 
-  def validateInitialDisclosureHasRelevantTaxPayer()
-                                                  (implicit hc: HeaderCarrier, ec: ExecutionContext): ReaderT[Option, NodeSeq, Future[Validation]] = {
+  def validateInitialDisclosureHasRelevantTaxPayer()(implicit hc: HeaderCarrier, ec: ExecutionContext): ReaderT[Option, NodeSeq, Future[Validation]] = {
 
     for {
       disclosureImportInstruction <- disclosureImportInstruction
@@ -277,7 +276,6 @@ class BusinessRuleValidationService @Inject()(submissionDetailsRepository: Submi
       }
     }
   }
-
 
   def validateHallmarks(): ReaderT[Option, NodeSeq, Validation] = {
 

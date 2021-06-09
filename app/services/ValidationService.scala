@@ -38,47 +38,37 @@ class XMLValidationService @Inject()(xmlValidatingParser: XMLValidatingParser){
 
     trait AccumulatorState extends DefaultHandler {
       override def warning(e: SAXParseException): Unit = list += SaxParseError(e.getLineNumber, e.getMessage)
-
       override def error(e: SAXParseException): Unit = list += SaxParseError(e.getLineNumber, e.getMessage)
-
       override def fatalError(e: SAXParseException): Unit = list += SaxParseError(e.getLineNumber, e.getMessage)
     }
 
     val elem = new scala.xml.factory.XMLLoader[scala.xml.Elem] {
       override def parser: SAXParser = xmlValidatingParser.validatingParser
-
-      override def adapter =
-        new scala.xml.parsing.NoBindingFactoryAdapter
-          with AccumulatorState
-
-
+      override def adapter = new scala.xml.parsing.NoBindingFactoryAdapter with AccumulatorState
     }.load(new StringReader(xmlString))
 
-    if(list.nonEmpty) Left(list)
-    else Right(elem)
+    if (list.nonEmpty) {
+      Left(list)
+    } else {
+      Right(elem)
+    }
   }
 
-  def validateManualSubmission(xml: Elem): ListBuffer[SaxParseError] ={
+  def validateManualSubmission(xml: Elem): ListBuffer[SaxParseError] = {
 
     val list: ListBuffer[SaxParseError] = new ListBuffer[SaxParseError]
 
     trait AccumulatorState extends DefaultHandler {
       override def warning(e: SAXParseException): Unit = list += SaxParseError(e.getLineNumber, e.getMessage)
-
       override def error(e: SAXParseException): Unit = list += SaxParseError(e.getLineNumber, e.getMessage)
-
       override def fatalError(e: SAXParseException): Unit = list += SaxParseError(e.getLineNumber, e.getMessage)
     }
 
     new scala.xml.factory.XMLLoader[scala.xml.Elem] {
       override def parser: SAXParser = xmlValidatingParser.validatingParser
-
-      override def adapter =
-        new scala.xml.parsing.NoBindingFactoryAdapter
-          with AccumulatorState
-
-
+      override def adapter = new scala.xml.parsing.NoBindingFactoryAdapter with AccumulatorState
     }.load(new StringReader(xml.mkString))
+
     list
   }
 }
@@ -87,7 +77,6 @@ class XMLValidationService @Inject()(xmlValidatingParser: XMLValidatingParser){
 trait XMLValidatingParser {
   def validatingParser: SAXParser
 }
-
 
 class XMLDacXSDValidatingParser extends XMLValidatingParser {
   val schemaLang: String = javax.xml.XMLConstants.W3C_XML_SCHEMA_NS_URI
