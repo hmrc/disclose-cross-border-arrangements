@@ -18,7 +18,7 @@ package services
 
 import cats.data.ReaderT
 import cats.implicits._
-import models.{Dac6MetaData, Validation}
+import models.{ImportInstruction, _}
 import org.slf4j.LoggerFactory
 import repositories.SubmissionDetailsRepository
 import uk.gov.hmrc.http.HeaderCarrier
@@ -121,22 +121,22 @@ class BusinessRuleValidationService @Inject()(submissionDetailsRepository: Submi
       disclosureID <- disclosureID
       messageRefID <- messageRefID
     } yield
-      disclosureImportInstruction match {
-        case "DAC6NEW" => Validation(
+      ImportInstruction(disclosureImportInstruction) match {
+        case New => Validation(
           key = "businessrules.newDisclosure.mustNotHaveArrangementIDOrDisclosureID",
           value = arrangementID.isEmpty && disclosureID.isEmpty)
-        case "DAC6ADD" => Validation(
+        case Add => Validation(
           key = "businessrules.addDisclosure.mustHaveArrangementIDButNotDisclosureID",
           value = arrangementID.nonEmpty && disclosureID.isEmpty)
-        case "DAC6REP" => Validation(
+        case Replace => Validation(
           key = "businessrules.repDisclosure.mustHaveArrangementIDDisclosureIDAndMessageRefID",
           value = arrangementID.nonEmpty && disclosureID.nonEmpty && messageRefID.nonEmpty)
-        case "DAC6DEL" => Validation(
+        case Delete => Validation(
           key = "businessrules.delDisclosure.mustHaveArrangementIDDisclosureIDAndMessageRefID",
           value = arrangementID.nonEmpty && disclosureID.nonEmpty && messageRefID.nonEmpty)
         case _ => Validation(
           key = "businessrules.disclosure.notAValidDisclosureInstruction",
-          value = false) //TODO: This is because I haven't used an enum
+          value = false)
       }
   }
 
@@ -145,8 +145,8 @@ class BusinessRuleValidationService @Inject()(submissionDetailsRepository: Submi
       disclosureImportInstruction <- disclosureImportInstruction
       initialDisclosureMA <- isInitialDisclosureMA
     } yield
-      disclosureImportInstruction match {
-        case "DAC6ADD" => Validation(
+      ImportInstruction(disclosureImportInstruction) match {
+        case Add => Validation(
           key = "businessrules.addDisclosure.mustNotBeInitialDisclosureMA",
           value = !initialDisclosureMA)
         case _ => Validation(
@@ -220,7 +220,7 @@ class BusinessRuleValidationService @Inject()(submissionDetailsRepository: Submi
   }
 
   def validateTaxPayerImplementingDateAgainstMarketableArrangementStatus()
-                                                                        (implicit hc: HeaderCarrier, ec: ExecutionContext): ReaderT[Option, NodeSeq, Future[Validation]] = {
+    (implicit hc: HeaderCarrier, ec: ExecutionContext): ReaderT[Option, NodeSeq, Future[Validation]] = {
     for {
       disclosureImportInstruction <- disclosureImportInstruction
       relevantTaxPayers <- noOfRelevantTaxPayers
@@ -304,6 +304,7 @@ class BusinessRuleValidationService @Inject()(submissionDetailsRepository: Submi
   }
 
   def extractDac6MetaData(): ReaderT[Option, NodeSeq, Dac6MetaData] = {
+
     for {
       disclosureImportInstruction <- disclosureImportInstruction
       arrangementID <- arrangementID
@@ -315,11 +316,11 @@ class BusinessRuleValidationService @Inject()(submissionDetailsRepository: Submi
 
       val infoPresent = disclosureInformation.nonEmpty
 
-      disclosureImportInstruction match {
-        case "DAC6NEW" => Dac6MetaData(disclosureImportInstruction, disclosureInformationPresent = infoPresent, initialDisclosureMA = isInitialDisclosureMA, messageRefId = messageRefId)
-        case "DAC6ADD" => Dac6MetaData(disclosureImportInstruction, Some(arrangementID), disclosureInformationPresent = infoPresent, initialDisclosureMA = isInitialDisclosureMA, messageRefId = messageRefId)
-        case "DAC6REP" => Dac6MetaData(disclosureImportInstruction, Some(arrangementID), Some(disclosureID), disclosureInformationPresent = infoPresent, initialDisclosureMA = isInitialDisclosureMA, messageRefId = messageRefId)
-        case "DAC6DEL" => Dac6MetaData(disclosureImportInstruction, Some(arrangementID), Some(disclosureID), disclosureInformationPresent = infoPresent, initialDisclosureMA = isInitialDisclosureMA, messageRefId = messageRefId)
+      ImportInstruction(disclosureImportInstruction) match {
+        case New => Dac6MetaData(disclosureImportInstruction, disclosureInformationPresent = infoPresent, initialDisclosureMA = isInitialDisclosureMA, messageRefId = messageRefId)
+        case Add => Dac6MetaData(disclosureImportInstruction, Some(arrangementID), disclosureInformationPresent = infoPresent, initialDisclosureMA = isInitialDisclosureMA, messageRefId = messageRefId)
+        case Replace => Dac6MetaData(disclosureImportInstruction, Some(arrangementID), Some(disclosureID), disclosureInformationPresent = infoPresent, initialDisclosureMA = isInitialDisclosureMA, messageRefId = messageRefId)
+        case Delete => Dac6MetaData(disclosureImportInstruction, Some(arrangementID), Some(disclosureID), disclosureInformationPresent = infoPresent, initialDisclosureMA = isInitialDisclosureMA, messageRefId = messageRefId)
         case _ => throw new RuntimeException("XML Data extraction failed - disclosure import instruction Missing")
       }
     }
