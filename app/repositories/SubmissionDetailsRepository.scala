@@ -72,7 +72,6 @@ class SubmissionDetailsRepository @Inject()(mongo: ReactiveMongoApi)
     )
   }
 
-  //TODO: This should have optional paging to support many submissions
   def retrieveSubmissionHistory(enrolmentID: String): Future[List[SubmissionDetails]] = {
     val maxDocs = 10000
     val selector = Json.obj("enrolmentID" -> enrolmentID)
