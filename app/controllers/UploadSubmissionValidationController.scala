@@ -19,13 +19,12 @@ package controllers
 import controllers.auth.IdentifierAuthAction
 import models.{UploadSubmissionValidationFailure, UploadSubmissionValidationSuccess}
 import play.api.libs.json.Json
-import play.api.mvc.{Action, ControllerComponents}
+import play.api.mvc.{Action, AnyContent, ControllerComponents}
 import services.UploadSubmissionValidationEngine
 import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
 
 import javax.inject.Inject
 import scala.concurrent.ExecutionContext
-import scala.xml.NodeSeq
 
 class UploadSubmissionValidationController @Inject()(identify: IdentifierAuthAction,
                                                      cc: ControllerComponents,
@@ -33,17 +32,12 @@ class UploadSubmissionValidationController @Inject()(identify: IdentifierAuthAct
                                                     )(implicit ec: ExecutionContext)
   extends BackendController(cc) {
 
-  def validateUploadSubmission: Action[NodeSeq] =  identify.async(parse.xml) {
+  def validateUploadSubmission: Action[AnyContent] =  identify.async {
     implicit request =>
-      validationEngine.validateUploadSubmission(request.body, request.enrolmentID) map {
-        case Some(UploadSubmissionValidationSuccess(dac6metaData)) =>
-          Ok(Json.toJsObject(UploadSubmissionValidationSuccess(dac6metaData)))
-
-        case Some(UploadSubmissionValidationFailure(errors)) =>
-          Ok(Json.toJson(UploadSubmissionValidationFailure(errors)))
-
-        case _ =>
-          BadRequest("Invalid_XML")
+      validationEngine.validateUploadSubmission(request.body.asText.get, request.enrolmentID) map {
+        case Some(UploadSubmissionValidationSuccess(dac6metaData)) => Ok(Json.toJson(UploadSubmissionValidationSuccess(dac6metaData)))
+        case Some(UploadSubmissionValidationFailure(Seq(errors))) => Ok(Json.toJson(UploadSubmissionValidationFailure(Seq(errors))))
+        case None => BadRequest("Invalid_XML")
       }
   }
 }
