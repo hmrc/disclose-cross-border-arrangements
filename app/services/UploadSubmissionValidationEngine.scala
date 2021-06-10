@@ -23,7 +23,7 @@ import uk.gov.hmrc.http.HeaderCarrier
 import javax.inject.Inject
 import scala.collection.mutable.ListBuffer
 import scala.concurrent.{ExecutionContext, Future}
-import scala.xml.{Elem, NodeSeq}
+import scala.xml.Elem
 
 class UploadSubmissionValidationEngine @Inject()(xmlValidationService: XMLValidationService,
                                                  businessRuleValidationService: BusinessRuleValidationService,
@@ -35,18 +35,24 @@ class UploadSubmissionValidationEngine @Inject()(xmlValidationService: XMLValida
 
   //TODO - Change output to submission Result - DAC6-858
   //TODO - Pass back metadata instead of MessageRefID
-  def validateUploadSubmission(xml: NodeSeq, enrolmentId: String)
+  def validateUploadSubmission(downloadURL: String, enrolmentId: String)
                               (implicit hc: HeaderCarrier, ec: ExecutionContext) : Future[Option[UploadSubmissionValidationResult]] = {
 
-    val elem = xml.asInstanceOf[Elem]
+//    val elem: Elem = xml.asInstanceOf[Elem]
+    println(s"\n\n\n\n@@@@@@downloadURL: \n\n + $downloadURL\n\n")
+
+    val xml = xmlValidationService.loadXML(downloadURL)
 
     try {
-      val xmlAndXmlValidationStatus: ListBuffer[SaxParseError] = performXmlValidation(elem)
-      val metaData = businessRuleValidationService.extractDac6MetaData()(elem)
+
+      //TODO - XML not being recieved remove XML load from disclose frontend & pass downloadSource instead - Do Load in backend
+
+      val xmlAndXmlValidationStatus: ListBuffer[SaxParseError] = performXmlValidation(xml)
+      val metaData = businessRuleValidationService.extractDac6MetaData()(xml)
 
       for {
         metaDataResult <- metaDataValidationService.verifyMetaDataForUploadSubmission(metaData, enrolmentId)
-        businessRulesResult <- performBusinessRulesValidation(elem)
+        businessRulesResult <- performBusinessRulesValidation(xml)
       } yield {
 
         println(s"\n\n@@@@@XML VALIDATIONSTATUS: $xmlAndXmlValidationStatus")

@@ -78,7 +78,16 @@ class XMLValidationService @Inject() (xmlValidatingParser: XMLValidatingParser) 
     }.load(new StringReader(xml.mkString))
     list
   }
+
+  def loadXML(downloadSrc: String): Elem = {
+    new scala.xml.factory.XMLLoader[scala.xml.Elem] {
+      override def parser: SAXParser = xmlValidatingParser.validatingParser
+      override def adapter =
+        new scala.xml.parsing.NoBindingFactoryAdapter
+    }.load(new URL(downloadSrc))
+  }
 }
+
 
 @ImplementedBy(classOf[XMLDacXSDValidatingParser])
 trait XMLValidatingParser {
