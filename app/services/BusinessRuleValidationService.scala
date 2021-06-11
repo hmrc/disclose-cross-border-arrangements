@@ -136,7 +136,7 @@ class BusinessRuleValidationService @Inject()(submissionDetailsRepository: Submi
           value = arrangementID.nonEmpty && disclosureID.nonEmpty && messageRefID.nonEmpty)
         case _ => Validation(
           key = "businessrules.disclosure.notAValidDisclosureInstruction",
-          value = false) //TODO: This is because I haven't used an enum
+          value = false)
       }
   }
 
