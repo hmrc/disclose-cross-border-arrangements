@@ -19,9 +19,7 @@ package controllers
 import base.SpecBase
 import matchers.JsonMatchers
 import models.upscan.CallbackBody
-import org.mockito.Matchers.any
-import org.mockito.Mockito.{times, verify, when}
-import org.scalatestplus.mockito.MockitoSugar
+import org.mockito.ArgumentMatchers.any
 import play.api.inject.bind
 import play.api.libs.json.Json
 import play.api.mvc.Result
@@ -31,7 +29,7 @@ import services.UpscanCallbackDispatcher
 
 import scala.concurrent.Future
 
-class UploadCallbackControllerSpec extends SpecBase with MockitoSugar with JsonMatchers {
+class UploadCallbackControllerSpec extends SpecBase with JsonMatchers {
   val mockUpscanCallbackDispatcher = mock[UpscanCallbackDispatcher]
 
   val application = applicationBuilder()

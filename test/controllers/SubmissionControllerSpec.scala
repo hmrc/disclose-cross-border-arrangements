@@ -18,23 +18,19 @@ package controllers
 
 import java.time.LocalDateTime
 import java.util.UUID
-
 import base.SpecBase
 import connectors.{SubmissionConnector, SubscriptionConnector}
 import controllers.auth.{FakeIdentifierAuthAction, IdentifierAuthAction}
 import generators.CacheModelGenerators
 import helpers.SubmissionFixtures.{minimalPassing, oneError}
 import helpers.{ContactFixtures, DateHelper}
-import models.subscription.DisplaySubscriptionForDACRequest
 import models.{DisclosureId, GeneratedIDs, SubmissionDetails, SubmissionHistory, SubmissionMetaData}
-import org.mockito.Matchers.any
-import org.mockito.Mockito._
-import org.mockito.{ArgumentCaptor, Matchers}
-import org.scalacheck.Arbitrary.arbitrary
+import org.mockito.ArgumentMatchers.{any, eq}
+import org.mockito.{ArgumentCaptor, ArgumentMatcher, ArgumentMatchers, MockitoSugar}
 import org.scalacheck.Gen
+import org.scalacheck.Prop.forAll
 import org.scalatest.BeforeAndAfterEach
-import org.scalatest.prop.PropertyChecks.forAll
-import org.scalatestplus.mockito.MockitoSugar
+import org.scalatestplus.scalacheck.ScalaCheckDrivenPropertyChecks
 import play.api.inject.bind
 import play.api.inject.guice.GuiceApplicationBuilder
 import play.api.libs.json.Json
@@ -50,6 +46,7 @@ import scala.xml.NodeSeq
 
 class SubmissionControllerSpec extends SpecBase
   with MockitoSugar
+  with ScalaCheckDrivenPropertyChecks
   with CacheModelGenerators
   with BeforeAndAfterEach {
 
@@ -117,7 +114,7 @@ class SubmissionControllerSpec extends SpecBase
       val argumentCaptor: ArgumentCaptor[NodeSeq] = ArgumentCaptor.forClass(classOf[NodeSeq])
 
       verify(mockSubmissionConnector, times(1)).submitDisclosure(argumentCaptor.capture())(any())
-      verify(mockSubmissionDetailsRepository, times(1)).storeSubmissionDetails(Matchers.eq(submissionDetails))
+      verify(mockSubmissionDetailsRepository, times(1)).storeSubmissionDetails(ArgumentMatchers.eq(submissionDetails))
 
       val xmlWithIds = argumentCaptor.getValue
       val generatedDisclosureId = (xmlWithIds \\ "DisclosureID").text
@@ -140,7 +137,7 @@ class SubmissionControllerSpec extends SpecBase
 
       status(result) mustBe INTERNAL_SERVER_ERROR
       verify(mockSubmissionConnector, times(0)).submitDisclosure(any())(any())
-      verify(mockSubmissionDetailsRepository, times(0)).storeSubmissionDetails(Matchers.eq(submissionDetails))
+      verify(mockSubmissionDetailsRepository, times(0)).storeSubmissionDetails(ArgumentMatchers.eq(submissionDetails))
     }
 
     "when a file is posted we try to validate it and there is an error and we respond with InternalServerError" in {
@@ -158,7 +155,7 @@ class SubmissionControllerSpec extends SpecBase
 
       status(result) mustBe INTERNAL_SERVER_ERROR
       verify(mockSubmissionConnector, times(0)).submitDisclosure(any())(any())
-      verify(mockSubmissionDetailsRepository, times(0)).storeSubmissionDetails(Matchers.eq(submissionDetails))
+      verify(mockSubmissionDetailsRepository, times(0)).storeSubmissionDetails(ArgumentMatchers.eq(submissionDetails))
     }
 
     "when a file is posted we try to submit it and there is an error we respond with InternalServerError" in {
@@ -176,7 +173,7 @@ class SubmissionControllerSpec extends SpecBase
 
       status(result) mustBe INTERNAL_SERVER_ERROR
       verify(mockSubmissionConnector, times(1)).submitDisclosure(any())(any())
-      verify(mockSubmissionDetailsRepository, times(0)).storeSubmissionDetails(Matchers.eq(submissionDetails))
+      verify(mockSubmissionDetailsRepository, times(0)).storeSubmissionDetails(ArgumentMatchers.eq(submissionDetails))
     }
 
     "when a file is posted, send it to the HOD but repository fails to store we return a server error" in {
@@ -197,7 +194,7 @@ class SubmissionControllerSpec extends SpecBase
 
       status(result) mustBe INTERNAL_SERVER_ERROR
       verify(mockSubmissionConnector, times(1)).submitDisclosure(any())(any())
-      verify(mockSubmissionDetailsRepository, times(1)).storeSubmissionDetails(Matchers.eq(submissionDetails))
+      verify(mockSubmissionDetailsRepository, times(1)).storeSubmissionDetails(ArgumentMatchers.eq(submissionDetails))
     }
 
     "conversationID is the correct length per spec when passed from frontend" in {

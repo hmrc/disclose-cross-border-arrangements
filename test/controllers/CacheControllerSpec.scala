@@ -18,13 +18,11 @@ package controllers
 
 import base.SpecBase
 import connectors.SubscriptionConnector
-import controllers.Assets.OK
 import controllers.auth.{FakeIdentifierAuthAction, IdentifierAuthAction}
 import generators.CacheModelGenerators
 import models.subscription._
 import models.subscription.cache.CreateSubscriptionForDACRequest
-import org.mockito.Matchers.any
-import org.mockito.Mockito.{reset, times, verify, when}
+import org.mockito.ArgumentMatchers.any
 import org.scalacheck.Arbitrary.arbitrary
 import org.scalacheck.Gen
 import org.scalatest.BeforeAndAfterEach

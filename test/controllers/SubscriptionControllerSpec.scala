@@ -21,11 +21,9 @@ import connectors.SubscriptionConnector
 import controllers.auth.{AuthAction, FakeAuthAction}
 import generators.ModelGenerators
 import models.subscription.{DisplaySubscriptionForDACRequest, UpdateSubscriptionForDACRequest}
-import org.mockito.Matchers.any
-import org.mockito.Mockito.when
+import org.mockito.ArgumentMatchers.any
 import org.scalacheck.Arbitrary.arbitrary
 import org.scalacheck.Gen
-import org.scalatestplus.mockito.MockitoSugar
 import org.scalatestplus.scalacheck.ScalaCheckPropertyChecks
 import play.api.Application
 import play.api.inject.bind
@@ -37,7 +35,6 @@ import uk.gov.hmrc.http.HttpResponse
 import scala.concurrent.Future
 
 class SubscriptionControllerSpec extends SpecBase
-  with MockitoSugar
   with ModelGenerators
   with ScalaCheckPropertyChecks {
 

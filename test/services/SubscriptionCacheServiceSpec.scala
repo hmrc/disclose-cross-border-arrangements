@@ -19,11 +19,9 @@ package services
 import base.SpecBase
 import generators.CacheModelGenerators
 import models.subscription.cache.CreateSubscriptionForDACRequest
-import org.mockito.Matchers.any
-import org.mockito.Mockito._
+import org.mockito.ArgumentMatchers.any
 import org.scalacheck.Arbitrary.arbitrary
 import org.scalatest.BeforeAndAfterEach
-import org.scalatestplus.mockito.MockitoSugar
 import org.scalatestplus.scalacheck.ScalaCheckPropertyChecks
 import play.api.inject.bind
 import repositories.SubscriptionCacheRepository
@@ -32,7 +30,6 @@ import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
 class SubscriptionCacheServiceSpec extends SpecBase
-  with MockitoSugar
   with BeforeAndAfterEach
   with CacheModelGenerators
   with ScalaCheckPropertyChecks {

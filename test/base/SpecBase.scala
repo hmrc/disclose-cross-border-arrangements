@@ -16,10 +16,12 @@
 
 package base
 
+import org.mockito.MockitoSugar
 import org.scalatest._
 import org.scalatest.concurrent.{IntegrationPatience, ScalaFutures}
-import org.scalatestplus.mockito.MockitoSugar
+import org.scalatest.freespec.AnyFreeSpec
 import org.scalatestplus.play.guice._
+import org.scalatest.matchers.must.Matchers
 import play.api.Configuration
 import play.api.i18n.{Messages, MessagesApi}
 import play.api.inject.Injector
@@ -28,8 +30,8 @@ import play.api.mvc.AnyContentAsEmpty
 import play.api.test.FakeRequest
 import uk.gov.hmrc.http.HeaderCarrier
 
-trait SpecBase extends FreeSpec
-  with MustMatchers
+trait SpecBase extends AnyFreeSpec
+  with Matchers
   with GuiceOneAppPerSuite
   with OptionValues
   with TryValues
