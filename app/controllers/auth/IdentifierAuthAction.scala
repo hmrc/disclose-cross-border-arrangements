@@ -17,10 +17,10 @@
 package controllers.auth
 
 import com.google.inject.ImplementedBy
-import controllers.Assets.Status
 import models.UserRequest
 import org.slf4j.LoggerFactory
 import play.api.http.Status.UNAUTHORIZED
+import play.api.mvc.Results.Status
 import play.api.mvc.{ActionBuilder, ActionFunction, AnyContent, BodyParsers, Request, Result}
 import uk.gov.hmrc.auth.core.{AuthConnector, AuthorisedFunctions, Enrolment, Enrolments, NoActiveSession}
 import uk.gov.hmrc.auth.core.retrieve.v2.Retrievals

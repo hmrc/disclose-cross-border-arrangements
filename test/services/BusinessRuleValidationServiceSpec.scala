@@ -22,9 +22,9 @@ import base.SpecBase
 import fixtures.XMLFixture
 import models.{Dac6MetaData, SubmissionDetails, Validation}
 import org.mockito.Mockito.{when, _}
+import org.mockito.MockitoSugar
 import org.scalatest.BeforeAndAfterEach
 import org.scalatest.concurrent.IntegrationPatience
-import org.scalatestplus.mockito.MockitoSugar
 import play.api.Application
 import play.api.inject.bind
 import repositories.SubmissionDetailsRepository

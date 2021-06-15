@@ -20,15 +20,14 @@ import base.SpecBase
 import com.github.tomakehurst.wiremock.client.WireMock.{aResponse, post, urlEqualTo}
 import com.github.tomakehurst.wiremock.stubbing.StubMapping
 import connectors.SubscriptionConnector
-import controllers.Assets.OK
 import generators.ModelGenerators
 import helpers.WireMockServerHandler
 import models.subscription.{DisplaySubscriptionForDACRequest, UpdateSubscriptionForDACRequest}
 import org.scalacheck.Arbitrary.arbitrary
 import org.scalacheck.Gen
-import org.scalatestplus.mockito.MockitoSugar
 import org.scalatestplus.scalacheck.ScalaCheckPropertyChecks
 import play.api.Application
+import play.api.http.Status.OK
 import play.api.inject.guice.GuiceApplicationBuilder
 import play.api.test.Helpers.{BAD_REQUEST, CONFLICT, FORBIDDEN, INTERNAL_SERVER_ERROR, METHOD_NOT_ALLOWED, NOT_FOUND, SERVICE_UNAVAILABLE}
 
@@ -36,7 +35,6 @@ import scala.concurrent.ExecutionContext.Implicits.global
 
 class SubscriptionConnectorSpec extends SpecBase
   with WireMockServerHandler
-  with MockitoSugar
   with ModelGenerators
   with ScalaCheckPropertyChecks {
 

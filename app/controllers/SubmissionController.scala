@@ -16,7 +16,6 @@
 
 package controllers
 
-import java.util.UUID
 import connectors.SubmissionConnector
 import controllers.auth.{AuthAction, IdentifierAuthAction}
 import helpers.DateHelper
@@ -29,9 +28,10 @@ import play.api.mvc.{Action, AnyContent, ControllerComponents, Result}
 import repositories.SubmissionDetailsRepository
 import services._
 import uk.gov.hmrc.http.HeaderNames.xSessionId
-import uk.gov.hmrc.http.HttpResponse
+import uk.gov.hmrc.http.{HeaderNames, HttpResponse}
 import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
 
+import java.util.UUID
 import scala.concurrent.{ExecutionContext, Future}
 import scala.util.{Success, Try}
 import scala.xml.NodeSeq
@@ -66,7 +66,8 @@ class SubmissionController @Inject()(
         val initialDisclosureMA = (xml \\ "InitialDisclosureMA").text.toBoolean
         val messageRefId = (xml \\ "MessageRefId").text
 
-        val conversationID: String = hc.headers
+
+        val conversationID: String = hc.headers(HeaderNames.explicitlyIncludedHeaders)
           .find(_._1 == xSessionId).map(n => n._2.replaceAll("session-", ""))
           .getOrElse(UUID.randomUUID().toString)
 

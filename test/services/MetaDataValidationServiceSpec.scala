@@ -19,18 +19,16 @@ package services
 import base.SpecBase
 import helpers.SuffixHelper
 import models.{Dac6MetaData, SubmissionDetails, Validation}
-import org.mockito.Matchers.any
+import org.mockito.ArgumentMatchers.any
 import org.mockito.Mockito
-import org.mockito.Mockito.{times, verify, when}
 import org.scalatest.BeforeAndAfterEach
-import org.scalatestplus.mockito.MockitoSugar
 import repositories.SubmissionDetailsRepository
 
 import java.time.LocalDateTime
 import scala.concurrent.duration._
 import scala.concurrent.{Await, Future}
 
-class MetaDataValidationServiceSpec extends SpecBase with MockitoSugar with BeforeAndAfterEach {
+class MetaDataValidationServiceSpec extends SpecBase with BeforeAndAfterEach {
 
   val arrangementId1 = "GBA20200101AAA123"
   val arrangementId2 = "GBA20200101BBB456"

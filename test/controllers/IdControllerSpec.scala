@@ -19,8 +19,7 @@ package controllers
 import base.SpecBase
 import controllers.auth.{AuthAction, FakeAuthAction}
 import models.{ArrangementId, DisclosureId}
-import org.mockito.Matchers.any
-import org.mockito.Mockito.when
+import org.mockito.ArgumentMatchers.any
 import org.scalatestplus.scalacheck.ScalaCheckPropertyChecks
 import play.api.inject.bind
 import play.api.inject.guice.GuiceApplicationBuilder

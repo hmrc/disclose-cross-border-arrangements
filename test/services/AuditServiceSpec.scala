@@ -18,11 +18,9 @@ package services
 import base.SpecBase
 import models.{Dac6MetaData, SaxParseError}
 import org.mockito.ArgumentCaptor
-import org.mockito.Matchers.any
-import org.mockito.Mockito.{times, verify, _}
+import org.mockito.ArgumentMatchers.any
 import org.scalacheck.Arbitrary.arbitrary
 import org.scalatest.BeforeAndAfterEach
-import org.scalatestplus.mockito.MockitoSugar
 import org.scalatestplus.scalacheck.ScalaCheckPropertyChecks.forAll
 import play.api.inject
 import play.api.inject.guice.GuiceApplicationBuilder
@@ -33,7 +31,7 @@ import uk.gov.hmrc.play.audit.model.ExtendedDataEvent
 import scala.collection.mutable.ListBuffer
 import scala.concurrent.Future
 
-class AuditServiceSpec extends SpecBase with MockitoSugar with BeforeAndAfterEach {
+class AuditServiceSpec extends SpecBase with BeforeAndAfterEach {
   val auditConnector =  mock[AuditConnector]
 
   override def beforeEach() = {

@@ -19,8 +19,6 @@ package services
 import base.SpecBase
 import helpers.TestXml
 import models.SaxParseError
-import org.mockito.Mockito.when
-import org.scalatestplus.mockito.MockitoSugar
 import play.api.Application
 import play.api.inject.bind
 
@@ -36,7 +34,7 @@ class XmlValidationServiceSpec extends SpecBase with TestXml {
 
   val application: Application = applicationBuilder()
     .overrides(
-    bind[XMLValidatingParser].toInstance(MockitoSugar.mock[XMLValidatingParser])
+    bind[XMLValidatingParser].toInstance(mock[XMLValidatingParser])
   ).build()
 
   trait ActualSetup {

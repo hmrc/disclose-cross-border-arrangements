@@ -22,10 +22,8 @@ import connectors.SubscriptionConnector
 import helpers.JsonFixtures.contactsResponse
 import models.SubscriptionDetails
 import models.subscription.{ContactInformationForIndividual, ContactInformationForOrganisation, DisplaySubscriptionForDACResponse, IndividualDetails, OrganisationDetails, PrimaryContact, ResponseCommon, ResponseDetail, SecondaryContact, SubscriptionForDACResponse}
-import org.mockito.Matchers.any
-import org.mockito.Mockito.{reset, times, verify, when}
+import org.mockito.ArgumentMatchers.any
 import org.scalatest.BeforeAndAfterEach
-import org.scalatestplus.mockito.MockitoSugar
 import play.api.http.Status._
 import play.api.inject.bind
 import play.api.test.FakeRequest
@@ -35,7 +33,6 @@ import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
 class ContactServiceSpec extends SpecBase
-  with MockitoSugar
   with BeforeAndAfterEach {
 
   override def beforeEach(): Unit = reset(mockSubscriptionConnector, mockSubscriptionCacheService)

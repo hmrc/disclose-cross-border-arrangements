@@ -16,14 +16,11 @@
 
 package controllers
 
-import java.time.LocalDateTime
-
 import base.SpecBase
 import controllers.auth.{AuthAction, FakeAuthAction}
 import generators.ModelGenerators
 import models.{SubmissionDetails, SubmissionHistory}
-import org.mockito.Matchers._
-import org.mockito.Mockito._
+import org.mockito.ArgumentMatchers.any
 import org.scalatest.BeforeAndAfterEach
 import org.scalatestplus.scalacheck.ScalaCheckPropertyChecks
 import play.api.Application
@@ -33,6 +30,7 @@ import play.api.test.FakeRequest
 import play.api.test.Helpers.{GET, contentAsJson, route, status, _}
 import repositories.SubmissionDetailsRepository
 
+import java.time.LocalDateTime
 import scala.concurrent.Future
 
 class HistoryControllerSpec extends SpecBase

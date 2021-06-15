@@ -19,10 +19,8 @@ package controllers
 import base.SpecBase
 import controllers.auth.{FakeIdentifierAuthAction, IdentifierAuthAction}
 import models.{ManualSubmissionValidationFailure, ManualSubmissionValidationSuccess}
-import org.mockito.Matchers.any
-import org.mockito.Mockito._
+import org.mockito.ArgumentMatchers.any
 import org.scalatest.BeforeAndAfterEach
-import org.scalatestplus.mockito.MockitoSugar
 import play.api.Application
 import play.api.inject.bind
 import play.api.libs.json.Json
@@ -35,7 +33,6 @@ import scala.concurrent.{ExecutionContextExecutor, Future}
 import scala.xml.Elem
 
 class ManualSubmissionValidationControllerSpec extends SpecBase
-  with MockitoSugar
   with BeforeAndAfterEach {
 
   implicit val ec: ExecutionContextExecutor = scala.concurrent.ExecutionContext.global

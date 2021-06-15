@@ -18,9 +18,7 @@ package services
 
 import base.SpecBase
 import models.upscan.{InProgress, Reference, UploadId, UploadSessionDetails}
-import org.mockito.Matchers._
-import org.mockito.Mockito._
-import org.scalatestplus.mockito.MockitoSugar
+import org.mockito.ArgumentMatchers.any
 import reactivemongo.bson.BSONObjectID
 import repositories.UploadSessionRepository
 
@@ -28,7 +26,7 @@ import scala.concurrent.duration._
 import scala.concurrent.{Await, Future}
 import scala.language.postfixOps
 
-class MongoBackedUploadProgressTrackerSpec extends SpecBase with MockitoSugar {
+class MongoBackedUploadProgressTrackerSpec extends SpecBase {
 
   val mockUploadSessionRepository = mock[UploadSessionRepository]
 

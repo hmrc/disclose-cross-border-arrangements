@@ -19,10 +19,8 @@ package services
 import base.SpecBase
 import helpers.{DateHelper, SuffixHelper}
 import models.{ArrangementId, DisclosureId}
-import org.mockito.Matchers.any
-import org.mockito.Mockito.{times, verify, when, _}
+import org.mockito.ArgumentMatchers.any
 import org.scalatest.BeforeAndAfterEach
-import org.scalatestplus.mockito.MockitoSugar
 import org.scalatestplus.scalacheck.ScalaCheckPropertyChecks
 import repositories.{ArrangementIdRepository, DisclosureIdRepository, SubmissionDetailsRepository}
 
@@ -30,7 +28,6 @@ import java.time.LocalDate
 import scala.concurrent.Future
 
 class IdServiceSpec extends SpecBase
-  with MockitoSugar
   with ScalaCheckPropertyChecks
   with BeforeAndAfterEach {
 
@@ -86,7 +83,7 @@ class IdServiceSpec extends SpecBase
 
       "must generate an arrangement Id in the correct format and check for uniqueness" +
         "and regenerate another Id if first Id is not unique" in {
-        when(mockArrangementIdRepository.doesArrangementIdExist(any())).thenReturn(Future.successful(true)).thenReturn(Future.successful(false))
+        when(mockArrangementIdRepository.doesArrangementIdExist(any())).thenReturn(Future.successful(true)).andThenAnswer(Future.successful(false))
         when(mockArrangementIdRepository.storeArrangementId(any())).thenReturn(Future.successful(newArrangementId))
 
         val id = service.generateArrangementId().futureValue
@@ -116,7 +113,7 @@ class IdServiceSpec extends SpecBase
 
       "must generate an disclosure Id in the correct format and check for uniqueness" +
         "and regenerate another Id if first Id is not unique" in {
-        when(mockDisclosureIdRepository.doesDisclosureIdExist(any())).thenReturn(Future.successful(true)).thenReturn(Future.successful(false))
+        when(mockDisclosureIdRepository.doesDisclosureIdExist(any())).thenReturn(Future.successful(true)).andThenAnswer(Future.successful(false))
         when(mockDisclosureIdRepository.storeDisclosureId(any())).thenReturn(Future.successful(newDisclosureId))
 
         val id = service.generateDisclosureId().futureValue

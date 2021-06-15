@@ -18,15 +18,12 @@ package services
 
 import base.SpecBase
 import models._
-import org.mockito.Mockito.{reset, times, verify, when}
 import org.scalatest.BeforeAndAfterEach
-import org.scalatestplus.mockito.MockitoSugar
 import play.api.inject.bind
 
 import scala.concurrent.Future
 
 class SubmissionServiceSpec extends SpecBase
-  with MockitoSugar
   with BeforeAndAfterEach {
 
   val mockIDService = mock[IdService]

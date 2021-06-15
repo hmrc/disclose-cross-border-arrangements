@@ -20,7 +20,6 @@ import base.SpecBase
 import controllers.auth.{AuthAction, FakeAuthAction}
 import generators.ModelGenerators
 import models.upscan.{InProgress, Reference, UploadId, UploadSessionDetails}
-import org.mockito.Mockito.when
 import org.scalatest.BeforeAndAfterEach
 import org.scalatestplus.scalacheck.ScalaCheckPropertyChecks
 import play.api.Application
