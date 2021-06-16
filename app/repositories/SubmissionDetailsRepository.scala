@@ -64,7 +64,6 @@ class SubmissionDetailsRepository @Inject()(mongo: MongoComponent)(implicit ec: 
       .toFuture()
   }
 
-  // TODO Steve: limit to 10?
   def countNoOfPreviousSubmissions(enrolmentID: String): Future[Long] =
     collection.countDocuments(equal("enrolmentID", enrolmentID)).toFuture()
 
