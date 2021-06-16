@@ -16,57 +16,35 @@
 
 package repositories
 
-import akka.stream.Materializer
-import javax.inject.Inject
 import models.DisclosureId
-import play.api.libs.json._
-import play.modules.reactivemongo.ReactiveMongoApi
-import reactivemongo.api.indexes.IndexType
-import reactivemongo.play.json.collection.JSONCollection
+import org.mongodb.scala.model.Filters.{and, equal}
+import org.mongodb.scala.model.Indexes.ascending
+import org.mongodb.scala.model.{IndexModel, IndexOptions}
+import uk.gov.hmrc.mongo.MongoComponent
+import uk.gov.hmrc.mongo.play.json.PlayMongoRepository
 
+import javax.inject.Inject
 import scala.concurrent.{ExecutionContext, Future}
 
-class DisclosureIdRepository @Inject()(mongo: ReactiveMongoApi
-                                      )(implicit ec: ExecutionContext, m: Materializer) {
+object DisclosureIdRepository {
 
-  private val disclosureIdCollectionName: String = "disclosure-id"
+  def indexes = Seq(IndexModel(ascending("dateString")
+    , IndexOptions().name("disclosure-id-date-index") ))
+}
 
-  private val dateIndex = IndexUtils.index(
-      key     = Seq("dateString" -> IndexType.Ascending),
-      name    = Some("disclosure-id-date-index"),
-      expireAfterSeconds = None
-    )
+class DisclosureIdRepository @Inject()(mongo: MongoComponent)(implicit ec: ExecutionContext
+) extends PlayMongoRepository[DisclosureId] (
+  mongoComponent = mongo,
+  collectionName = "disclosure-id",
+  domainFormat   = DisclosureId.format,
+  indexes        = DisclosureIdRepository.indexes,
+  replaceIndexes = true
+) {
 
-  lazy val ensureIndex: Future[Unit] =
-  for {
-    collection <- mongo.database.map(_.collection[JSONCollection](disclosureIdCollectionName))
-      _ <- collection.indexesManager.ensure(dateIndex)
-    } yield ()
-
-  private def disclosureIdCollection: Future[JSONCollection] =
-  for {
-    _ <- ensureIndex
-      collection <- mongo.database.map(_.collection[JSONCollection](disclosureIdCollectionName))
-    } yield collection
-
-  def doesDisclosureIdExist(disclosureId: DisclosureId):Future[Boolean] = {
-    val selector = Json.obj(
-      "dateString" -> disclosureId.dateString,
-      "suffix" -> disclosureId.suffix
-    )
-
-    disclosureIdCollection.flatMap(
-      _.find[JsObject, DisclosureId](selector, None).one[DisclosureId]
-    ) map (_.isDefined)
-  }
+  def doesDisclosureIdExist(disclosureId: DisclosureId):Future[Boolean] =
+    collection.find( and( equal("dateString", disclosureId.dateString), equal("suffix", disclosureId.suffix)))
+      .toFuture().map(_.nonEmpty)
 
   def storeDisclosureId(disclosureId: DisclosureId): Future[DisclosureId] =
-    disclosureIdCollection.flatMap {
-      _.insert(ordered = false)
-        .one(disclosureId).map {
-        lastError =>
-          lastError.ok
-          disclosureId
-      }
-    }
+    collection.insertOne(disclosureId).toFuture().map(_ => disclosureId)
 }

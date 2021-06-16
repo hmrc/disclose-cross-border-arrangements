@@ -17,59 +17,50 @@
 package repositories
 
 import models.upscan._
+import org.mongodb.scala.bson.conversions.Bson
+import org.mongodb.scala.model.Filters.equal
+import org.mongodb.scala.model.Indexes.ascending
+import org.mongodb.scala.model.Updates.set
+import org.mongodb.scala.model.{FindOneAndUpdateOptions, IndexModel, IndexOptions}
 import play.api.Configuration
-import play.api.libs.json._
-import play.modules.reactivemongo.ReactiveMongoApi
-import reactivemongo.api.indexes.IndexType
-import reactivemongo.play.json.ImplicitBSONHandlers.JsObjectDocumentWriter
-import reactivemongo.play.json.collection.JSONCollection
+import uk.gov.hmrc.mongo.MongoComponent
+import uk.gov.hmrc.mongo.play.json.{Codecs, PlayMongoRepository}
 
+import java.util.concurrent.TimeUnit
 import javax.inject.Inject
 import scala.concurrent.{ExecutionContext, Future}
 
-class UploadSessionRepository @Inject()(mongo: ReactiveMongoApi,
-                                        config: Configuration)(implicit ec: ExecutionContext) {
+object UploadSessionRepository {
 
-  private val collectionName = "uploadSessionRepository"
-  private val cacheTtl = config.get[Int]("mongodb.timeToLiveInSeconds")
+  def cacheTtl(config: Configuration): Int = config.get[Int]("mongodb.timeToLiveInSeconds")
 
-  private def collection: Future[JSONCollection] =
-    mongo.database.map(_.collection[JSONCollection](collectionName))
+  def indexes(config: Configuration) = Seq(IndexModel(ascending("lastUpdated")
+    , IndexOptions().name("upload-last-updated-index").expireAfter(cacheTtl(config), TimeUnit.SECONDS) ))
+}
 
-  private val lastUpdatedIndex = IndexUtils.index(
-    key     = Seq("lastUpdated" -> IndexType.Ascending),
-    name    = Some("upload-last-updated-index"),
-    expireAfterSeconds = Some(cacheTtl)
-  )
+class UploadSessionRepository @Inject()(mongo: MongoComponent, config: Configuration)(implicit ec: ExecutionContext
+) extends PlayMongoRepository[UploadSessionDetails] (
+  mongoComponent = mongo,
+  collectionName = "uploadSessionRepository",
+  domainFormat   = UploadSessionDetails.format,
+  indexes        = UploadSessionRepository.indexes(config),
+  replaceIndexes = true
+) {
 
-  val started: Future[Unit] =
-    collection.flatMap {
-      _.indexesManager.ensure(lastUpdatedIndex)
-    }.map(_ => ())
-
-  def findByUploadId(uploadId: UploadId): Future[Option[UploadSessionDetails]] = {
-    collection.flatMap(_.find(Json.obj("uploadId" -> Json.toJson(uploadId)), None).one[UploadSessionDetails])
-  }
+  def findByUploadId(uploadId: UploadId): Future[Option[UploadSessionDetails]] =
+    collection.find(equal("uploadId", Codecs.toBson(uploadId))).first().toFutureOption()
 
   def updateStatus(reference : Reference, newStatus : UploadStatus): Future[Boolean] = {
 
-    implicit val referenceFormatter = Json.format[Reference]
-    val selector = Json.obj("reference" -> Json.toJson(reference))
-    val modifier = Json.obj("$set" -> Json.obj("status" -> Json.toJson(newStatus)))
+    val filter: Bson = equal("reference.value", Codecs.toBson(reference.value))
+    val modifier: Bson = set("status", Codecs.toBson(newStatus))
+    val options: FindOneAndUpdateOptions = FindOneAndUpdateOptions().upsert(true)
 
-    collection.flatMap {
-      _.update(ordered = false)
-        .one(selector, modifier, upsert = true).map {
-        lastError =>
-          lastError.ok
-      }
-    }
+    collection.findOneAndUpdate(filter, modifier, options).toFuture.map(_ => true)
   }
 
   def insert(uploadDetails: UploadSessionDetails): Future[Boolean] = {
-    collection.flatMap(_.insert.one(uploadDetails)).map {
-      lastError =>
-        lastError.ok
-    }
+
+    collection.insertOne(uploadDetails).toFuture.map(_ => true)
   }
 }

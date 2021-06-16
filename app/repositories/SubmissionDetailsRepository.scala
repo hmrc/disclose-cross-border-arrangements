@@ -16,157 +16,85 @@
 
 package repositories
 
-import javax.inject.Inject
 import models.SubmissionDetails
-import play.api.libs.json.Json
-import play.modules.reactivemongo.ReactiveMongoApi
-import reactivemongo.api.Cursor
-import reactivemongo.api.ReadConcern.Local
-import reactivemongo.api.indexes.IndexType
-import reactivemongo.play.json.collection.JSONCollection
-import reactivemongo.play.json.compat._
+import org.mongodb.scala.bson.conversions.Bson
+import org.mongodb.scala.model.Filters.{and, equal, or, regex}
+import org.mongodb.scala.model.Indexes.ascending
+import org.mongodb.scala.model.Sorts._
+import org.mongodb.scala.model.{IndexModel, IndexOptions}
+import uk.gov.hmrc.mongo.MongoComponent
+import uk.gov.hmrc.mongo.play.json.PlayMongoRepository
 
+import java.util.concurrent.TimeUnit
+import javax.inject.Inject
 import scala.concurrent.{ExecutionContext, Future}
 
-class SubmissionDetailsRepository @Inject()(mongo: ReactiveMongoApi)
-                                           (implicit ec: ExecutionContext) {
+object SubmissionDetailsRepository {
 
-  private val collectionName: String = "submission-details"
-  private val ttlForDetails: Int = 189341712
-  //6 years - using 31556952 seconds for average year
+  def indexes = Seq(IndexModel(ascending("submissionTime")
+    , IndexOptions().name("submission-time-ttl-index").expireAfter(6*365, TimeUnit.DAYS) ))
+}
 
-  val ttlIndex = IndexUtils.index(
-    key = Seq("submissionTime" -> IndexType.Ascending),
-    name = Some("submission-time-ttl-index"),
-    expireAfterSeconds = Some(ttlForDetails)
-  )
+class SubmissionDetailsRepository @Inject()(mongo: MongoComponent)(implicit ec: ExecutionContext
+) extends PlayMongoRepository[SubmissionDetails] (
+  mongoComponent = mongo,
+  collectionName = "submission-details",
+  domainFormat   = SubmissionDetails.format,
+  indexes        = SubmissionDetailsRepository.indexes,
+  replaceIndexes = true
+) {
 
-  lazy val ensureIndexes: Future[Unit] =
-    for {
-      collection <- mongo.database.map(_.collection[JSONCollection](collectionName))
-      _ <- collection.indexesManager.ensure(ttlIndex)
-    } yield ()
-
-  private def submissionDetailsCollection: Future[JSONCollection] =
-    for {
-      _ <- ensureIndexes
-      collection <- mongo.database.map(_.collection[JSONCollection](collectionName))
-    } yield collection
 
   //TODO: Not guaranteed to be unique - you could replace a file multiple times
   def getSubmissionDetails(disclosureID: String): Future[Option[SubmissionDetails]] =
-    submissionDetailsCollection
-      .flatMap(_.find(Json.obj("disclosureID" -> disclosureID), None)
-        .one[SubmissionDetails]
-      )
+    collection.find(equal("disclosureID", disclosureID)).first().toFutureOption()
 
-  def retrieveFirstDisclosureForArrangementId(arrangementID: String): Future[Option[SubmissionDetails]] = {
-    val selector = Json.obj(
-      "arrangementID" -> arrangementID,
-      "importInstruction" -> "New"
-    )
+  def retrieveFirstDisclosureForArrangementId(arrangementID: String): Future[Option[SubmissionDetails]] =
+    collection.find( and( equal("arrangementID", arrangementID), equal("importInstruction", "New")))
+      .first().toFutureOption()
 
-    submissionDetailsCollection.flatMap(
-      _.find(selector, None)
-        .one[SubmissionDetails]
-    )
-  }
+  val sortByLatestSubmission: Bson =
+    orderBy(descending("submissionTime"), ascending("arrangementID", "disclosureID"))
 
-  def retrieveSubmissionHistory(enrolmentID: String): Future[List[SubmissionDetails]] = {
+  def retrieveSubmissionHistory(enrolmentID: String): Future[Seq[SubmissionDetails]] = {
     val maxDocs = 10000
-    val selector = Json.obj("enrolmentID" -> enrolmentID)
-    val sortByLatestSubmission = Json.obj(
-      "submissionTime" -> -1,
-      "arrangementID" -> 1,
-      "disclosureID" -> 1
-    )
-
-    submissionDetailsCollection.flatMap(
-      _.find(selector, None)
-        .sort(sortByLatestSubmission)
-        .cursor[SubmissionDetails]()
-        .collect[List](maxDocs, Cursor.FailOnError())
-    )
+    collection.find(equal("enrolmentID", enrolmentID))
+      .limit(maxDocs)
+      .sort(sortByLatestSubmission)
+      .toFuture()
   }
 
-  def countNoOfPreviousSubmissions(enrolmentID: String): Future[Long] = {
-    val enrolmentSelector = Json.obj("enrolmentID" -> enrolmentID)
-    submissionDetailsCollection.flatMap(
-      _.count(
-        selector = Option(enrolmentSelector),
-        limit = Some(10),
-        skip = 0,
-        hint = None,
-        readConcern = Local)
-    )
-  }
+  def countNoOfPreviousSubmissions(enrolmentID: String): Future[Long] =
+    collection.countDocuments(equal("enrolmentID", enrolmentID)).toFuture()
 
-  def storeSubmissionDetails(submissionDetails: SubmissionDetails): Future[Boolean] = {
-    submissionDetailsCollection.flatMap {
-      _.insert(ordered = false)
-        .one(submissionDetails).map { lastError =>
-        lastError.ok
-      }
-    }
-  }
+  def storeSubmissionDetails(submissionDetails: SubmissionDetails): Future[Boolean] =
+    collection.insertOne(submissionDetails).toFuture().map(_ => true)
 
-  def searchSubmissions(searchCriteria: String): Future[List[SubmissionDetails]] = {
-    val selector = Json.obj(
-      "$or" -> Json.arr(
-        Json.obj("arrangementID" -> Json.obj("$regex" -> s"$searchCriteria.*", "$options" -> "i")),
-        Json.obj("disclosureID" -> Json.obj("$regex" -> s"$searchCriteria.*", "$options" -> "i")),
-        Json.obj("messageRefId" -> Json.obj("$regex" -> s"$searchCriteria.*", "$options" -> "i"))
-      )
-    )
-
+  def searchSubmissions(searchCriteria: String): Future[Seq[SubmissionDetails]] = {
+    val pattern = s"$searchCriteria.*"
     val maxDocs = 50
-    val sortByLatestSubmission = Json.obj(
-      "submissionTime" -> -1,
-      "arrangementID" -> 1,
-      "disclosureID" -> 1
-    )
-
-    submissionDetailsCollection.flatMap(
-      _.find(selector, None)
-        .sort(sortByLatestSubmission)
-        .cursor[SubmissionDetails]()
-        .collect[List](maxDocs, Cursor.FailOnError())
-    )
-
+    val caseInsensitiveOption = "i"
+    collection.find( or(
+      regex("arrangementID", pattern, caseInsensitiveOption)
+      , regex("disclosureID", pattern, caseInsensitiveOption)
+      , regex("messageRefId", pattern, caseInsensitiveOption)
+    )).limit(maxDocs)
+      .sort(sortByLatestSubmission)
+      .toFuture()
   }
 
-  def doesDisclosureIdMatchEnrolmentID(disclosureId: String, enrolmentId: String): Future[Boolean] = {
-    val selector = Json.obj(
-      "enrolmentID" -> enrolmentId,
-      "disclosureID" -> disclosureId
-    )
+  def doesDisclosureIdMatchEnrolmentID(disclosureID: String, enrolmentID: String): Future[Boolean] =
+    collection.find( and( equal("enrolmentID", enrolmentID), equal("disclosureID", disclosureID)))
+      .sort(descending("submissionTime"))
+      .first()
+      .toFutureOption()
+      .map(_.isDefined)
 
-    val sortByLatestSubmission = Json.obj(
-      "submissionTime" -> -1
-    )
-
-    submissionDetailsCollection.flatMap(
-      _.find(selector, None)
-        .sort(sortByLatestSubmission)
-        .one[SubmissionDetails]
-    ) map (_.isDefined)
-  }
-
-  def doesDisclosureIdMatchArrangementID(disclosureID: String, arrangementID: String): Future[Boolean] = {
-    val selector = Json.obj(
-      "arrangementID" -> arrangementID,
-      "disclosureID" -> disclosureID
-    )
-
-    val sortByLatestSubmission = Json.obj(
-      "submissionTime" -> -1
-    )
-
-    submissionDetailsCollection.flatMap(
-      _.find(selector, None)
-        .sort(sortByLatestSubmission)
-        .one[SubmissionDetails]
-    ) map (_.isDefined)
-  }
+  def doesDisclosureIdMatchArrangementID(disclosureID: String, arrangementID: String): Future[Boolean] =
+    collection.find( and( equal("arrangementID", arrangementID), equal("disclosureID", disclosureID)))
+      .sort(descending("submissionTime"))
+      .first()
+      .toFutureOption()
+      .map(_.isDefined)
 
 }

@@ -16,19 +16,22 @@
 
 package repositories
 
-import java.time.{Instant, LocalDateTime, ZoneId, ZoneOffset}
+import base.SpecBase
+import models.ArrangementId
 
-import play.api.libs.json.{Json, Reads, Writes, __}
+class ArrangementIdRepositorySpec extends SpecBase {
+  "Arrangement Id Repository" - {
 
-trait MongoDateTimeFormats {
+    "must store arrangement Id correctly" in {
 
-  implicit val localDateTimeRead: Reads[LocalDateTime] =
-    (__ \ "$date").read[Long].map {
-      millis =>
-        LocalDateTime.ofInstant(Instant.ofEpochMilli(millis), ZoneOffset.UTC)
+
+        val repo = app.injector.instanceOf[ArrangementIdRepository]
+
+      implicit val ec: scala.concurrent.ExecutionContext = scala.concurrent.ExecutionContext.global
+        val arrangementId = ArrangementId(dateString = "date", suffix = "suffix")
+        whenReady (repo.storeArrangementId(arrangementId).flatMap(_ => repo.doesArrangementIdExist(arrangementId))) { result =>
+          result mustBe true
+        }
+      }
     }
-
-  implicit val localDateTimeWrite: Writes[LocalDateTime] = (dateTime: LocalDateTime) => Json.obj(
-    "$date" -> dateTime.atZone(ZoneId.of("UTC")).toInstant.toEpochMilli
-  )
 }

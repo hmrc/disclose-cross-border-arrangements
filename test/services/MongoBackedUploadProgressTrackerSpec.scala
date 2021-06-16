@@ -18,8 +18,8 @@ package services
 
 import base.SpecBase
 import models.upscan.{InProgress, Reference, UploadId, UploadSessionDetails}
+import org.bson.types.ObjectId
 import org.mockito.ArgumentMatchers.any
-import reactivemongo.bson.BSONObjectID
 import repositories.UploadSessionRepository
 
 import scala.concurrent.duration._
@@ -44,7 +44,7 @@ class MongoBackedUploadProgressTrackerSpec extends SpecBase {
     "must find an upload" in {
       val uploadId = UploadId("123")
       val uploadDetails = UploadSessionDetails(
-        BSONObjectID.generate(),
+        ObjectId.get(),
         UploadId("123"),
         Reference("123"),
         InProgress

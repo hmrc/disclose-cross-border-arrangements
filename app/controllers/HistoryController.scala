@@ -32,6 +32,8 @@ class HistoryController @Inject()(
                                    submissionDetailsRepository: SubmissionDetailsRepository
                                  )(implicit ec: ExecutionContext) extends BackendController(cc) {
 
+  import APIDateTimeFormats._
+
   def noOfPreviousSubmissions(enrolmentId: String): Action[AnyContent] = authenticate.async {
     implicit request =>
      submissionDetailsRepository

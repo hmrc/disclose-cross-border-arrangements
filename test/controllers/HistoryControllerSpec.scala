@@ -38,6 +38,8 @@ class HistoryControllerSpec extends SpecBase
   with ModelGenerators
   with BeforeAndAfterEach {
 
+  import APIDateTimeFormats._
+
   val mockSubmissionDetailsRepository: SubmissionDetailsRepository = mock[SubmissionDetailsRepository]
 
   override def beforeEach(): Unit = reset(mockSubmissionDetailsRepository)
@@ -119,6 +121,7 @@ class HistoryControllerSpec extends SpecBase
           val result = route(application, request).value
 
           status(result) mustEqual OK
+          import APIDateTimeFormats._
           contentAsJson(result) mustEqual Json.toJson(details.headOption)
       }
     }

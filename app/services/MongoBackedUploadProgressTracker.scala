@@ -16,12 +16,12 @@
 
 package services
 
-import javax.inject.Inject
 import models.upscan._
+import org.bson.types.ObjectId
 import org.slf4j.LoggerFactory
-import reactivemongo.bson.BSONObjectID
 import repositories.UploadSessionRepository
 
+import javax.inject.Inject
 import scala.concurrent.{ExecutionContext, Future}
 
 trait UploadProgressTracker {
@@ -40,7 +40,7 @@ class MongoBackedUploadProgressTracker @Inject()(repository : UploadSessionRepos
 
   override def requestUpload(uploadId : UploadId, fileReference : Reference) : Future[Boolean] = {
 
-    repository.insert(UploadSessionDetails(BSONObjectID.generate(), uploadId, fileReference, InProgress))
+    repository.insert(UploadSessionDetails(ObjectId.get(), uploadId, fileReference, InProgress))
   }
 
   override def registerUploadResult(fileReference: Reference, uploadStatus: UploadStatus): Future[Boolean] = {

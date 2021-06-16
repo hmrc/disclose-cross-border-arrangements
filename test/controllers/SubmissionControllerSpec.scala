@@ -50,6 +50,8 @@ class SubmissionControllerSpec extends SpecBase
   with CacheModelGenerators
   with BeforeAndAfterEach {
 
+  import APIDateTimeFormats._
+
   val mockSubmissionService: SubmissionService = mock[SubmissionService]
   val mockDateHelper: DateHelper = mock[DateHelper]
   val mockSubmissionDetailsRepository: SubmissionDetailsRepository = mock[SubmissionDetailsRepository]
