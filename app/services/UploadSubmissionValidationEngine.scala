@@ -23,7 +23,8 @@ import uk.gov.hmrc.http.HeaderCarrier
 import javax.inject.Inject
 import scala.collection.mutable.ListBuffer
 import scala.concurrent.{ExecutionContext, Future}
-import scala.xml.{Elem, NodeSeq}
+import scala.xml.transform.RewriteRule
+import scala.xml.{Elem, NamespaceBinding, Node, NodeSeq, TopScope}
 
 class UploadSubmissionValidationEngine @Inject()(xmlValidationService: XMLValidationService,
                                                  businessRuleValidationService: BusinessRuleValidationService,
@@ -38,7 +39,20 @@ class UploadSubmissionValidationEngine @Inject()(xmlValidationService: XMLValida
   def validateUploadSubmission(xml: NodeSeq, enrolmentId: String)
                               (implicit hc: HeaderCarrier, ec: ExecutionContext) : Future[Option[UploadSubmissionValidationResult]] = {
 
-    val elem = xml.asInstanceOf[Elem]
+    val ns = new NamespaceBinding(null, "urn:ukdac6:v0.1", TopScope)
+
+    // create a RewriteRule that sets this as the only namespace
+    object setNs extends RewriteRule {
+      override def transform(n: Node): Seq[Node] = n match {
+        case Elem(prefix, label, attribs, scope, children @ _*)  =>
+          Elem(prefix, label, attribs, ns, children.map(setNs) :_*)
+        case other => other
+      }
+    }
+
+    val xml2 = setNs.transform(xml.head)
+
+    val elem = xml2.asInstanceOf[Elem]
 
     try {
       val xmlAndXmlValidationStatus: ListBuffer[SaxParseError] = performXmlValidation(elem)

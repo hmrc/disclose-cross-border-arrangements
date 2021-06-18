@@ -36,9 +36,15 @@ class UploadSubmissionValidationController @Inject()(identify: IdentifierAuthAct
   def validateUploadSubmission: Action[NodeSeq] =  identify.async(parse.xml) {
     implicit request =>
       validationEngine.validateUploadSubmission(request.body, request.enrolmentID) map {
-        case Some(UploadSubmissionValidationSuccess(dac6metaData)) => Ok(Json.toJson(UploadSubmissionValidationSuccess(dac6metaData)))
-        case Some(UploadSubmissionValidationFailure(Seq(errors))) => Ok(Json.toJson(UploadSubmissionValidationFailure(Seq(errors))))
-        case None => BadRequest("Invalid_XML")
+        res =>
+          println(s"\n\n\n\n${res.get}")
+          res
+        match
+        {
+          case Some(UploadSubmissionValidationSuccess(dac6metaData)) => Ok(Json.toJson(UploadSubmissionValidationSuccess(dac6metaData)))
+          case Some(UploadSubmissionValidationFailure(Seq(errors))) => Ok(Json.toJson(UploadSubmissionValidationFailure(Seq(errors))))
+          case None => BadRequest("Invalid_XML")
+        }
       }
   }
 }
