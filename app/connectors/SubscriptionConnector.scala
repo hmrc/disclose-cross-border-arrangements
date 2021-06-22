@@ -20,7 +20,7 @@ import config.AppConfig
 
 import javax.inject.Inject
 import models.subscription.{DisplaySubscriptionForDACRequest, UpdateSubscriptionForDACRequest}
-import uk.gov.hmrc.http.{Authorization, HeaderCarrier, HttpClient, HttpResponse}
+import uk.gov.hmrc.http.{Authorization, HeaderCarrier, HeaderNames, HttpClient, HttpResponse}
 
 import java.time.ZonedDateTime
 import java.time.format.DateTimeFormatter
@@ -36,12 +36,10 @@ class SubscriptionConnector @Inject()(val config: AppConfig, val http: HttpClien
     //x-conversation-id must match conversationID in RequestCommon otherwise EIS will throw a 400 Bad Request
     val conversationID = subscriptionForDACRequest.displaySubscriptionForDACRequest.requestCommon.conversationID.getOrElse("")
 
-    val newHeaders = hc
-      .copy(authorization = Some(Authorization(s"Bearer ${config.bearerToken}")))
-      .withExtraHeaders(addHeaders(conversationID): _*)
+    val extraHeader: Seq[(String, String)] = extraHeaders(hc, conversationID)
 
-    http.POST[DisplaySubscriptionForDACRequest, HttpResponse](displaySubscriptionUrl, subscriptionForDACRequest)(wts =
-      DisplaySubscriptionForDACRequest.format, rds = httpReads, hc = newHeaders, ec = ec)
+    http.POST[DisplaySubscriptionForDACRequest, HttpResponse](displaySubscriptionUrl, subscriptionForDACRequest, extraHeader)(wts =
+      DisplaySubscriptionForDACRequest.format, rds = httpReads, hc = hc, ec = ec)
   }
 
   def updateSubscriptionForDAC(updateSubscriptionForDACRequest: UpdateSubscriptionForDACRequest)
@@ -50,12 +48,17 @@ class SubscriptionConnector @Inject()(val config: AppConfig, val http: HttpClien
     val displaySubscriptionUrl = s"${config.registrationUrl}/dac6/dct05/v1"
     val conversationID = hc.sessionId.map(_.value).getOrElse(UUID.randomUUID().toString)
 
+    val extraHeader: Seq[(String, String)] = extraHeaders(hc, conversationID)
+
+    http.POST[UpdateSubscriptionForDACRequest, HttpResponse](displaySubscriptionUrl, updateSubscriptionForDACRequest, extraHeader)(wts =
+      UpdateSubscriptionForDACRequest.format, rds = httpReads, hc = hc, ec = ec)
+  }
+
+  private def extraHeaders(hc: HeaderCarrier, conversationID: String)(implicit headerCarrier: HeaderCarrier): Seq[(String, String)] = {
     val newHeaders = hc
       .copy(authorization = Some(Authorization(s"Bearer ${config.bearerToken}")))
-      .withExtraHeaders(addHeaders(conversationID): _*)
 
-    http.POST[UpdateSubscriptionForDACRequest, HttpResponse](displaySubscriptionUrl, updateSubscriptionForDACRequest)(wts =
-      UpdateSubscriptionForDACRequest.format, rds = httpReads, hc = newHeaders, ec = ec)
+    newHeaders.headers(Seq(HeaderNames.authorisation, HeaderNames.xRequestId)).++(addHeaders(conversationID))
   }
 
   private def addHeaders(conversationID: String)(implicit headerCarrier: HeaderCarrier): Seq[(String,String)] = {

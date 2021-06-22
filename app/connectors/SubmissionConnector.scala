@@ -19,7 +19,7 @@ package connectors
 import config.AppConfig
 
 import javax.inject.Inject
-import uk.gov.hmrc.http.{Authorization, HeaderCarrier, HttpClient, HttpResponse}
+import uk.gov.hmrc.http.{Authorization, HeaderCarrier, HeaderNames, HttpClient, HttpResponse}
 
 import java.time.ZonedDateTime
 import java.time.format.DateTimeFormatter
@@ -37,9 +37,10 @@ class SubmissionConnector @Inject()(
   def submitDisclosure(submission: NodeSeq)(implicit hc:HeaderCarrier): Future[HttpResponse] = {
     val newHeaders: HeaderCarrier = hc
       .copy(authorization = Some(Authorization(s"Bearer ${config.bearerToken}")))
-      .withExtraHeaders(addHeaders(): _*)
 
-    http.POSTString[HttpResponse](submissionUrl, submission.mkString, Seq.empty[(String, String)])(implicitly, newHeaders, ec)
+    val extraHeaders = newHeaders.headers(Seq(HeaderNames.authorisation, HeaderNames.xRequestId)).++(addHeaders)
+
+    http.POSTString[HttpResponse](submissionUrl, submission.mkString, extraHeaders)(implicitly, hc, ec)
   }
 
   private def addHeaders()(implicit headerCarrier: HeaderCarrier): Seq[(String,String)] = {
