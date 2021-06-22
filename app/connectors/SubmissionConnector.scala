@@ -38,7 +38,7 @@ class SubmissionConnector @Inject()(
     val newHeaders: HeaderCarrier = hc
       .copy(authorization = Some(Authorization(s"Bearer ${config.bearerToken}")))
 
-    val extraHeaders = newHeaders.headers(Seq(HeaderNames.authorisation, HeaderNames.xRequestId)).++(addHeaders)
+    val extraHeaders = newHeaders.headers(Seq(HeaderNames.authorisation)).++(addHeaders)
 
     http.POSTString[HttpResponse](submissionUrl, submission.mkString, extraHeaders)(implicitly, hc, ec)
   }

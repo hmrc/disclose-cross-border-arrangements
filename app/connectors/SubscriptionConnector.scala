@@ -58,7 +58,7 @@ class SubscriptionConnector @Inject()(val config: AppConfig, val http: HttpClien
     val newHeaders = hc
       .copy(authorization = Some(Authorization(s"Bearer ${config.bearerToken}")))
 
-    newHeaders.headers(Seq(HeaderNames.authorisation, HeaderNames.xRequestId)).++(addHeaders(conversationID))
+    newHeaders.headers(Seq(HeaderNames.authorisation)).++(addHeaders(conversationID))
   }
 
   private def addHeaders(conversationID: String)(implicit headerCarrier: HeaderCarrier): Seq[(String,String)] = {
