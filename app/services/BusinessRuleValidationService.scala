@@ -63,10 +63,10 @@ class BusinessRuleValidationService @Inject()(submissionDetailsRepository: Submi
           Future(true)
         }else Future(isInitialDisclosureMA)
 
-      initialDisclosureMaValue.map { shouldBeTreatedAsMa =>
+      initialDisclosureMaValue.map { mustBeTreatedAsMa =>
         Validation(
           key = "businessrules.initialDisclosure.needRelevantTaxPayer",
-          value = if (!shouldBeTreatedAsMa) noOfRelevantTaxPayers > 0 else true
+          value = if (!mustBeTreatedAsMa) noOfRelevantTaxPayers > 0 else true
         )
       }
     }

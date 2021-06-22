@@ -21,7 +21,6 @@ import cats.data.ReaderT
 import cats.implicits._
 import models._
 import org.mockito.ArgumentMatchers.any
-import org.mockito.Mockito.{when, _}
 import org.mockito.MockitoSugar
 import repositories.SubmissionDetailsRepository
 import uk.gov.hmrc.http.HeaderCarrier

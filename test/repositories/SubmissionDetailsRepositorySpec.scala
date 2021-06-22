@@ -52,7 +52,7 @@ class SubmissionDetailsRepositorySpec extends SpecBase with BeforeAndAfterEach {
     "must insert Submission Details" in {
       val sd = submissionDetailsRep.storeSubmissionDetails(submissionDetails)
       whenReady(sd) { result =>
-        result shouldBe true
+        result mustBe true
       }
     }
   }
