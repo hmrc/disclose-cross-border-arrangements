@@ -18,7 +18,7 @@ package models
 
 import base.SpecBase
 import controllers.APIDateTimeFormats
-import play.api.libs.json.{JsObject, JsSuccess, Json}
+import play.api.libs.json.{JsObject, Json}
 
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter

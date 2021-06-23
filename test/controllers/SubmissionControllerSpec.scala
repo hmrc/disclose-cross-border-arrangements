@@ -16,19 +16,16 @@
 
 package controllers
 
-import java.time.LocalDateTime
-import java.util.UUID
 import base.SpecBase
 import connectors.{SubmissionConnector, SubscriptionConnector}
 import controllers.auth.{FakeIdentifierAuthAction, IdentifierAuthAction}
 import generators.CacheModelGenerators
 import helpers.SubmissionFixtures.{minimalPassing, oneError}
 import helpers.{ContactFixtures, DateHelper}
-import models.{DisclosureId, GeneratedIDs, SubmissionDetails, SubmissionHistory, SubmissionMetaData}
-import org.mockito.ArgumentMatchers.{any, eq}
-import org.mockito.{ArgumentCaptor, ArgumentMatcher, ArgumentMatchers, MockitoSugar}
+import models._
+import org.mockito.ArgumentMatchers.any
+import org.mockito.{ArgumentCaptor, ArgumentMatchers, MockitoSugar}
 import org.scalacheck.Gen
-import org.scalacheck.Prop.forAll
 import org.scalatest.BeforeAndAfterEach
 import org.scalatestplus.scalacheck.ScalaCheckDrivenPropertyChecks
 import play.api.inject.bind
@@ -41,6 +38,8 @@ import repositories.SubmissionDetailsRepository
 import services.{ContactService, SubmissionService, SubscriptionCacheService, TransformService}
 import uk.gov.hmrc.http.{HeaderNames, HttpResponse, UpstreamErrorResponse}
 
+import java.time.LocalDateTime
+import java.util.UUID
 import scala.concurrent.Future
 import scala.xml.NodeSeq
 

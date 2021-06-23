@@ -18,19 +18,18 @@ package controllers.auth
 
 import akka.util.Timeout
 import org.mockito.ArgumentMatchers.any
-import org.mockito.Mockito.when
 import org.mockito.MockitoSugar
 import org.scalatestplus.play.PlaySpec
 import org.scalatestplus.play.guice.GuiceOneAppPerSuite
-import play.api.{Application, Configuration}
+import play.api.http.Status.{OK, UNAUTHORIZED}
 import play.api.inject.bind
 import play.api.inject.guice.GuiceApplicationBuilder
 import play.api.mvc.{Action, AnyContent, InjectedController}
 import play.api.test.FakeRequest
 import play.api.test.Helpers.status
-import uk.gov.hmrc.auth.core.{AuthConnector, Enrolment, EnrolmentIdentifier, Enrolments, MissingBearerToken}
-import play.api.http.Status.{OK, UNAUTHORIZED}
+import play.api.{Application, Configuration}
 import uk.gov.hmrc.auth.core.retrieve.~
+import uk.gov.hmrc.auth.core._
 
 import scala.concurrent.Future
 import scala.concurrent.duration._

@@ -16,11 +16,10 @@
 
 package models.upscan
 
-import java.time.Instant
-
 import base.SpecBase
-import models.FileName
-import play.api.libs.json.{JsError, JsResultException, Json}
+import play.api.libs.json.Json
+
+import java.time.Instant
 
 class UploadCallbackSpec extends SpecBase {
 

@@ -22,7 +22,6 @@ import models.upscan.UploadId
 import org.mongodb.scala.bson.BsonDocument
 import org.mongodb.scala.result.DeleteResult
 import org.scalatest.BeforeAndAfterEach
-import org.scalatest.Matchers.convertToAnyShouldWrapper
 import play.api.test.Helpers.{await, _}
 import uk.gov.hmrc.mongo.play.json.PlayMongoRepository
 
@@ -52,7 +51,7 @@ class SubmissionDetailsRepositorySpec extends SpecBase with BeforeAndAfterEach {
     "must insert Submission Details" in {
       val sd = submissionDetailsRep.storeSubmissionDetails(submissionDetails)
       whenReady(sd) { result =>
-        result shouldBe true
+        result mustBe true
       }
     }
   }

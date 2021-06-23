@@ -16,12 +16,13 @@
 
 package models
 
+import org.scalatest.freespec.AnyFreeSpec
+import org.scalatest.matchers.must.Matchers
+
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 
-import org.scalatest.{FreeSpec, MustMatchers}
-
-class FileNameSpec extends FreeSpec with MustMatchers {
+class FileNameSpec extends AnyFreeSpec with Matchers {
 
   object File extends FileName("fileName", "disclosureID", genId, time)
 

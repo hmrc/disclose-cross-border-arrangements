@@ -17,10 +17,8 @@
 package controllers
 
 import connectors.SubmissionConnector
-import controllers.auth.{AuthAction, IdentifierAuthAction}
+import controllers.auth.IdentifierAuthAction
 import helpers.DateHelper
-
-import javax.inject.Inject
 import models._
 import org.slf4j.LoggerFactory
 import play.api.libs.json.{JsSuccess, Json}
@@ -32,6 +30,7 @@ import uk.gov.hmrc.http.{HeaderNames, HttpResponse}
 import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
 
 import java.util.UUID
+import javax.inject.Inject
 import scala.concurrent.{ExecutionContext, Future}
 import scala.util.{Success, Try}
 import scala.xml.NodeSeq

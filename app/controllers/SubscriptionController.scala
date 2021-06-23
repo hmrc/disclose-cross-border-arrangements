@@ -18,6 +18,7 @@ package controllers
 
 import connectors.SubscriptionConnector
 import controllers.auth.AuthAction
+
 import javax.inject.Inject
 import models.ErrorDetails
 import models.subscription.{DisplaySubscriptionForDACRequest, UpdateSubscriptionForDACRequest}
@@ -25,8 +26,8 @@ import play.api.Logger
 import play.api.libs.json.{JsResult, JsSuccess, JsValue, Json}
 import play.api.mvc.{Action, ControllerComponents, Result}
 import uk.gov.hmrc.http.{HeaderCarrier, HttpResponse}
-import uk.gov.hmrc.play.HeaderCarrierConverter
 import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
+import uk.gov.hmrc.play.http.HeaderCarrierConverter
 
 import scala.concurrent.{ExecutionContext, Future}
 import scala.util.{Success, Try}
@@ -43,13 +44,15 @@ class SubscriptionController @Inject()(
     implicit request =>
 
       implicit val hc: HeaderCarrier =
-        HeaderCarrierConverter.fromHeadersAndSession(request.headers, Some(request.session))
+        HeaderCarrierConverter.fromRequestAndSession(request, request.session)
 
       val displaySubscriptionResult: JsResult[DisplaySubscriptionForDACRequest] =
         request.body.validate[DisplaySubscriptionForDACRequest]
 
       displaySubscriptionResult.fold(
-        invalid = _ => Future.successful(BadRequest("")),
+        invalid = jsonValidation => {
+          logger.warn(s"displaySubscriptionResult validation failed with error: $jsonValidation")
+          Future.successful(BadRequest("Json:Failed to read DisplaySubscriptionForDACRequest"))},
         valid = request =>
           for {
             httpResponse <- subscriptionConnector.displaySubscriptionForDAC(request)
@@ -63,7 +66,7 @@ class SubscriptionController @Inject()(
     implicit request =>
 
       implicit val hc: HeaderCarrier =
-        HeaderCarrierConverter.fromHeadersAndSession(request.headers, Some(request.session))
+        HeaderCarrierConverter.fromRequestAndSession(request, request.session)
 
       val displaySubscriptionResult: JsResult[UpdateSubscriptionForDACRequest] =
         request.body.validate[UpdateSubscriptionForDACRequest]

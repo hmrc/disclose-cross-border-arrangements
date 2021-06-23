@@ -16,12 +16,9 @@
 
 package services
 
-import java.time.LocalDateTime
-import java.util.{Calendar, GregorianCalendar}
 import base.SpecBase
 import fixtures.XMLFixture
 import models.{Dac6MetaData, SubmissionDetails, Validation}
-import org.mockito.Mockito.{when, _}
 import org.mockito.MockitoSugar
 import org.scalatest.BeforeAndAfterEach
 import org.scalatest.concurrent.IntegrationPatience
@@ -29,6 +26,8 @@ import play.api.Application
 import play.api.inject.bind
 import repositories.SubmissionDetailsRepository
 
+import java.time.LocalDateTime
+import java.util.{Calendar, GregorianCalendar}
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 

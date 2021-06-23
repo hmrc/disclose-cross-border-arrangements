@@ -19,7 +19,6 @@ package repositories
 import base.SpecBase
 import models.upscan.{Quarantined, Reference, UploadId, UploadSessionDetails}
 import org.bson.types.ObjectId
-import org.scalatest.Matchers.convertToAnyShouldWrapper
 
 import java.util.UUID
 class UploadSessionRepositorySpec extends SpecBase {
@@ -31,15 +30,15 @@ class UploadSessionRepositorySpec extends SpecBase {
       val uploadDetails = UploadSessionDetails(ObjectId.get(), uploadId, Reference("xxxx"),Quarantined)
       val res = uploadRep.insert(uploadDetails)
       whenReady(res) { result =>
-        result shouldBe true
+        result mustBe true
       }
     }
     "must read UploadStatus" in {
       val res = uploadRep.findByUploadId(uploadId)
       whenReady(res) { case Some(result) =>
-        result.uploadId shouldBe (uploadDetails.uploadId)
-        result.reference shouldBe (uploadDetails.reference)
-        result.status shouldBe (uploadDetails.status)
+        result.uploadId mustBe (uploadDetails.uploadId)
+        result.reference mustBe (uploadDetails.reference)
+        result.status mustBe (uploadDetails.status)
       }
     }
   }

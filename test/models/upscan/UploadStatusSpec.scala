@@ -17,10 +17,11 @@
 package models.upscan
 
 
-import org.scalatest.{MustMatchers, WordSpec}
+import org.scalatest.matchers.must.Matchers
+import org.scalatest.wordspec.AnyWordSpec
 import play.api.libs.json.{JsError, Json}
 
-class UploadStatusSpec extends WordSpec with MustMatchers {
+class UploadStatusSpec extends AnyWordSpec with Matchers {
 
   val statuses: List[UploadStatus] = List(NotStarted, Failed, InProgress, Quarantined, Rejected)
 

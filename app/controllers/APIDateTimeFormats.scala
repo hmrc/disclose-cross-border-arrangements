@@ -19,7 +19,7 @@ package controllers
 import models.subscription.cache.{CreateSubscriptionForDACRequest, SubscriptionForDACRequest}
 import models.{SubmissionDetails, SubmissionHistory}
 import play.api.libs.functional.syntax.{toFunctionalBuilderOps, unlift}
-import play.api.libs.json.{JsPath, JsString, JsSuccess, Json, OFormat, OWrites, Reads, Writes, __}
+import play.api.libs.json._
 
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
