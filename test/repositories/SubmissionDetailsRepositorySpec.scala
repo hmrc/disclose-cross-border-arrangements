@@ -22,7 +22,6 @@ import models.upscan.UploadId
 import org.mongodb.scala.bson.BsonDocument
 import org.mongodb.scala.result.DeleteResult
 import org.scalatest.BeforeAndAfterEach
-import org.scalatest.Matchers.convertToAnyShouldWrapper
 import play.api.test.Helpers.{await, _}
 import uk.gov.hmrc.mongo.play.json.PlayMongoRepository
 

@@ -36,7 +36,7 @@ class SubscriptionConnector @Inject()(val config: AppConfig, val http: HttpClien
     //x-conversation-id must match conversationID in RequestCommon otherwise EIS will throw a 400 Bad Request
     val conversationID = subscriptionForDACRequest.displaySubscriptionForDACRequest.requestCommon.conversationID.getOrElse("")
 
-    val extraHeader: Seq[(String, String)] = extraHeaders(hc, conversationID)
+    val extraHeader: Seq[(String, String)] = extraHeaders(conversationID)
 
     http.POST[DisplaySubscriptionForDACRequest, HttpResponse](displaySubscriptionUrl, subscriptionForDACRequest, extraHeader)(wts =
       DisplaySubscriptionForDACRequest.format, rds = httpReads, hc = hc, ec = ec)
@@ -48,14 +48,14 @@ class SubscriptionConnector @Inject()(val config: AppConfig, val http: HttpClien
     val displaySubscriptionUrl = s"${config.registrationUrl}/dac6/dct05/v1"
     val conversationID = hc.sessionId.map(_.value).getOrElse(UUID.randomUUID().toString)
 
-    val extraHeader: Seq[(String, String)] = extraHeaders(hc, conversationID)
+    val extraHeader: Seq[(String, String)] = extraHeaders(conversationID)
 
     http.POST[UpdateSubscriptionForDACRequest, HttpResponse](displaySubscriptionUrl, updateSubscriptionForDACRequest, extraHeader)(wts =
       UpdateSubscriptionForDACRequest.format, rds = httpReads, hc = hc, ec = ec)
   }
 
-  private def extraHeaders(hc: HeaderCarrier, conversationID: String)(implicit headerCarrier: HeaderCarrier): Seq[(String, String)] = {
-    val newHeaders = hc
+  private def extraHeaders(conversationID: String)(implicit headerCarrier: HeaderCarrier): Seq[(String, String)] = {
+    val newHeaders = headerCarrier
       .copy(authorization = Some(Authorization(s"Bearer ${config.bearerToken}")))
 
     newHeaders.headers(Seq(HeaderNames.authorisation)).++(addHeaders(conversationID))

@@ -19,7 +19,6 @@ package repositories
 import base.SpecBase
 import models.upscan.{Quarantined, Reference, UploadId, UploadSessionDetails}
 import org.bson.types.ObjectId
-import org.scalatest.Matchers.convertToAnyShouldWrapper
 
 import java.util.UUID
 class UploadSessionRepositorySpec extends SpecBase {
