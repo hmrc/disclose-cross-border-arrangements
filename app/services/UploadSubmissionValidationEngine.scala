@@ -23,7 +23,7 @@ import uk.gov.hmrc.http.HeaderCarrier
 import javax.inject.Inject
 import scala.collection.mutable.ListBuffer
 import scala.concurrent.{ExecutionContext, Future}
-import scala.xml.Elem
+import scala.xml.{Elem, NodeSeq}
 
 class UploadSubmissionValidationEngine @Inject()(xmlValidationService: XMLValidationService,
                                                  businessRuleValidationService: BusinessRuleValidationService,
@@ -35,24 +35,20 @@ class UploadSubmissionValidationEngine @Inject()(xmlValidationService: XMLValida
 
   //TODO - Change output to submission Result - DAC6-858
   //TODO - Pass back metadata instead of MessageRefID
-  def validateUploadSubmission(downloadURL: String, enrolmentId: String)
+  def validateUploadSubmission(xml: NodeSeq, enrolmentId: String)
                               (implicit hc: HeaderCarrier, ec: ExecutionContext) : Future[Option[UploadSubmissionValidationResult]] = {
 
-//    val elem: Elem = xml.asInstanceOf[Elem]
-    println(s"\n\n\n\n@@@@@@downloadURL: \n\n + $downloadURL\n\n")
-
-    val xml = xmlValidationService.loadXML(downloadURL)
+    val elem: Elem = xml.asInstanceOf[Elem]
+    println(s"\n\n\n\n@@@@@@elem: \n\n + $elem\n\n")
 
     try {
 
-      //TODO - XML not being recieved remove XML load from disclose frontend & pass downloadSource instead - Do Load in backend
-
-      val xmlAndXmlValidationStatus: ListBuffer[SaxParseError] = performXmlValidation(xml)
-      val metaData = businessRuleValidationService.extractDac6MetaData()(xml)
+      val xmlAndXmlValidationStatus: ListBuffer[SaxParseError] = performXmlValidation(elem)
+      val metaData = businessRuleValidationService.extractDac6MetaData()(elem)
 
       for {
         metaDataResult <- metaDataValidationService.verifyMetaDataForUploadSubmission(metaData, enrolmentId)
-        businessRulesResult <- performBusinessRulesValidation(xml)
+        businessRulesResult <- performBusinessRulesValidation(elem)
       } yield {
 
         println(s"\n\n@@@@@XML VALIDATIONSTATUS: $xmlAndXmlValidationStatus")
