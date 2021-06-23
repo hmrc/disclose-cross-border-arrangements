@@ -18,16 +18,16 @@ package models
 
 import play.api.libs.json.{Json, OFormat}
 
-sealed trait ManualSubmissionValidationResult
+sealed trait UploadSubmissionValidationResult
 
-case class ManualSubmissionValidationSuccess(messageRefId: String) extends ManualSubmissionValidationResult
+case class UploadSubmissionValidationSuccess(dac6MetaData: Dac6MetaData) extends UploadSubmissionValidationResult
 
-object ManualSubmissionValidationSuccess {
-  implicit val format: OFormat[ManualSubmissionValidationSuccess] = Json.format[ManualSubmissionValidationSuccess]
+object UploadSubmissionValidationSuccess {
+  implicit val format: OFormat[UploadSubmissionValidationSuccess] = Json.format[UploadSubmissionValidationSuccess]
 }
 
-case class ManualSubmissionValidationFailure(errors: Seq[String]) extends ManualSubmissionValidationResult
+case class UploadSubmissionValidationFailure(errors: Seq[String]) extends UploadSubmissionValidationResult
 
-object ManualSubmissionValidationFailure {
-  implicit val format: OFormat[ManualSubmissionValidationFailure] = Json.format[ManualSubmissionValidationFailure]
+object UploadSubmissionValidationFailure {
+  implicit val format: OFormat[UploadSubmissionValidationFailure] = Json.format[UploadSubmissionValidationFailure]
 }
