@@ -16,6 +16,7 @@
 
 package services
 
+import helpers.{ErrorMessageHelper, XmlErrorMessageHelper}
 import models._
 import org.slf4j.LoggerFactory
 import uk.gov.hmrc.http.HeaderCarrier
@@ -28,10 +29,12 @@ import scala.xml.{Elem, NodeSeq}
 class UploadSubmissionValidationEngine @Inject()(xmlValidationService: XMLValidationService,
                                                  businessRuleValidationService: BusinessRuleValidationService,
                                                  metaDataValidationService: MetaDataValidationService,
+                                                 xmlErrorMessageHelper: XmlErrorMessageHelper,
+                                                 errorMessageHelper: ErrorMessageHelper,
                                                  auditService: AuditService) {
 
   private val logger = LoggerFactory.getLogger(getClass)
-  private val noErrors: Seq[String] = Seq()
+  private val noErrors = Seq.empty
 
   //TODO - Change output to submission Result - DAC6-858
   //TODO - Pass back metadata instead of MessageRefID
@@ -39,30 +42,29 @@ class UploadSubmissionValidationEngine @Inject()(xmlValidationService: XMLValida
                               (implicit hc: HeaderCarrier, ec: ExecutionContext) : Future[Option[UploadSubmissionValidationResult]] = {
 
     val elem: Elem = xml.asInstanceOf[Elem]
-    println(s"\n\n\n\n@@@@@@elem: \n\n + $elem\n\n")
 
     try {
 
-      val xmlAndXmlValidationStatus: ListBuffer[SaxParseError] = performXmlValidation(elem)
-      val metaData = businessRuleValidationService.extractDac6MetaData()(elem)
+      val xmlValidationResult: Seq[GenericError] = performXmlValidation(elem)
+      val metaData: Option[Dac6MetaData] = businessRuleValidationService.extractDac6MetaData()(elem)
 
       for {
-        metaDataResult <- metaDataValidationService.verifyMetaDataForUploadSubmission(metaData, enrolmentId)
+        metaDataResult <- metaDataValidationService.verifyMetaDataForUploadSubmission(metaData, enrolmentId, elem)
         businessRulesResult <- performBusinessRulesValidation(elem)
       } yield {
 
-        println(s"\n\n@@@@@XML VALIDATIONSTATUS: $xmlAndXmlValidationStatus")
-        println(s"\n\n@@@@@businessRulesResult: $businessRulesResult")
-        println(s"\n\n@@@@@metaDataResult: $metaDataResult")
-        println(s"\n\ncombined Upload Results: ${combineUploadResults(xmlAndXmlValidationStatus, businessRulesResult, metaDataResult)}")
-
-        combineUploadResults(xmlAndXmlValidationStatus, businessRulesResult, metaDataResult) match {
-          case None =>  auditService.auditManualSubmissionParseFailure(enrolmentId, metaData, xmlAndXmlValidationStatus)
-            None
-          case Some(Seq()) =>
+        combineUploadResults(xmlValidationResult, businessRulesResult, metaDataResult) match {
+          case Seq() =>
+            println("\n\n------------success------------\n\n")
             Some(UploadSubmissionValidationSuccess(metaDataResult.right.get))
-          case Some(Seq(errors)) =>
-            Some(UploadSubmissionValidationFailure(Seq(errors)))
+          case Seq(errors) =>
+            println("\n\n------------failure------------\n\n")
+        //auditService.auditManualSubmissionParseFailure(enrolmentId, metaData, xmlAndXmlValidationStatus)
+          Some(UploadSubmissionValidationFailure(Seq(errors)))
+
+          case _ =>
+            println("\n------------errors------------\n")
+            None
         }
       }
     } catch {
@@ -72,34 +74,40 @@ class UploadSubmissionValidationEngine @Inject()(xmlValidationService: XMLValida
     }
   }
 
-  def performXmlValidation(elem: Elem): ListBuffer[SaxParseError] = {
-    xmlValidationService.validateManualSubmission(elem)
+  def performXmlValidation(elem: Elem): Seq[GenericError] = {
+    val xmlErrors: ListBuffer[SaxParseError] = xmlValidationService.validateManualSubmission(elem)
+    if (xmlErrors.isEmpty) {
+      noErrors
+    } else {
+      xmlErrorMessageHelper.generateErrorMessages(xmlErrors)
+    }
   }
 
   def performBusinessRulesValidation(elem: Elem)
-                                    (implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Seq[String]] = {
+                                    (implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Seq[GenericError]] = {
 
     businessRuleValidationService.validateFile()(hc, ec)(elem) match {
       case Some(value) => value.map {
-        seqValidation =>
-          seqValidation.map(_.key)
-
+        seqValidation: Seq[Validation] =>
+          errorMessageHelper.convertToGenericErrors(seqValidation, elem)
       }
       case None => Future.successful(noErrors)
     }
   }
 
-  private def combineUploadResults(xmlResult: ListBuffer[SaxParseError], businessRulesResult: Seq[String],
-                             metaDataResult:  Either[Seq[String], Dac6MetaData]):  Option[Seq[String]] = {
+  private def combineUploadResults(xmlResult: Seq[GenericError], businessRulesResult: Seq[GenericError],
+                             metaDataResult:  Either[Seq[GenericError], Dac6MetaData]):  Seq[GenericError] = {
 
-    if (xmlResult.isEmpty) {
-      if(metaDataResult.isLeft) {
-        Some(businessRulesResult ++ metaDataResult.left.get)
-      } else {
-        Some(businessRulesResult)
-      }
+    val combinedErrors =
+      (xmlResult ++ businessRulesResult ++ metaDataResult.left.getOrElse(Seq.empty)).sortBy(_.lineNumber)
+
+
+    println(s"\n\n-------combined errors----------: $combinedErrors\n\n")
+
+    if (combinedErrors.isEmpty){
+        Seq.empty
     } else {
-      None
+      combinedErrors
     }
   }
 }
