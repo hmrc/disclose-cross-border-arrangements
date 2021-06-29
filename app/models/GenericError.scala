@@ -16,7 +16,7 @@
 
 package models
 
-import play.api.libs.json.Json
+import play.api.libs.json.{Json, OFormat}
 
 case class GenericError(lineNumber: Int, messageKey: String)
 
@@ -27,5 +27,5 @@ object GenericError {
       ge => (ge.lineNumber, ge.messageKey)
     )
 
-  implicit val format = Json.format[GenericError]
+  implicit val format: OFormat[GenericError] = Json.format[GenericError]
 }
