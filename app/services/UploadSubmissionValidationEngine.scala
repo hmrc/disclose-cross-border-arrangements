@@ -34,7 +34,7 @@ class UploadSubmissionValidationEngine @Inject()(xmlValidationService: XMLValida
                                                  auditService: AuditService) {
 
   private val logger = LoggerFactory.getLogger(getClass)
-  private val noErrors = Seq.empty
+  private val noErrors = Seq()
 
   //TODO - Change output to submission Result - DAC6-858
   //TODO - Pass back metadata instead of MessageRefID
@@ -44,7 +44,6 @@ class UploadSubmissionValidationEngine @Inject()(xmlValidationService: XMLValida
     val elem: Elem = xml.asInstanceOf[Elem]
 
     try {
-
       val xmlValidationResult: Seq[GenericError] = performXmlValidation(elem)
       val metaData: Option[Dac6MetaData] = businessRuleValidationService.extractDac6MetaData()(elem)
 
@@ -55,15 +54,11 @@ class UploadSubmissionValidationEngine @Inject()(xmlValidationService: XMLValida
 
         combineUploadResults(xmlValidationResult, businessRulesResult, metaDataResult) match {
           case Seq() =>
-            println("\n\n------------success------------\n\n")
             Some(UploadSubmissionValidationSuccess(metaDataResult.right.get))
-          case Seq(errors) =>
-            println("\n\n------------failure------------\n\n")
-        //auditService.auditManualSubmissionParseFailure(enrolmentId, metaData, xmlAndXmlValidationStatus)
-          Some(UploadSubmissionValidationFailure(Seq(errors)))
-
+          case errors: Seq[GenericError] =>
+            Some(UploadSubmissionValidationFailure(errors))
           case _ =>
-            println("\n------------errors------------\n")
+//            auditService.auditManualSubmissionParseFailure(enrolmentId, metaData, xmlAndXmlValidationStatus)
             None
         }
       }
@@ -79,7 +74,8 @@ class UploadSubmissionValidationEngine @Inject()(xmlValidationService: XMLValida
     if (xmlErrors.isEmpty) {
       noErrors
     } else {
-      xmlErrorMessageHelper.generateErrorMessages(xmlErrors)
+      val filteredErrors: Seq[GenericError] = xmlErrorMessageHelper.generateErrorMessages(xmlErrors)
+      filteredErrors
     }
   }
 
@@ -96,18 +92,15 @@ class UploadSubmissionValidationEngine @Inject()(xmlValidationService: XMLValida
   }
 
   private def combineUploadResults(xmlResult: Seq[GenericError], businessRulesResult: Seq[GenericError],
-                             metaDataResult:  Either[Seq[GenericError], Dac6MetaData]):  Seq[GenericError] = {
+                             metaDataResult:  Either[Seq[GenericError], Dac6MetaData]): Seq[GenericError] = {
 
     val combinedErrors =
       (xmlResult ++ businessRulesResult ++ metaDataResult.left.getOrElse(Seq.empty)).sortBy(_.lineNumber)
 
-
-    println(s"\n\n-------combined errors----------: $combinedErrors\n\n")
-
-    if (combinedErrors.isEmpty){
-        Seq.empty
-    } else {
-      combinedErrors
+    if (combinedErrors.isEmpty)
+        noErrors
+    else {
+        combinedErrors
     }
   }
 }

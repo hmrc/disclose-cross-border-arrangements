@@ -55,6 +55,7 @@ class MetaDataValidationService @Inject()(
 
   def verifyMetaDataForUploadSubmission(dac6MetaData: Option[Dac6MetaData], enrolmentId: String, xml: Elem)
                                        (implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Either[Seq[GenericError], Dac6MetaData]] = {
+
     verifyMetaData(dac6MetaData, enrolmentId).flatMap {
       case Seq() if dac6MetaData.isDefined => Future(Right(dac6MetaData.get))
       case Seq(Validation("metaDataRules.messageRefId.notUnique", false, _))  => verifyMetaDataForUploadSubmission(dac6MetaData, enrolmentId, xml)
