@@ -22,7 +22,7 @@ import cats.implicits._
 import helpers.{ErrorMessageHelper, XmlErrorMessageHelper}
 import models._
 import org.mockito.Matchers.any
-import org.mockito.Mockito.when
+import org.mockito.Mockito.{when, verify, times}
 import org.scalatestplus.mockito.MockitoSugar
 import repositories.SubmissionDetailsRepository
 import uk.gov.hmrc.http.HeaderCarrier
@@ -131,7 +131,6 @@ class UploadSubmissionValidationEngineSpec extends SpecBase with MockitoSugar {
 
           }
         }
-
       }
 
     val validationEngine = new UploadSubmissionValidationEngine(mockXmlValidationService,
@@ -149,15 +148,7 @@ class UploadSubmissionValidationEngineSpec extends SpecBase with MockitoSugar {
 
   }
 
-  //TODO - fix auditing & fix final test
-
   "ValidateUploadSubmission" - {
-
-//    "must return ValidationSuccess for valid file" in new SetUp {
-//      when(mockXmlValidationService.validateXml(any())).thenReturn(Left(noErrors))
-//      when(mockMetaDataValidationService.verifyMetaData(any(), any())(any(), any())).thenReturn(Future.successful(Seq()))
-//      Await.result(validationEngine.validateUploadSubmission(elem, enrolmentId), 10 seconds) mustBe Right(UploadSubmissionValidationSuccess(mockMetaData))
-//    }
 
     "must return UploadSubmissionValidationSuccess when xml with no errors received" in new SetUp {
 
@@ -166,7 +157,7 @@ class UploadSubmissionValidationEngineSpec extends SpecBase with MockitoSugar {
 
       Await.result(validationEngine.validateUploadSubmission(elem, enrolmentId), 10 seconds) mustBe Some(UploadSubmissionValidationSuccess(mockMetaData))
 
-//      verify(mockAuditService, times(0)).auditManualSubmissionParseFailure(any(), any(), any())(any())
+      verify(mockAuditService, times(0)).auditUploadSubmissionParseFailure(any(), any(), any())(any())
 
     }
 
@@ -179,7 +170,7 @@ class UploadSubmissionValidationEngineSpec extends SpecBase with MockitoSugar {
 
       val expectedResult = Some(UploadSubmissionValidationFailure(Seq(GenericError(lineNumber, defaultError))))
       Await.result(validationEngine.validateUploadSubmission(elem, enrolmentId), 10 seconds) mustBe expectedResult
-//      verify(mockAuditService, times(0)).auditManualSubmissionParseFailure(any(), any(), any())(any()) //TODO - add auditing
+      verify(mockAuditService, times(0)).auditUploadSubmissionParseFailure(any(), any(), any())(any())
 
     }
 
@@ -192,7 +183,7 @@ class UploadSubmissionValidationEngineSpec extends SpecBase with MockitoSugar {
 
       val expectedResult = Some(UploadSubmissionValidationFailure(Seq(GenericError(lineNumber, "metaDataRules.arrangementId.arrangementIdDoesNotMatchRecords"))))
       Await.result(validationEngine.validateUploadSubmission(elem, enrolmentId), 10 seconds) mustBe expectedResult
-//      verify(mockAuditService, times(0)).auditManualSubmissionParseFailure(any(), any(), any())(any()) /TODO - add auditing
+      verify(mockAuditService, times(0)).auditUploadSubmissionParseFailure(any(), any(), any())(any())
 
     }
 
@@ -204,9 +195,6 @@ class UploadSubmissionValidationEngineSpec extends SpecBase with MockitoSugar {
       val expectedErrors = Seq(GenericError(20, "Enter a Street"), GenericError(27, "Enter a City"))
 
       Await.result(validationEngine.validateUploadSubmission(elem, enrolmentId), 10 seconds) mustBe Some(UploadSubmissionValidationFailure(expectedErrors))
-//      verify(mockAuditService, times(1)).auditValidationFailure(any(), any(), any())(any())
-//      verify(mockAuditService, times(2)).auditErrorMessage(any())(any())
-
     }
 
     "must return ValidationFailure for valid file which fails metaDataCheck and audit outcome" in new SetUp {
@@ -217,7 +205,7 @@ class UploadSubmissionValidationEngineSpec extends SpecBase with MockitoSugar {
 
       val expectedResult = Some(UploadSubmissionValidationFailure(Seq(GenericError(1, "metaDataRules.arrangementId.arrangementIdDoesNotMatchRecords"))))
       Await.result(validationEngine.validateUploadSubmission(elem, enrolmentId), 10 seconds) mustBe expectedResult
-//      verify(mockAuditService, times(0)).auditManualSubmissionParseFailure(any(), any(), any())(any())
+      verify(mockAuditService, times(0)).auditUploadSubmissionParseFailure(any(), any(), any())(any())
     }
 
     "must return ValidationFailure for file missing mandatory attributes" in new SetUp {
@@ -231,9 +219,6 @@ class UploadSubmissionValidationEngineSpec extends SpecBase with MockitoSugar {
       val expectedErrors = Seq(GenericError(175, "Enter an Amount currCode"))
 
       Await.result(validationEngine.validateUploadSubmission(elem, enrolmentId), 10 seconds)  mustBe Some(UploadSubmissionValidationFailure(expectedErrors))
-//      verify(mockAuditService, times(1)).auditValidationFailure(any(), any(), any())(any())
-//      verify(mockAuditService, times(1)).auditErrorMessage(any())(any())
-
     }
 
     "must return ValidationFailure for file where element is too long (1-400 allowed)" in new SetUp {
@@ -244,9 +229,6 @@ class UploadSubmissionValidationEngineSpec extends SpecBase with MockitoSugar {
       val expectedErrors = Seq(GenericError(116, "BuildingIdentifier must be 400 characters or less"))
 
       Await.result(validationEngine.validateUploadSubmission(elem, enrolmentId), 10 seconds)  mustBe Some(UploadSubmissionValidationFailure(expectedErrors))
-//      verify(mockAuditService, times(1)).auditValidationFailure(any(), any(), any())(any())
-//      verify(mockAuditService, times(1)).auditErrorMessage(any())(any())
-
     }
 
     "must return ValidationFailure for file where element is too long (1-4000 allowed)" in new SetUp {
@@ -257,9 +239,6 @@ class UploadSubmissionValidationEngineSpec extends SpecBase with MockitoSugar {
       val expectedErrors = Seq(GenericError(116, "NationalProvision must be 4000 characters or less"))
 
       Await.result(validationEngine.validateUploadSubmission(elem, enrolmentId), 10 seconds)  mustBe Some(UploadSubmissionValidationFailure(expectedErrors))
-//      verify(mockAuditService, times(1)).auditValidationFailure(any(), any(), any())(any())
-//      verify(mockAuditService, times(1)).auditErrorMessage(any())(any())
-
     }
 
     "must return ValidationFailure for file with invalid country code" in new SetUp {
@@ -270,9 +249,6 @@ class UploadSubmissionValidationEngineSpec extends SpecBase with MockitoSugar {
       val expectedErrors = Seq(GenericError(123, "Country is not one of the ISO country codes"))
 
       Await.result(validationEngine.validateUploadSubmission(elem, enrolmentId), 10 seconds)  mustBe Some(UploadSubmissionValidationFailure(expectedErrors))
-//      verify(mockAuditService, times(1)).auditValidationFailure(any(), any(), any())(any())
-//      verify(mockAuditService, times(1)).auditErrorMessage(any())(any())
-
     }
 
     "must return ValidationFailure for file with invalid countryMS code" in new SetUp {
@@ -282,9 +258,6 @@ class UploadSubmissionValidationEngineSpec extends SpecBase with MockitoSugar {
       val expectedErrors = Seq(GenericError(177, "ConcernedMS is not one of the ISO EU Member State country codes"))
 
       Await.result(validationEngine.validateUploadSubmission(elem, enrolmentId), 10 seconds)  mustBe Some(UploadSubmissionValidationFailure(expectedErrors))
-//      verify(mockAuditService, times(1)).auditValidationFailure(any(), any(), any())(any())
-//      verify(mockAuditService, times(1)).auditErrorMessage(any())(any())
-
     }
 
     "must return ValidationFailure for file with invalid countryExemption code" in new SetUp {
@@ -295,8 +268,6 @@ class UploadSubmissionValidationEngineSpec extends SpecBase with MockitoSugar {
       val expectedErrors = Seq(GenericError(133, "CountryExemption is not one of the ISO country codes"))
 
       Await.result(validationEngine.validateUploadSubmission(elem, enrolmentId), 10 seconds)  mustBe Some(UploadSubmissionValidationFailure(expectedErrors))
-//      verify(mockAuditService, times(1)).auditValidationFailure(any(), any(), any())(any())
-//      verify(mockAuditService, times(1)).auditErrorMessage(any())(any())
     }
 
     "must return ValidationFailure for file with invalid Reason entry code" in new SetUp {
@@ -307,9 +278,6 @@ class UploadSubmissionValidationEngineSpec extends SpecBase with MockitoSugar {
       val expectedErrors = Seq(GenericError(169, "Reason is not one of the allowed values"))
 
       Await.result(validationEngine.validateUploadSubmission(elem, enrolmentId), 10 seconds)  mustBe Some(UploadSubmissionValidationFailure(expectedErrors))
-//      verify(mockAuditService, times(1)).auditValidationFailure(any(), any(), any())(any())
-//      verify(mockAuditService, times(1)).auditErrorMessage(any())(any())
-
     }
 
     "must return ValidationFailure for file with invalid Intermediary Capacity code" in new SetUp {
@@ -320,9 +288,6 @@ class UploadSubmissionValidationEngineSpec extends SpecBase with MockitoSugar {
       val expectedErrors = Seq(GenericError(129, "Capacity is not one of the allowed values (DAC61101, DAC61102) for Intermediary"))
 
       Await.result(validationEngine.validateUploadSubmission(elem, enrolmentId), 10 seconds)  mustBe Some(UploadSubmissionValidationFailure(expectedErrors))
-//      verify(mockAuditService, times(1)).auditValidationFailure(any(), any(), any())(any())
-//      verify(mockAuditService, times(1)).auditErrorMessage(any())(any())
-
     }
 
 
@@ -334,9 +299,6 @@ class UploadSubmissionValidationEngineSpec extends SpecBase with MockitoSugar {
       val expectedErrors = Seq(GenericError(37, "Capacity is not one of the allowed values (DAC61104, DAC61105, DAC61106) for Taxpayer"))
 
       Await.result(validationEngine.validateUploadSubmission(elem, enrolmentId), 10 seconds)  mustBe Some(UploadSubmissionValidationFailure(expectedErrors))
-//      verify(mockAuditService, times(1)).auditValidationFailure(any(), any(), any())(any())
-//      verify(mockAuditService, times(1)).auditErrorMessage(any())(any())
-
     }
 
     "must return ValidationFailure for file with invalid issuedBy code" in new SetUp {
@@ -347,9 +309,6 @@ class UploadSubmissionValidationEngineSpec extends SpecBase with MockitoSugar {
       val expectedErrors = Seq(GenericError(18, "TIN issuedBy is not one of the ISO country codes"))
 
       Await.result(validationEngine.validateUploadSubmission(elem, enrolmentId), 10 seconds)  mustBe Some(UploadSubmissionValidationFailure(expectedErrors))
-//      verify(mockAuditService, times(1)).auditValidationFailure(any(), any(), any())(any())
-//      verify(mockAuditService, times(1)).auditErrorMessage(any())(any())
-
     }
 
     "must return ValidationFailure with generic error message if parse error is not in an expected format" in new SetUp {
@@ -361,9 +320,6 @@ class UploadSubmissionValidationEngineSpec extends SpecBase with MockitoSugar {
       val expectedErrors = Seq(GenericError(lineNumber, "There is a problem with this line number"))
 
       Await.result(validationEngine.validateUploadSubmission(elem, enrolmentId), 10 seconds)  mustBe Some(UploadSubmissionValidationFailure(expectedErrors))
-//      verify(mockAuditService, times(1)).auditValidationFailure(any(), any(), any())(any())
-//      verify(mockAuditService, times(1)).auditErrorMessage(any())(any())
-
     }
 
     "must return ValidationFailure for file which fails business rules validation" in new SetUp {
@@ -385,27 +341,14 @@ class UploadSubmissionValidationEngineSpec extends SpecBase with MockitoSugar {
 
       val expectedErrors = Seq(GenericError(lineNumber, defaultError), GenericError(20, "Enter a Street"))
       Await.result(validationEngine.validateUploadSubmission(elem, enrolmentId), 10 seconds)  mustBe Some(UploadSubmissionValidationFailure(expectedErrors))
-//      verify(mockAuditService, times(1)).auditValidationFailure(any(), any(), any())(any())
-//      verify(mockAuditService, times(2)).auditErrorMessage(any())(any())
     }
 
-//    "must return none when xml parsing fails and audit failure" in new SetUp {
-//
-//      when(mockXmlValidationService.validateManualSubmission(any())).thenReturn(ListBuffer(addressError1))
-//      when(mockMetaDataValidationService.verifyMetaDataForUploadSubmission(any(), any(), any())(any(), any())).thenReturn(Future.successful(Right(mockMetaData)))
-//
-//      val xml = <dummyTag></dummyTag>
-//
-//      Await.result(validationEngine.validateUploadSubmission(xml, enrolmentId), 10 seconds) mustBe None
+    "must return none when xml parsing fails and audit failure" in new SetUp {
+      val exception = new RuntimeException
+      when(mockXmlValidationService.validateManualSubmission(any())).thenThrow(exception)
+      when(mockMetaDataValidationService.verifyMetaDataForUploadSubmission(any(), any(), any())(any(), any())).thenReturn(Future.successful(Right(mockMetaData)))
 
-//      verify(mockAuditService, times(1)).auditManualSubmissionParseFailure(any(), any(), any())(any())
-//    }
-
-//    "must throw an exception if XML parser throws an exception (e.g. missing closing tags)" in new SetUp {
-//      val exception = new RuntimeException
-//      when(mockXmlValidationService.validateXml(any())).thenThrow(exception)
-//
-//      Await.result(validationEngine.validateFile(source, enrolmentId, businessRulesCheckRequired = false), 10 seconds) mustBe Left(exception)
-//    }
+      Await.result(validationEngine.validateUploadSubmission(elem, enrolmentId), 10 seconds) mustBe None
+    }
   }
 }

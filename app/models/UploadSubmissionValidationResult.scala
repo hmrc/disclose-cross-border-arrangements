@@ -16,9 +16,24 @@
 
 package models
 
-import play.api.libs.json.{Json, OFormat}
+import play.api.libs.json.{Format, JsResult, JsValue, Json, OFormat}
 
 sealed trait UploadSubmissionValidationResult
+
+object UploadSubmissionValidationResult {
+  implicit val validationWrites = new Format[UploadSubmissionValidationResult] {
+
+    override def reads(json: JsValue): JsResult[UploadSubmissionValidationResult] =
+      json.validate[UploadSubmissionValidationSuccess].orElse(
+        json.validate[UploadSubmissionValidationFailure]
+      )
+
+    override def writes(o: UploadSubmissionValidationResult): JsValue = o match {
+      case m@UploadSubmissionValidationSuccess(_) => UploadSubmissionValidationSuccess.format.writes(m)
+      case m@UploadSubmissionValidationFailure(_) => UploadSubmissionValidationFailure.format.writes(m)
+    }
+  }
+}
 
 case class UploadSubmissionValidationSuccess(dac6MetaData: Dac6MetaData) extends UploadSubmissionValidationResult
 
