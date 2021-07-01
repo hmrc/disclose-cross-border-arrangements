@@ -21,9 +21,7 @@ import cats.data.ReaderT
 import cats.implicits._
 import helpers.{ErrorMessageHelper, XmlErrorMessageHelper}
 import models._
-import org.mockito.Matchers.any
-import org.mockito.Mockito.{when, verify, times}
-import org.scalatestplus.mockito.MockitoSugar
+import org.mockito.ArgumentMatchers.any
 import repositories.SubmissionDetailsRepository
 import uk.gov.hmrc.http.HeaderCarrier
 
@@ -34,7 +32,7 @@ import scala.concurrent.{Await, ExecutionContext, Future}
 import scala.language.postfixOps
 import scala.xml.{Elem, NodeSeq}
 
-class UploadSubmissionValidationEngineSpec extends SpecBase with MockitoSugar {
+class UploadSubmissionValidationEngineSpec extends SpecBase {
 
   val xsdError = "xsd-error"
   val defaultError = "There is a problem with this line number"

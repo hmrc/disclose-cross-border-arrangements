@@ -22,6 +22,8 @@ import org.mockito.ArgumentCaptor
 import org.mockito.ArgumentMatchers.any
 import org.scalacheck.Arbitrary.arbitrary
 import org.scalatest.BeforeAndAfterEach
+import org.mockito.ArgumentMatchers.any
+
 import org.scalatestplus.scalacheck.ScalaCheckPropertyChecks.forAll
 import play.api.inject
 import play.api.inject.guice.GuiceApplicationBuilder
