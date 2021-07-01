@@ -34,8 +34,6 @@ class AuditService @Inject()(appConfig: AppConfig, auditConnector: AuditConnecto
   private val logger = LoggerFactory.getLogger(getClass)
   val noneProvided = "None Provided"
 
-  // match auditing with diclose-frontend - DAC6-858
-
   def auditValidationFailures(subscriptionID: String, errors: Seq[SaxParseError])(implicit hc: HeaderCarrier): Unit = {
     val auditType = "Validation"
     val transactionName = "/disclose-cross-border-arrangements/validation"

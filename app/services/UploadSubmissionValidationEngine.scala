@@ -36,8 +36,6 @@ class UploadSubmissionValidationEngine @Inject()(xmlValidationService: XMLValida
   private val logger = LoggerFactory.getLogger(getClass)
   private val noErrors = Seq()
 
-  //TODO - Change output to submission Result - DAC6-858
-  //TODO - Pass back metadata instead of MessageRefID
   def validateUploadSubmission(xml: NodeSeq, enrolmentId: String)
                               (implicit hc: HeaderCarrier, ec: ExecutionContext) : Future[Option[UploadSubmissionValidationResult]] = {
 
@@ -58,7 +56,7 @@ class UploadSubmissionValidationEngine @Inject()(xmlValidationService: XMLValida
           case errors: Seq[GenericError] =>
             Some(UploadSubmissionValidationFailure(errors))
           case _ =>
-//            auditService.auditManualSubmissionParseFailure(enrolmentId, metaData, xmlAndXmlValidationStatus)
+            auditService.auditUploadSubmissionParseFailure(enrolmentId, metaData, xmlValidationResult)
             None
         }
       }
