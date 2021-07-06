@@ -10,7 +10,6 @@ lazy val microservice = Project(appName, file("."))
   .settings(
     majorVersion             := 0,
     scalaVersion             := "2.12.10",
-    scalafmtOnCompile in ThisBuild := true,
     PlayKeys.playDefaultPort := 9759,
     libraryDependencies      ++= AppDependencies.compile ++ AppDependencies.test
   )
@@ -25,6 +24,7 @@ lazy val microservice = Project(appName, file("."))
     ScoverageKeys.coverageMinimum := 80,
     ScoverageKeys.coverageFailOnMinimum := true,
     ScoverageKeys.coverageHighlighting := true,
+    scalafmtOnCompile in ThisBuild := true,
     resolvers += Resolver.jcenterRepo)
 
 lazy val testSettings: Seq[Def.Setting[_]] = Seq(

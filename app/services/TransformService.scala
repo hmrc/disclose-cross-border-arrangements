@@ -104,12 +104,11 @@ class TransformService @Inject() () {
     </DAC6UKSubmissionInboundRequest>
   }
 
-  def addNameSpaceDefinitions(submissionFile: NodeSeq): NodeSeq = {
+  def addNameSpaceDefinitions(submissionFile: NodeSeq): NodeSeq =
     for (node <- submissionFile) yield node match {
       case elem: Elem =>
         elem.copy(scope = NamespaceBinding("xsi", "http://www.w3.org/2001/XMLSchema-instance", NamespaceBinding("dac6", "urn:ukdac6:v0.1", TopScope)))
     }
-  }
 
   def transformSubscriptionDetails(
     subscriptionDetails: SubscriptionDetails,
