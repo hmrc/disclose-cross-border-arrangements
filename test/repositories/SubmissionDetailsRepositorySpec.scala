@@ -32,15 +32,18 @@ import scala.reflect.ClassTag
 
 class SubmissionDetailsRepositorySpec extends SpecBase with BeforeAndAfterEach {
   lazy val submissionDetailsRep = app.injector.instanceOf[SubmissionDetailsRepository]
-  val uploadId = UploadId(UUID.randomUUID().toString)
-  val submissionDetails = SubmissionDetails(enrolmentID = "ID",
+  val uploadId                  = UploadId(UUID.randomUUID().toString)
+
+  val submissionDetails = SubmissionDetails(
+    enrolmentID = "ID",
     submissionTime = LocalDateTime.now(),
     fileName = "file",
     arrangementID = Some("arrangementId"),
     disclosureID = Some("disclossureId"),
     importInstruction = "New",
     initialDisclosureMA = false,
-    messageRefId = UUID.randomUUID().toString)
+    messageRefId = UUID.randomUUID().toString
+  )
 
   override protected def beforeEach(): Unit = {
     await(removeAll(submissionDetailsRep))
@@ -50,8 +53,9 @@ class SubmissionDetailsRepositorySpec extends SpecBase with BeforeAndAfterEach {
   "Insert" - {
     "must insert Submission Details" in {
       val sd = submissionDetailsRep.storeSubmissionDetails(submissionDetails)
-      whenReady(sd) { result =>
-        result mustBe true
+      whenReady(sd) {
+        result =>
+          result mustBe true
       }
     }
   }
@@ -59,8 +63,8 @@ class SubmissionDetailsRepositorySpec extends SpecBase with BeforeAndAfterEach {
   "SubmissionDetailsRepository" - {
 
     val arrangementID = "GBA20200904AAAAAA"
-    val disclosureID = "GBD20200601AAA000"
-    val enrolmentID = "XADAC0001234567"
+    val disclosureID  = "GBD20200601AAA000"
+    val enrolmentID   = "XADAC0001234567"
 
     val date = LocalDateTime.now()
 
@@ -72,13 +76,13 @@ class SubmissionDetailsRepositorySpec extends SpecBase with BeforeAndAfterEach {
       disclosureID = Some(disclosureID),
       importInstruction = "Add",
       initialDisclosureMA = false,
-      messageRefId = "GBXADAC0001234567AAA00101")
+      messageRefId = "GBXADAC0001234567AAA00101"
+    )
 
     val repo: SubmissionDetailsRepository = app.injector.instanceOf[SubmissionDetailsRepository]
 
     "calling getSubmissionDetails" - {
       "must get submission details" in {
-
 
         await(repo.storeSubmissionDetails(submissionDetails))
 
@@ -86,13 +90,12 @@ class SubmissionDetailsRepositorySpec extends SpecBase with BeforeAndAfterEach {
           _ mustBe Some(submissionDetails)
         }
 
-
       }
     }
 
     "calling retrieveFirstDisclosureForArrangementId" - {
       "must retrieve submission details for the first disclosure for arrangement ID" in {
-        val firstSubmissionDetails = submissionDetails.copy(importInstruction = "New", initialDisclosureMA = true)
+        val firstSubmissionDetails  = submissionDetails.copy(importInstruction = "New", initialDisclosureMA = true)
         val secondSubmissionDetails = submissionDetails.copy(submissionTime = LocalDateTime.now().plusDays(1))
 
         await(repo.storeSubmissionDetails(firstSubmissionDetails))
@@ -105,7 +108,6 @@ class SubmissionDetailsRepositorySpec extends SpecBase with BeforeAndAfterEach {
       "must return None if there is no first disclosure for arrangement ID" in {
         val repo: SubmissionDetailsRepository = app.injector.instanceOf[SubmissionDetailsRepository]
 
-
         whenReady(repo.retrieveFirstDisclosureForArrangementId(arrangementID)) {
           _ mustBe None
         }
@@ -115,7 +117,7 @@ class SubmissionDetailsRepositorySpec extends SpecBase with BeforeAndAfterEach {
     "calling retrieveSubmissionHistory" - {
       "must retrieve submission details history - latest submissions first" in {
         val olderSubmissionDetails = submissionDetails.copy(fileName = "another-file.xml", submissionTime = LocalDateTime.now().minusDays(1))
-        val diffSubmissionDetails = submissionDetails.copy(enrolmentID = "diffEnrolmentID", fileName = "diff-file.xml")
+        val diffSubmissionDetails  = submissionDetails.copy(enrolmentID = "diffEnrolmentID", fileName = "diff-file.xml")
 
         val repo: SubmissionDetailsRepository = app.injector.instanceOf[SubmissionDetailsRepository]
 
@@ -145,7 +147,6 @@ class SubmissionDetailsRepositorySpec extends SpecBase with BeforeAndAfterEach {
 
         val repo: SubmissionDetailsRepository = app.injector.instanceOf[SubmissionDetailsRepository]
 
-
         whenReady(repo.countNoOfPreviousSubmissions(enrolmentID)) {
           _ mustEqual 0
         }
@@ -157,7 +158,6 @@ class SubmissionDetailsRepositorySpec extends SpecBase with BeforeAndAfterEach {
 
         val repo: SubmissionDetailsRepository = app.injector.instanceOf[SubmissionDetailsRepository]
 
-
         whenReady(repo.storeSubmissionDetails(submissionDetails)) {
           _ mustEqual true
         }
@@ -168,7 +168,7 @@ class SubmissionDetailsRepositorySpec extends SpecBase with BeforeAndAfterEach {
 
       "must search for the arrangement ID and return a list of matching submissions" in {
         val submissionDetailsSameArrID = submissionDetails.copy(importInstruction = "Delete")
-        val submissionDetailsOther = submissionDetails.copy(arrangementID = Some("GBA20200904AAABBB"))
+        val submissionDetailsOther     = submissionDetails.copy(arrangementID = Some("GBA20200904AAABBB"))
 
         val repo: SubmissionDetailsRepository = app.injector.instanceOf[SubmissionDetailsRepository]
 
@@ -183,7 +183,7 @@ class SubmissionDetailsRepositorySpec extends SpecBase with BeforeAndAfterEach {
 
       "must search for the disclosure ID and return a list of matching submissions" in {
         val submissionDetailsSameDiscID = submissionDetails.copy(importInstruction = "Replace")
-        val submissionDetailsOther = submissionDetails.copy(disclosureID = Some("GBD20200601BBB000"))
+        val submissionDetailsOther      = submissionDetails.copy(disclosureID = Some("GBD20200601BBB000"))
 
         val repo: SubmissionDetailsRepository = app.injector.instanceOf[SubmissionDetailsRepository]
 
@@ -211,7 +211,7 @@ class SubmissionDetailsRepositorySpec extends SpecBase with BeforeAndAfterEach {
 
       "must search for the partial search string and return a list of matching submissions" in {
         val submissionDetailsSameFileName = submissionDetails.copy(disclosureID = Some("GBD20200601BBB000"))
-        val submissionDetailsOther = submissionDetails.copy(disclosureID = Some("GBD20200601CCC000"))
+        val submissionDetailsOther        = submissionDetails.copy(disclosureID = Some("GBD20200601CCC000"))
 
         val repo: SubmissionDetailsRepository = app.injector.instanceOf[SubmissionDetailsRepository]
 
@@ -284,7 +284,6 @@ class SubmissionDetailsRepositorySpec extends SpecBase with BeforeAndAfterEach {
       }
     }
   }
-
 
   def removeAll[T: ClassTag](connection: PlayMongoRepository[T]): Future[DeleteResult] =
     connection.collection.deleteMany(BsonDocument()).toFuture

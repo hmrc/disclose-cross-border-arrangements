@@ -32,14 +32,12 @@ import services.ManualSubmissionValidationEngine
 import scala.concurrent.{ExecutionContextExecutor, Future}
 import scala.xml.Elem
 
-class ManualSubmissionValidationControllerSpec extends SpecBase
-  with BeforeAndAfterEach {
+class ManualSubmissionValidationControllerSpec extends SpecBase with BeforeAndAfterEach {
 
   implicit val ec: ExecutionContextExecutor = scala.concurrent.ExecutionContext.global
 
-  override def beforeEach(): Unit = {
+  override def beforeEach(): Unit =
     reset()
-  }
 
   val xml: Elem = <dummyTag></dummyTag>
 
@@ -56,8 +54,9 @@ class ManualSubmissionValidationControllerSpec extends SpecBase
 
     "return ok with ManualSubmissionValidationSuccess when passes validation" in {
 
-      when(mockValidationEngine.validateManualSubmission(any(), any())(any(), any())).thenReturn(Future.successful(Some(ManualSubmissionValidationSuccess("id"))))
-      val request = FakeRequest(POST, routes.ManualSubmissionValidationController.validateManualSubmission().url).withXmlBody(xml)
+      when(mockValidationEngine.validateManualSubmission(any(), any())(any(), any()))
+        .thenReturn(Future.successful(Some(ManualSubmissionValidationSuccess("id"))))
+      val request                = FakeRequest(POST, routes.ManualSubmissionValidationController.validateManualSubmission().url).withXmlBody(xml)
       val result: Future[Result] = route(application, request).value
 
       status(result) mustBe 200
@@ -66,8 +65,9 @@ class ManualSubmissionValidationControllerSpec extends SpecBase
 
     "return ok with ManualSubmissionValidationFailure when fails business rule validation" in {
 
-      when(mockValidationEngine.validateManualSubmission(any(), any())(any(), any())).thenReturn(Future.successful(Some(ManualSubmissionValidationFailure(Seq("random-error")))))
-      val request = FakeRequest(POST, routes.ManualSubmissionValidationController.validateManualSubmission().url).withXmlBody(xml)
+      when(mockValidationEngine.validateManualSubmission(any(), any())(any(), any()))
+        .thenReturn(Future.successful(Some(ManualSubmissionValidationFailure(Seq("random-error")))))
+      val request                = FakeRequest(POST, routes.ManualSubmissionValidationController.validateManualSubmission().url).withXmlBody(xml)
       val result: Future[Result] = route(application, request).value
 
       status(result) mustBe 200
@@ -77,7 +77,7 @@ class ManualSubmissionValidationControllerSpec extends SpecBase
     "return badRequest when xml parsing fails" in {
 
       when(mockValidationEngine.validateManualSubmission(any(), any())(any(), any())).thenReturn(Future.successful(None))
-      val request = FakeRequest(POST, routes.ManualSubmissionValidationController.validateManualSubmission().url).withXmlBody(xml)
+      val request                = FakeRequest(POST, routes.ManualSubmissionValidationController.validateManualSubmission().url).withXmlBody(xml)
       val result: Future[Result] = route(application, request).value
 
       status(result) mustBe 400

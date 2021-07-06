@@ -26,10 +26,9 @@ import uk.gov.hmrc.http.HeaderCarrier
 
 import scala.concurrent.{ExecutionContext, Future}
 
-class ContactService @Inject()(subscriptionCacheService: SubscriptionCacheService,
-                               subscriptionConnector: SubscriptionConnector) {
+class ContactService @Inject() (subscriptionCacheService: SubscriptionCacheService, subscriptionConnector: SubscriptionConnector) {
 
-  def getLatestContacts(enrolmentID: String)(implicit request: UserRequest[_], hc:HeaderCarrier, ex: ExecutionContext): Future[SubscriptionDetails] = {
+  def getLatestContacts(enrolmentID: String)(implicit request: UserRequest[_], hc: HeaderCarrier, ex: ExecutionContext): Future[SubscriptionDetails] = {
 
     retrieveContactFromCacheOrHOD(enrolmentID: String) map {
       retrievedSubscription =>
@@ -37,39 +36,43 @@ class ContactService @Inject()(subscriptionCacheService: SubscriptionCacheServic
           sub =>
             val details = sub.displaySubscriptionForDACResponse.responseDetail
 
-          SubscriptionDetails(
-            subscriptionID = details.subscriptionID,
-            tradingName = details.tradingName,
-            isGBUser = details.isGBUser,
-            primaryContact = details.primaryContact.contactInformation.head,
-            secondaryContact = details.secondaryContact.map(_.contactInformation.head)
-          )
+            SubscriptionDetails(
+              subscriptionID = details.subscriptionID,
+              tradingName = details.tradingName,
+              isGBUser = details.isGBUser,
+              primaryContact = details.primaryContact.contactInformation.head,
+              secondaryContact = details.secondaryContact.map(_.contactInformation.head)
+            )
 
-        } getOrElse(throw new Exception("Failed to retrieve and convert subscription"))
+        } getOrElse (throw new Exception("Failed to retrieve and convert subscription"))
     }
   }
 
-  def retrieveContactFromCacheOrHOD(enrolmentID: String)(implicit request: UserRequest[_], hc:HeaderCarrier, ex: ExecutionContext):Future[Option[DisplaySubscriptionForDACResponse]] = {
+  def retrieveContactFromCacheOrHOD(
+    enrolmentID: String
+  )(implicit request: UserRequest[_], hc: HeaderCarrier, ex: ExecutionContext): Future[Option[DisplaySubscriptionForDACResponse]] = {
     val subscriptionForDACRequest: DisplaySubscriptionForDACRequest =
-      DisplaySubscriptionForDACRequest(DisplaySubscriptionDetails(
-        RequestCommon.createRequestCommon,
-        RequestDetail(
-          IDType = "DAC",
-          IDNumber = enrolmentID)
-      ))
+      DisplaySubscriptionForDACRequest(
+        DisplaySubscriptionDetails(
+          RequestCommon.createRequestCommon,
+          RequestDetail(IDType = "DAC", IDNumber = enrolmentID)
+        )
+      )
 
     subscriptionCacheService.retrieveSubscriptionDetails(enrolmentID).flatMap {
       case Some(a) => Future.successful(Some(a))
-      case None => subscriptionConnector.displaySubscriptionForDAC(subscriptionForDACRequest).map {
-        response =>
-          response.status match {
-            case OK => response.json.validate[DisplaySubscriptionForDACResponse] match {
-              case JsSuccess(response, _) => Some(response)
-              case JsError(_) => None
+      case None =>
+        subscriptionConnector.displaySubscriptionForDAC(subscriptionForDACRequest).map {
+          response =>
+            response.status match {
+              case OK =>
+                response.json.validate[DisplaySubscriptionForDACResponse] match {
+                  case JsSuccess(response, _) => Some(response)
+                  case JsError(_)             => None
+                }
+              case _ => None
             }
-            case _ => None
-          }
-      }
+        }
     }
   }
 

@@ -23,8 +23,7 @@ import play.api.inject.bind
 
 import scala.concurrent.Future
 
-class SubmissionServiceSpec extends SpecBase
-  with BeforeAndAfterEach {
+class SubmissionServiceSpec extends SpecBase with BeforeAndAfterEach {
 
   val mockIDService = mock[IdService]
 
@@ -34,9 +33,8 @@ class SubmissionServiceSpec extends SpecBase
     )
     .build()
 
-  override def beforeEach(): Unit = {
+  override def beforeEach(): Unit =
     reset(mockIDService)
-  }
 
   "Submission Service" - {
     "when a New instruction is sent it generates a disclosureID and arrangementID" in {

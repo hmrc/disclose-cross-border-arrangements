@@ -56,7 +56,7 @@ class UpdateSubscriptionForDACRequestSpec extends SpecBase with ModelGenerators 
             IDType = "SAFE",
             IDNumber = requestDetail.IDNumber,
             tradingName = None,
-            isGBUser =  requestDetail.isGBUser,
+            isGBUser = requestDetail.isGBUser,
             primaryContact = primaryContact,
             secondaryContact = Some(secondaryContact)
           )
@@ -68,8 +68,15 @@ class UpdateSubscriptionForDACRequestSpec extends SpecBase with ModelGenerators 
             )
           )
 
-          val jsonPayload = updateDetailsPayload(JsString(requestDetail.IDNumber), JsBoolean(requestDetail.isGBUser),
-            JsString(firstName), JsString(lastName), JsString(email), JsString(orgName), JsString(phone))
+          val jsonPayload = updateDetailsPayload(
+            JsString(requestDetail.IDNumber),
+            JsBoolean(requestDetail.isGBUser),
+            JsString(firstName),
+            JsString(lastName),
+            JsString(email),
+            JsString(orgName),
+            JsString(phone)
+          )
 
           Json.parse(jsonPayload).validate[UpdateSubscriptionForDACRequest].get mustBe updateRequest
       }
@@ -88,7 +95,7 @@ class UpdateSubscriptionForDACRequestSpec extends SpecBase with ModelGenerators 
             IDType = "SAFE",
             IDNumber = requestDetail.IDNumber,
             tradingName = None,
-            isGBUser =  requestDetail.isGBUser,
+            isGBUser = requestDetail.isGBUser,
             primaryContact = primaryContactForInd,
             secondaryContact = None
           )
@@ -101,7 +108,11 @@ class UpdateSubscriptionForDACRequestSpec extends SpecBase with ModelGenerators 
           )
 
           val jsonPayload = updateDetailsPayloadNoSecondContact(JsString(requestDetail.IDNumber),
-            JsBoolean(requestDetail.isGBUser), JsString(firstName), JsString(lastName), JsString(primaryEmail))
+                                                                JsBoolean(requestDetail.isGBUser),
+                                                                JsString(firstName),
+                                                                JsString(lastName),
+                                                                JsString(primaryEmail)
+          )
 
           Json.parse(jsonPayload).validate[UpdateSubscriptionForDACRequest].get mustBe updateRequest
       }
@@ -124,7 +135,7 @@ class UpdateSubscriptionForDACRequestSpec extends SpecBase with ModelGenerators 
             IDType = "SAFE",
             IDNumber = requestDetail.IDNumber,
             tradingName = None,
-            isGBUser =  requestDetail.isGBUser,
+            isGBUser = requestDetail.isGBUser,
             primaryContact = primaryContactForInd,
             secondaryContact = Some(secondaryContact)
           )
@@ -136,8 +147,7 @@ class UpdateSubscriptionForDACRequestSpec extends SpecBase with ModelGenerators 
             )
           )
 
-          Json.toJson(updateRequest) mustBe updateDetailsJson(requestDetail.IDNumber, requestDetail.isGBUser,
-            firstName, lastName, email, orgName, phone)
+          Json.toJson(updateRequest) mustBe updateDetailsJson(requestDetail.IDNumber, requestDetail.isGBUser, firstName, lastName, email, orgName, phone)
       }
     }
 
@@ -154,7 +164,7 @@ class UpdateSubscriptionForDACRequestSpec extends SpecBase with ModelGenerators 
             IDType = "SAFE",
             IDNumber = requestDetail.IDNumber,
             tradingName = None,
-            isGBUser =  requestDetail.isGBUser,
+            isGBUser = requestDetail.isGBUser,
             primaryContact = primaryContactForInd,
             secondaryContact = None
           )
@@ -166,8 +176,7 @@ class UpdateSubscriptionForDACRequestSpec extends SpecBase with ModelGenerators 
             )
           )
 
-          Json.toJson(updateRequest) mustBe updateDetailsJsonNoSecondContact(requestDetail.IDNumber, requestDetail.isGBUser,
-            firstName, lastName, primaryEmail)
+          Json.toJson(updateRequest) mustBe updateDetailsJsonNoSecondContact(requestDetail.IDNumber, requestDetail.isGBUser, firstName, lastName, primaryEmail)
       }
     }
 

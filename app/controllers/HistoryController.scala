@@ -26,19 +26,22 @@ import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
 
 import scala.concurrent.ExecutionContext
 
-class HistoryController @Inject()(
-                                   authenticate: AuthAction,
-                                   cc: ControllerComponents,
-                                   submissionDetailsRepository: SubmissionDetailsRepository
-                                 )(implicit ec: ExecutionContext) extends BackendController(cc) {
+class HistoryController @Inject() (
+  authenticate: AuthAction,
+  cc: ControllerComponents,
+  submissionDetailsRepository: SubmissionDetailsRepository
+)(implicit ec: ExecutionContext)
+    extends BackendController(cc) {
 
   import APIDateTimeFormats._
 
   def noOfPreviousSubmissions(enrolmentId: String): Action[AnyContent] = authenticate.async {
     implicit request =>
-     submissionDetailsRepository
-      .countNoOfPreviousSubmissions(enrolmentId)
-      .map(no => Ok(s"$no"))
+      submissionDetailsRepository
+        .countNoOfPreviousSubmissions(enrolmentId)
+        .map(
+          no => Ok(s"$no")
+        )
   }
 
   def submissionDetails(enrolmentId: String): Action[AnyContent] = authenticate.async {
@@ -48,7 +51,8 @@ class HistoryController @Inject()(
         .map {
           details =>
             Ok(Json.toJson(SubmissionHistory(details)))
-        }.recover {
+        }
+        .recover {
           case e =>
             InternalServerError(s"Failed with the following error: $e")
         }
@@ -56,46 +60,57 @@ class HistoryController @Inject()(
 
   def disclosureDetails(disclosureId: String): Action[AnyContent] = authenticate.async {
     implicit request =>
-      submissionDetailsRepository.getSubmissionDetails(disclosureId)
+      submissionDetailsRepository
+        .getSubmissionDetails(disclosureId)
         .map {
           details => Ok(Json.toJson(details))
-        }.recover {
-        case e =>
-          InternalServerError(s"Failed with the following error: $e")
-      }
+        }
+        .recover {
+          case e =>
+            InternalServerError(s"Failed with the following error: $e")
+        }
   }
 
   def retrieveFirstDisclosure(arrangementId: String): Action[AnyContent] = authenticate.async {
     implicit request =>
-      submissionDetailsRepository.retrieveFirstDisclosureForArrangementId(arrangementId).map {
-        submissionDetails =>  Ok(Json.toJson(submissionDetails))
-          }.recover {
-        case _ =>
-          NotFound(s"No first disclosure found for $arrangementId")
-      }
+      submissionDetailsRepository
+        .retrieveFirstDisclosureForArrangementId(arrangementId)
+        .map {
+          submissionDetails => Ok(Json.toJson(submissionDetails))
+        }
+        .recover {
+          case _ =>
+            NotFound(s"No first disclosure found for $arrangementId")
+        }
 
   }
 
   def isMarketableArrangement(arrangementId: String): Action[AnyContent] = authenticate.async {
     implicit request =>
-      submissionDetailsRepository.retrieveFirstDisclosureForArrangementId(arrangementId).map {
-        submissionDetails =>
-          Ok(submissionDetails.exists(_.initialDisclosureMA).toString)
-      }.recover {
-        case _ =>
-          NotFound(s"No first disclosure found for $arrangementId")
-      }
+      submissionDetailsRepository
+        .retrieveFirstDisclosureForArrangementId(arrangementId)
+        .map {
+          submissionDetails =>
+            Ok(submissionDetails.exists(_.initialDisclosureMA).toString)
+        }
+        .recover {
+          case _ =>
+            NotFound(s"No first disclosure found for $arrangementId")
+        }
 
   }
 
   def searchSubmissions(searchCriteria: String): Action[AnyContent] = authenticate.async {
     implicit request =>
-      submissionDetailsRepository.searchSubmissions(searchCriteria).map {
-        searchResult =>
-          Ok(Json.toJson(SubmissionHistory(searchResult)))
-      }.recover {
-        case _ =>
-          NotFound(s"Unable to retrieve a list of disclosures for search criteria")
-      }
+      submissionDetailsRepository
+        .searchSubmissions(searchCriteria)
+        .map {
+          searchResult =>
+            Ok(Json.toJson(SubmissionHistory(searchResult)))
+        }
+        .recover {
+          case _ =>
+            NotFound(s"Unable to retrieve a list of disclosures for search criteria")
+        }
   }
 }

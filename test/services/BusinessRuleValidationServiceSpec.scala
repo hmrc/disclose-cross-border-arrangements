@@ -35,17 +35,16 @@ class BusinessRuleValidationServiceSpec extends SpecBase with MockitoSugar with 
 
   val mockSubmissionDetailsRepository: SubmissionDetailsRepository = mock[SubmissionDetailsRepository]
 
-  override def beforeEach: Unit = {
+  override def beforeEach: Unit =
     reset(mockSubmissionDetailsRepository)
-  }
 
   val application: Application = applicationBuilder()
     .overrides(
       bind[SubmissionDetailsRepository].toInstance(mockSubmissionDetailsRepository)
-    ).build()
+    )
+    .build()
 
-  val valuesForHallmarkD = List("DAC6D1Other", "DAC6D1a", "DAC6D1b", "DAC6D1c",
-    "DAC6D1d", "DAC6D1e", "DAC6D1f", "DAC6D2")
+  val valuesForHallmarkD = List("DAC6D1Other", "DAC6D1a", "DAC6D1b", "DAC6D1c", "DAC6D1d", "DAC6D1e", "DAC6D1f", "DAC6D2")
 
   "BusinessRuleValidationService" - {
     "must be able to extract the initial disclosure when set" in {
@@ -101,7 +100,7 @@ class BusinessRuleValidationServiceSpec extends SpecBase with MockitoSugar with 
         </DAC6_Arrangement>
 
       val service = app.injector.instanceOf[BusinessRuleValidationService]
-      val result = service.validateFile()(implicitly, implicitly)(xml)
+      val result  = service.validateFile()(implicitly, implicitly)(xml)
 
       whenReady(result.get) {
         _ mustBe List(Validation("businessrules.RelevantTaxPayersBirthDates.maxDateOfBirthExceeded", false))
@@ -124,15 +123,13 @@ class BusinessRuleValidationServiceSpec extends SpecBase with MockitoSugar with 
           </DAC6Disclosures>
         </DAC6_Arrangement>
 
-
       val service = app.injector.instanceOf[BusinessRuleValidationService]
-      val result = service.validateFile()(implicitly, implicitly)(xml)
+      val result  = service.validateFile()(implicitly, implicitly)(xml)
 
       whenReady(result.get) {
         _ mustBe List(Validation("businessrules.initialDisclosure.needRelevantTaxPayer", false))
       }
     }
-
 
     "must fail validation if no relevant taxpayers are present for a DAC6ADD if InitialDisclosureMA is false" in {
       val xml =
@@ -150,9 +147,8 @@ class BusinessRuleValidationServiceSpec extends SpecBase with MockitoSugar with 
           </DAC6Disclosures>
         </DAC6_Arrangement>
 
-
       val service = app.injector.instanceOf[BusinessRuleValidationService]
-      val result = service.validateFile()(implicitly, implicitly)(xml)
+      val result  = service.validateFile()(implicitly, implicitly)(xml)
 
       whenReady(result.get) {
         _ mustBe List(Validation("businessrules.initialDisclosure.needRelevantTaxPayer", false))
@@ -176,9 +172,8 @@ class BusinessRuleValidationServiceSpec extends SpecBase with MockitoSugar with 
           </DAC6Disclosures>
         </DAC6_Arrangement>
 
-
       val service = app.injector.instanceOf[BusinessRuleValidationService]
-      val result = service.validateFile()(implicitly, implicitly)(xml)
+      val result  = service.validateFile()(implicitly, implicitly)(xml)
 
       whenReady(result.get) {
         _ mustBe List()
@@ -202,18 +197,25 @@ class BusinessRuleValidationServiceSpec extends SpecBase with MockitoSugar with 
           </DAC6Disclosures>
         </DAC6_Arrangement>
 
-      val firstDisclosure: SubmissionDetails = SubmissionDetails("enrolmentID", LocalDateTime.parse("2020-05-14T17:10:00"),
-        "fileName", Some("GBA20200904AAAAAA"), Some("GBD20200904AAAAAA"), "New",
-        initialDisclosureMA = false, messageRefId = "GB0000000XXX")
+      val firstDisclosure: SubmissionDetails = SubmissionDetails(
+        "enrolmentID",
+        LocalDateTime.parse("2020-05-14T17:10:00"),
+        "fileName",
+        Some("GBA20200904AAAAAA"),
+        Some("GBD20200904AAAAAA"),
+        "New",
+        initialDisclosureMA = false,
+        messageRefId = "GB0000000XXX"
+      )
 
       when(mockSubmissionDetailsRepository.retrieveFirstDisclosureForArrangementId("GBA20200904AAAAAA"))
         .thenReturn(Future.successful(Some(firstDisclosure)))
 
       val service = new BusinessRuleValidationService(mockSubmissionDetailsRepository)
-      val result = service.validateInitialDisclosureHasRelevantTaxPayer()(implicitly, implicitly)(xml)
+      val result  = service.validateInitialDisclosureHasRelevantTaxPayer()(implicitly, implicitly)(xml)
 
       whenReady(result.get) {
-        _ mustBe Validation("businessrules.initialDisclosure.needRelevantTaxPayer",false,None)
+        _ mustBe Validation("businessrules.initialDisclosure.needRelevantTaxPayer", false, None)
       }
     }
 
@@ -234,15 +236,22 @@ class BusinessRuleValidationServiceSpec extends SpecBase with MockitoSugar with 
           </DAC6Disclosures>
         </DAC6_Arrangement>
 
-      val firstDisclosure: SubmissionDetails = SubmissionDetails("enrolmentID", LocalDateTime.parse("2020-05-14T17:10:00"),
-        "fileName", Some("GBA20200904AAAAAA"), Some("GBD20200904AAAAAA"), "New",
-        initialDisclosureMA = true, messageRefId = "GB0000000XXX")
+      val firstDisclosure: SubmissionDetails = SubmissionDetails(
+        "enrolmentID",
+        LocalDateTime.parse("2020-05-14T17:10:00"),
+        "fileName",
+        Some("GBA20200904AAAAAA"),
+        Some("GBD20200904AAAAAA"),
+        "New",
+        initialDisclosureMA = true,
+        messageRefId = "GB0000000XXX"
+      )
 
       when(mockSubmissionDetailsRepository.retrieveFirstDisclosureForArrangementId("GBA20200904AAAAAA"))
         .thenReturn(Future.successful(Some(firstDisclosure)))
 
       val service = new BusinessRuleValidationService(mockSubmissionDetailsRepository)
-      val result = service.validateFile()(implicitly, implicitly)(xml)
+      val result  = service.validateFile()(implicitly, implicitly)(xml)
 
       whenReady(result.get) {
         _ mustBe List()
@@ -266,21 +275,27 @@ class BusinessRuleValidationServiceSpec extends SpecBase with MockitoSugar with 
           </DAC6Disclosures>
         </DAC6_Arrangement>
 
-      val firstDisclosure: SubmissionDetails = SubmissionDetails("enrolmentID", LocalDateTime.parse("2020-05-14T17:10:00"),
-        "fileName", Some("GBA20200904AAAAAA"), Some("GBD20200904AAAAAA"), "New",
-        initialDisclosureMA = true, messageRefId = "GB0000000XXX")
+      val firstDisclosure: SubmissionDetails = SubmissionDetails(
+        "enrolmentID",
+        LocalDateTime.parse("2020-05-14T17:10:00"),
+        "fileName",
+        Some("GBA20200904AAAAAA"),
+        Some("GBD20200904AAAAAA"),
+        "New",
+        initialDisclosureMA = true,
+        messageRefId = "GB0000000XXX"
+      )
 
       when(mockSubmissionDetailsRepository.retrieveFirstDisclosureForArrangementId("GBA20200904AAAAAA"))
         .thenReturn(Future.successful(Some(firstDisclosure)))
 
       val service = new BusinessRuleValidationService(mockSubmissionDetailsRepository)
-      val result = service.validateFile()(implicitly, implicitly)(xml)
+      val result  = service.validateFile()(implicitly, implicitly)(xml)
 
       whenReady(result.get) {
-        _ mustBe List(Validation("businessrules.initialDisclosure.needRelevantTaxPayer",false,None))
+        _ mustBe List(Validation("businessrules.initialDisclosure.needRelevantTaxPayer", false, None))
       }
     }
-
 
     "must fail validation if taxpayer implementing dates are provided for DAC6 new for non ma" in {
       val xml =
@@ -482,7 +497,7 @@ class BusinessRuleValidationServiceSpec extends SpecBase with MockitoSugar with 
         </DAC6_Arrangement>
 
       val service = app.injector.instanceOf[BusinessRuleValidationService]
-      val result = service.validateFile()(implicitly, implicitly)(xml)
+      val result  = service.validateFile()(implicitly, implicitly)(xml)
 
       whenReady(result.get) {
         _ mustBe List(Validation("businessrules.nonMA.cantHaveRelevantTaxPayer", false))
@@ -542,7 +557,7 @@ class BusinessRuleValidationServiceSpec extends SpecBase with MockitoSugar with 
         </DAC6_Arrangement>
 
       val service = app.injector.instanceOf[BusinessRuleValidationService]
-      val result = service.validateFile()(implicitly, implicitly)(xml)
+      val result  = service.validateFile()(implicitly, implicitly)(xml)
 
       whenReady(result.get) {
         _ mustBe List(Validation("businessrules.DisclosingBirthDates.maxDateOfBirthExceeded", false))
@@ -600,7 +615,7 @@ class BusinessRuleValidationServiceSpec extends SpecBase with MockitoSugar with 
         </DAC6_Arrangement>
 
       val service = app.injector.instanceOf[BusinessRuleValidationService]
-      val result = service.validateFile()(implicitly, implicitly)(xml)
+      val result  = service.validateFile()(implicitly, implicitly)(xml)
 
       whenReady(result.get) {
         _ mustBe List(Validation("businessrules.AssociatedEnterprisesBirthDates.maxDateOfBirthExceeded", false))
@@ -663,7 +678,7 @@ class BusinessRuleValidationServiceSpec extends SpecBase with MockitoSugar with 
         </DAC6_Arrangement>
 
       val service = app.injector.instanceOf[BusinessRuleValidationService]
-      val result = service.validateFile()(implicitly, implicitly)(xml)
+      val result  = service.validateFile()(implicitly, implicitly)(xml)
 
       whenReady(result.get) {
         _ mustBe List(Validation("businessrules.IntermediaryBirthDates.maxDateOfBirthExceeded", false))
@@ -719,7 +734,7 @@ class BusinessRuleValidationServiceSpec extends SpecBase with MockitoSugar with 
         </DAC6_Arrangement>
 
       val service = app.injector.instanceOf[BusinessRuleValidationService]
-      val result = service.validateFile()(implicitly, implicitly)(xml)
+      val result  = service.validateFile()(implicitly, implicitly)(xml)
 
       whenReady(result.get) {
         _ mustBe List(Validation("businessrules.AffectedPersonsBirthDates.maxDateOfBirthExceeded", false))
@@ -746,7 +761,7 @@ class BusinessRuleValidationServiceSpec extends SpecBase with MockitoSugar with 
         </DAC6_Arrangement>
 
       val service = app.injector.instanceOf[BusinessRuleValidationService]
-      val result = service.validateFile()(implicitly, implicitly)(xml)
+      val result  = service.validateFile()(implicitly, implicitly)(xml)
 
       whenReady(result.get) {
         _ mustBe List()
@@ -793,7 +808,7 @@ class BusinessRuleValidationServiceSpec extends SpecBase with MockitoSugar with 
         </DAC6_Arrangement>
 
       val service = app.injector.instanceOf[BusinessRuleValidationService]
-      val result = service.validateInitialDisclosureHasRelevantTaxPayer()(implicitly, implicitly)(xml)
+      val result  = service.validateInitialDisclosureHasRelevantTaxPayer()(implicitly, implicitly)(xml)
 
       whenReady(result.get) {
         _.value mustBe false
@@ -1108,7 +1123,7 @@ class BusinessRuleValidationServiceSpec extends SpecBase with MockitoSugar with 
 
     BusinessRuleValidationService.taxPayerImplementingDates(xml).value mustBe Seq(
       new GregorianCalendar(2020, Calendar.MAY, 14).getTime,
-      new GregorianCalendar(2020, Calendar.JUNE, 21).getTime,
+      new GregorianCalendar(2020, Calendar.JUNE, 21).getTime
     )
   }
 
@@ -1195,7 +1210,7 @@ class BusinessRuleValidationServiceSpec extends SpecBase with MockitoSugar with 
 
     BusinessRuleValidationService.disclosureInformationImplementingDates(xml).value mustBe Seq(
       new GregorianCalendar(2020, Calendar.JANUARY, 14).getTime,
-      new GregorianCalendar(2018, Calendar.JANUARY, 21).getTime,
+      new GregorianCalendar(2018, Calendar.JANUARY, 21).getTime
     )
   }
 
@@ -1756,11 +1771,12 @@ class BusinessRuleValidationServiceSpec extends SpecBase with MockitoSugar with 
       </DAC6_Arrangement>
 
     val service = app.injector.instanceOf[BusinessRuleValidationService]
-    val result = service.validateTaxPayerImplementingDateAgainstMarketableArrangementStatus()(implicitly, implicitly)(xml)
+    val result  = service.validateTaxPayerImplementingDateAgainstMarketableArrangementStatus()(implicitly, implicitly)(xml)
 
     whenReady(result.get) {
       _.value mustBe true
-    }  }
+    }
+  }
 
   "must correctly invalidate an initial disclosure MA with Relevant Tax Payers has a missing TaxPayer Implementation Date" in {
     val xml =
@@ -1781,11 +1797,12 @@ class BusinessRuleValidationServiceSpec extends SpecBase with MockitoSugar with 
       </DAC6_Arrangement>
 
     val service = app.injector.instanceOf[BusinessRuleValidationService]
-    val result = service.validateTaxPayerImplementingDateAgainstMarketableArrangementStatus()(implicitly, implicitly)(xml)
+    val result  = service.validateTaxPayerImplementingDateAgainstMarketableArrangementStatus()(implicitly, implicitly)(xml)
 
     whenReady(result.get) {
       _.value mustBe false
-    }  }
+    }
+  }
 
   "must correctly validate an non initial disclosure MA with Relevant Tax Payers has a missing TaxPayer Implementation Date" in {
     val xml =
@@ -1807,11 +1824,12 @@ class BusinessRuleValidationServiceSpec extends SpecBase with MockitoSugar with 
       </DAC6_Arrangement>
 
     val service = app.injector.instanceOf[BusinessRuleValidationService]
-    val result = service.validateTaxPayerImplementingDateAgainstMarketableArrangementStatus()(implicitly, implicitly)(xml)
+    val result  = service.validateTaxPayerImplementingDateAgainstMarketableArrangementStatus()(implicitly, implicitly)(xml)
 
     whenReady(result.get) {
       _.value mustBe true
-    }  }
+    }
+  }
 
   "must correctly invalidate an initial disclosure MA with Relevant Tax Payers that has a missing TaxPayer Implementation Date" in {
     val xml =
@@ -1833,7 +1851,7 @@ class BusinessRuleValidationServiceSpec extends SpecBase with MockitoSugar with 
       </DAC6_Arrangement>
 
     val service = app.injector.instanceOf[BusinessRuleValidationService]
-    val result = service.validateFile()(implicitly, implicitly)(xml)
+    val result  = service.validateFile()(implicitly, implicitly)(xml)
 
     whenReady(result.get) {
       _ mustBe List(Validation("businessrules.initialDisclosureMA.missingRelevantTaxPayerDates", false))
@@ -1862,7 +1880,7 @@ class BusinessRuleValidationServiceSpec extends SpecBase with MockitoSugar with 
       </DAC6_Arrangement>
 
     val service = app.injector.instanceOf[BusinessRuleValidationService]
-    val result = service.validateFile()(implicitly, implicitly)(xml)
+    val result  = service.validateFile()(implicitly, implicitly)(xml)
 
     whenReady(result.get) {
       _ mustBe List()
@@ -1917,17 +1935,18 @@ class BusinessRuleValidationServiceSpec extends SpecBase with MockitoSugar with 
       </DAC6_Arrangement>
 
     val service = app.injector.instanceOf[BusinessRuleValidationService]
-    val result = service.validateTaxPayerImplementingDateAgainstMarketableArrangementStatus()(implicitly, implicitly)(xml)
+    val result  = service.validateTaxPayerImplementingDateAgainstMarketableArrangementStatus()(implicitly, implicitly)(xml)
 
     whenReady(result.get) {
       _.value mustBe true
-    }  }
+    }
+  }
 
   "must correctly validate a file has TaxPayer Implementation Dates if initial disclosure MA is false, " +
     "first disclosure for arrangement ID is not found and Relevant Tax Payers exist" in {
 
-    val xml =
-      <DAC6_Arrangement version="First" xmlns="urn:ukdac6:v0.1">
+      val xml =
+        <DAC6_Arrangement version="First" xmlns="urn:ukdac6:v0.1">
         <Header>
           <MessageRefId>GB0000000XXX</MessageRefId>
           <Timestamp>2020-05-14T17:10:00</Timestamp>
@@ -1944,26 +1963,33 @@ class BusinessRuleValidationServiceSpec extends SpecBase with MockitoSugar with 
         </DAC6Disclosures>
       </DAC6_Arrangement>
 
-    val service = application.injector.instanceOf[BusinessRuleValidationService]
-    val result = service.validateTaxPayerImplementingDateAgainstMarketableArrangementStatus()(implicitly, implicitly)(xml)
+      val service = application.injector.instanceOf[BusinessRuleValidationService]
+      val result  = service.validateTaxPayerImplementingDateAgainstMarketableArrangementStatus()(implicitly, implicitly)(xml)
 
-    whenReady(result.get) {
-      _.value mustBe true
+      whenReady(result.get) {
+        _.value mustBe true
+      }
     }
-  }
 
   "must correctly validate a file has TaxPayer Implementation Dates if initial disclosure MA is false, " +
     "first disclosure's InitialDisclosureMA is true and Relevant Tax Payers exist" in {
 
-    val firstDisclosure: SubmissionDetails = SubmissionDetails("enrolmentID", LocalDateTime.parse("2020-05-14T17:10:00"),
-      "fileName", Some("GBA20200904AAAAAA"), Some("GBD20200904AAAAAA"), "New",
-      initialDisclosureMA = true, messageRefId = "GB0000000XXX")
+      val firstDisclosure: SubmissionDetails = SubmissionDetails(
+        "enrolmentID",
+        LocalDateTime.parse("2020-05-14T17:10:00"),
+        "fileName",
+        Some("GBA20200904AAAAAA"),
+        Some("GBD20200904AAAAAA"),
+        "New",
+        initialDisclosureMA = true,
+        messageRefId = "GB0000000XXX"
+      )
 
-    when(mockSubmissionDetailsRepository.retrieveFirstDisclosureForArrangementId("GBA20200904AAAAAA"))
-      .thenReturn(Future.successful(Some(firstDisclosure)))
+      when(mockSubmissionDetailsRepository.retrieveFirstDisclosureForArrangementId("GBA20200904AAAAAA"))
+        .thenReturn(Future.successful(Some(firstDisclosure)))
 
-    val xml =
-      <DAC6_Arrangement version="First" xmlns="urn:ukdac6:v0.1">
+      val xml =
+        <DAC6_Arrangement version="First" xmlns="urn:ukdac6:v0.1">
         <Header>
           <MessageRefId>GB0000000XXX</MessageRefId>
           <Timestamp>2020-05-14T17:10:00</Timestamp>
@@ -1983,19 +2009,26 @@ class BusinessRuleValidationServiceSpec extends SpecBase with MockitoSugar with 
         </DAC6Disclosures>
       </DAC6_Arrangement>
 
-    val service = application.injector.instanceOf[BusinessRuleValidationService]
-    val result = service.validateTaxPayerImplementingDateAgainstMarketableArrangementStatus()(implicitly, implicitly)(xml)
+      val service = application.injector.instanceOf[BusinessRuleValidationService]
+      val result  = service.validateTaxPayerImplementingDateAgainstMarketableArrangementStatus()(implicitly, implicitly)(xml)
 
-    whenReady(result.get) {
-      _.value mustBe true
+      whenReady(result.get) {
+        _.value mustBe true
+      }
     }
-  }
 
   "must correctly validate a file that has TaxPayer Implementation Dates if initial disclosure MA is false for DAC6NEW" in {
 
-    val replacedFirstDisclosure: SubmissionDetails = SubmissionDetails("enrolmentID", LocalDateTime.parse("2020-05-14T17:10:00"),
-      "fileName", Some("GBA20200904AAAAAA"), Some("GBD20200904AAAAAA"), "Replace",
-      initialDisclosureMA = false, messageRefId = "GB0000000XXX")
+    val replacedFirstDisclosure: SubmissionDetails = SubmissionDetails(
+      "enrolmentID",
+      LocalDateTime.parse("2020-05-14T17:10:00"),
+      "fileName",
+      Some("GBA20200904AAAAAA"),
+      Some("GBD20200904AAAAAA"),
+      "Replace",
+      initialDisclosureMA = false,
+      messageRefId = "GB0000000XXX"
+    )
 
     when(mockSubmissionDetailsRepository.retrieveFirstDisclosureForArrangementId("GBA20200904AAAAAA"))
       .thenReturn(Future.successful(Some(replacedFirstDisclosure)))
@@ -2018,7 +2051,7 @@ class BusinessRuleValidationServiceSpec extends SpecBase with MockitoSugar with 
       </DAC6_Arrangement>
 
     val service = application.injector.instanceOf[BusinessRuleValidationService]
-    val result = service.validateTaxPayerImplementingDateAgainstMarketableArrangementStatus()(implicitly, implicitly)(xml)
+    val result  = service.validateTaxPayerImplementingDateAgainstMarketableArrangementStatus()(implicitly, implicitly)(xml)
 
     whenReady(result.get) {
       _ mustBe Validation("businessrules.nonMA.cantHaveRelevantTaxPayer", true)
@@ -2027,9 +2060,16 @@ class BusinessRuleValidationServiceSpec extends SpecBase with MockitoSugar with 
 
   "must correctly invalidate a DAC6ADD for a non-marketable arrangment where user has putTaxPayer Implementation Dates" in {
 
-    val firstDisclosure: SubmissionDetails = SubmissionDetails("enrolmentID", LocalDateTime.parse("2020-05-14T17:10:00"),
-      "fileName", Some("GBA20200904AAAAAA"), Some("GBD20200904AAAAAA"), "New",
-      initialDisclosureMA = false, messageRefId = "GB0000000XXX")
+    val firstDisclosure: SubmissionDetails = SubmissionDetails(
+      "enrolmentID",
+      LocalDateTime.parse("2020-05-14T17:10:00"),
+      "fileName",
+      Some("GBA20200904AAAAAA"),
+      Some("GBD20200904AAAAAA"),
+      "New",
+      initialDisclosureMA = false,
+      messageRefId = "GB0000000XXX"
+    )
 
     when(mockSubmissionDetailsRepository.retrieveFirstDisclosureForArrangementId("GBA20200904AAAAAA"))
       .thenReturn(Future.successful(Some(firstDisclosure)))
@@ -2055,7 +2095,7 @@ class BusinessRuleValidationServiceSpec extends SpecBase with MockitoSugar with 
       </DAC6_Arrangement>
 
     val service = application.injector.instanceOf[BusinessRuleValidationService]
-    val result = service.validateTaxPayerImplementingDateAgainstMarketableArrangementStatus()(implicitly, implicitly)(xml)
+    val result  = service.validateTaxPayerImplementingDateAgainstMarketableArrangementStatus()(implicitly, implicitly)(xml)
 
     whenReady(result.get) {
       _ mustBe Validation("businessrules.nonMA.cantHaveRelevantTaxPayer", false)
@@ -2064,9 +2104,16 @@ class BusinessRuleValidationServiceSpec extends SpecBase with MockitoSugar with 
 
   "must correctly invalidate a DAC6REP for a non-marketable arrangement where user has putTaxPayer Implementation Dates" in {
 
-    val firstDisclosure: SubmissionDetails = SubmissionDetails("enrolmentID", LocalDateTime.parse("2020-05-14T17:10:00"),
-      "fileName", Some("GBA20200904AAAAAA"), Some("GBD20200904AAAAAA"), "New",
-      initialDisclosureMA = false, messageRefId = "GB0000000XXX")
+    val firstDisclosure: SubmissionDetails = SubmissionDetails(
+      "enrolmentID",
+      LocalDateTime.parse("2020-05-14T17:10:00"),
+      "fileName",
+      Some("GBA20200904AAAAAA"),
+      Some("GBD20200904AAAAAA"),
+      "New",
+      initialDisclosureMA = false,
+      messageRefId = "GB0000000XXX"
+    )
 
     when(mockSubmissionDetailsRepository.retrieveFirstDisclosureForArrangementId("GBA20200904AAAAAA"))
       .thenReturn(Future.successful(Some(firstDisclosure)))
@@ -2092,26 +2139,32 @@ class BusinessRuleValidationServiceSpec extends SpecBase with MockitoSugar with 
       </DAC6_Arrangement>
 
     val service = application.injector.instanceOf[BusinessRuleValidationService]
-    val result = service.validateTaxPayerImplementingDateAgainstMarketableArrangementStatus()(implicitly, implicitly)(xml)
+    val result  = service.validateTaxPayerImplementingDateAgainstMarketableArrangementStatus()(implicitly, implicitly)(xml)
 
     whenReady(result.get) {
       _ mustBe Validation("businessrules.nonMA.cantHaveRelevantTaxPayer", false)
     }
   }
 
-
   "must correctly invalidate a file with missing TaxPayer Implementation Dates if initial disclosure MA is false, " +
     "first disclosure's InitialDisclosureMA is true and Relevant Tax Payers exist" in {
 
-    val firstDisclosure: SubmissionDetails = SubmissionDetails("enrolmentID", LocalDateTime.parse("2020-05-14T17:10:00"),
-      "fileName", Some("GBA20200904AAAAAA"), Some("GBD20200904AAAAAA"), "New",
-      initialDisclosureMA = true, messageRefId = "GB0000000XXX")
+      val firstDisclosure: SubmissionDetails = SubmissionDetails(
+        "enrolmentID",
+        LocalDateTime.parse("2020-05-14T17:10:00"),
+        "fileName",
+        Some("GBA20200904AAAAAA"),
+        Some("GBD20200904AAAAAA"),
+        "New",
+        initialDisclosureMA = true,
+        messageRefId = "GB0000000XXX"
+      )
 
-    when(mockSubmissionDetailsRepository.retrieveFirstDisclosureForArrangementId("GBA20200904AAAAAA"))
-      .thenReturn(Future.successful(Some(firstDisclosure)))
+      when(mockSubmissionDetailsRepository.retrieveFirstDisclosureForArrangementId("GBA20200904AAAAAA"))
+        .thenReturn(Future.successful(Some(firstDisclosure)))
 
-    val xml =
-      <DAC6_Arrangement version="First" xmlns="urn:ukdac6:v0.1">
+      val xml =
+        <DAC6_Arrangement version="First" xmlns="urn:ukdac6:v0.1">
         <Header>
           <MessageRefId>GB0000000XXX</MessageRefId>
           <Timestamp>2020-05-14T17:10:00</Timestamp>
@@ -2130,13 +2183,13 @@ class BusinessRuleValidationServiceSpec extends SpecBase with MockitoSugar with 
         </DAC6Disclosures>
       </DAC6_Arrangement>
 
-    val service = application.injector.instanceOf[BusinessRuleValidationService]
-    val result = service.validateTaxPayerImplementingDateAgainstMarketableArrangementStatus()(implicitly, implicitly)(xml)
+      val service = application.injector.instanceOf[BusinessRuleValidationService]
+      val result  = service.validateTaxPayerImplementingDateAgainstMarketableArrangementStatus()(implicitly, implicitly)(xml)
 
-    whenReady(result.get) {
-      _.value mustBe false
+      whenReady(result.get) {
+        _.value mustBe false
+      }
     }
-  }
 
   "must extract presence of DAC6D1OtherInfo" in {
     val xml =
@@ -2234,7 +2287,7 @@ class BusinessRuleValidationServiceSpec extends SpecBase with MockitoSugar with 
       </DAC6_Arrangement>
 
     val service = app.injector.instanceOf[BusinessRuleValidationService]
-    val result = service.validateFile()(implicitly, implicitly)(xml)
+    val result  = service.validateFile()(implicitly, implicitly)(xml)
 
     whenReady(result.get) {
       _ mustBe List()
@@ -2268,7 +2321,7 @@ class BusinessRuleValidationServiceSpec extends SpecBase with MockitoSugar with 
       </DAC6_Arrangement>
 
     val service = app.injector.instanceOf[BusinessRuleValidationService]
-    val result = service.validateFile()(implicitly, implicitly)(xml)
+    val result  = service.validateFile()(implicitly, implicitly)(xml)
 
     whenReady(result.get) {
       _ mustBe List()
@@ -2474,10 +2527,10 @@ class BusinessRuleValidationServiceSpec extends SpecBase with MockitoSugar with 
       </DAC6_Arrangement>
 
     val service = app.injector.instanceOf[BusinessRuleValidationService]
-    val result = service.validateFile()(implicitly, implicitly)(xml)
+    val result  = service.validateFile()(implicitly, implicitly)(xml)
 
     whenReady(result.get) {
-      _ mustBe List(Validation("businessrules.DisclosingBirthDates.maxDateOfBirthExceeded",false,None))
+      _ mustBe List(Validation("businessrules.DisclosingBirthDates.maxDateOfBirthExceeded", false, None))
 
     }
   }
@@ -2509,8 +2562,8 @@ class BusinessRuleValidationServiceSpec extends SpecBase with MockitoSugar with 
   "must return correct errors for xml with mutiple errors: " +
     " error 1 = initial disclosure marketable arrangement does not have one or more relevant taxpayers " +
     " error 2 = other info is provided when hallmark absent" in {
-    val xml =
-      <DAC6_Arrangement version="First" xmlns="urn:ukdac6:v0.1">
+      val xml =
+        <DAC6_Arrangement version="First" xmlns="urn:ukdac6:v0.1">
         <Header>
           <MessageRefId>GB0000000XXX</MessageRefId>
           <Timestamp>2020-05-14T17:10:00</Timestamp>
@@ -2527,14 +2580,15 @@ class BusinessRuleValidationServiceSpec extends SpecBase with MockitoSugar with 
         </DAC6Disclosures>
       </DAC6_Arrangement>
 
-    val service = app.injector.instanceOf[BusinessRuleValidationService]
-    val result = service.validateFile()(implicitly, implicitly)(xml)
+      val service = app.injector.instanceOf[BusinessRuleValidationService]
+      val result  = service.validateFile()(implicitly, implicitly)(xml)
 
-    whenReady(result.get) {
-      _ mustBe List(Validation("businessrules.initialDisclosure.needRelevantTaxPayer", false),
-        Validation("businessrules.dac6D10OtherInfo.needHallMarkToProvideInfo", false))
+      whenReady(result.get) {
+        _ mustBe List(Validation("businessrules.initialDisclosure.needRelevantTaxPayer", false),
+                      Validation("businessrules.dac6D10OtherInfo.needHallMarkToProvideInfo", false)
+        )
+      }
     }
-  }
 
   "must return no errors for valid xml" in {
     val xml =
@@ -2568,7 +2622,7 @@ class BusinessRuleValidationServiceSpec extends SpecBase with MockitoSugar with 
       </DAC6_Arrangement>
 
     val service = app.injector.instanceOf[BusinessRuleValidationService]
-    val result = service.validateFile()(implicitly, implicitly)(xml)
+    val result  = service.validateFile()(implicitly, implicitly)(xml)
 
     whenReady(result.get) {
       _ mustBe List()
@@ -2599,16 +2653,17 @@ class BusinessRuleValidationServiceSpec extends SpecBase with MockitoSugar with 
       </DAC6_Arrangement>
 
     val service = app.injector.instanceOf[BusinessRuleValidationService]
-    service.extractDac6MetaData()(xml) mustBe Some(Dac6MetaData("DAC6NEW", None, None,
-      disclosureInformationPresent = true, initialDisclosureMA = true,
-      messageRefId = "GB0000000XXX"))
+    service.extractDac6MetaData()(xml) mustBe Some(
+      Dac6MetaData("DAC6NEW", None, None, disclosureInformationPresent = true, initialDisclosureMA = true, messageRefId = "GB0000000XXX")
+    )
   }
 
   "must pass validation for all allowed hallmark D values" in {
 
-    valuesForHallmarkD.foreach { value =>
-      val xml =
-        <DAC6_Arrangement version="First" xmlns="urn:ukdac6:v0.1">
+    valuesForHallmarkD.foreach {
+      value =>
+        val xml =
+          <DAC6_Arrangement version="First" xmlns="urn:ukdac6:v0.1">
           <Header>
             <ArrangementID>GBA20200904AAAAAA</ArrangementID>
             <MessageRefId>GB0000000XXX</MessageRefId>
@@ -2628,13 +2683,12 @@ class BusinessRuleValidationServiceSpec extends SpecBase with MockitoSugar with 
           </DAC6Disclosures>
         </DAC6_Arrangement>
 
+        val service = app.injector.instanceOf[BusinessRuleValidationService]
+        val result  = service.validateFile()(implicitly, implicitly)(xml)
 
-      val service = app.injector.instanceOf[BusinessRuleValidationService]
-      val result = service.validateFile()(implicitly, implicitly)(xml)
-
-      whenReady(result.get) {
-        _ mustBe List()
-      }
+        whenReady(result.get) {
+          _ mustBe List()
+        }
     }
   }
 
@@ -2662,9 +2716,8 @@ class BusinessRuleValidationServiceSpec extends SpecBase with MockitoSugar with 
         </DAC6Disclosures>
       </DAC6_Arrangement>
 
-
     val service = app.injector.instanceOf[BusinessRuleValidationService]
-    val result = service.validateFile()(implicitly, implicitly)(xml)
+    val result  = service.validateFile()(implicitly, implicitly)(xml)
 
     whenReady(result.get) {
       _ mustBe List(Validation("businessrules.hallmarks.dHallmarkNotProvided", false))
@@ -2673,9 +2726,10 @@ class BusinessRuleValidationServiceSpec extends SpecBase with MockitoSugar with 
 
   "must fail validation when non hallmark D value supplied along with hallmarkD value" in {
 
-    valuesForHallmarkD.foreach { value =>
-      val xml =
-        <DAC6_Arrangement version="First" xmlns="urn:ukdac6:v0.1">
+    valuesForHallmarkD.foreach {
+      value =>
+        val xml =
+          <DAC6_Arrangement version="First" xmlns="urn:ukdac6:v0.1">
           <Header>
             <ArrangementID>GBA20200904AAAAAA</ArrangementID>
             <MessageRefId>GB0000000XXX</MessageRefId>
@@ -2697,13 +2751,12 @@ class BusinessRuleValidationServiceSpec extends SpecBase with MockitoSugar with 
           </DAC6Disclosures>
         </DAC6_Arrangement>
 
+        val service = app.injector.instanceOf[BusinessRuleValidationService]
+        val result  = service.validateFile()(implicitly, implicitly)(xml)
 
-      val service = app.injector.instanceOf[BusinessRuleValidationService]
-      val result = service.validateFile()(implicitly, implicitly)(xml)
-
-      whenReady(result.get) {
-        _ mustBe List(Validation("businessrules.hallmarks.dHallmarkWithOtherHallmarks", false))
-      }
+        whenReady(result.get) {
+          _ mustBe List(Validation("businessrules.hallmarks.dHallmarkWithOtherHallmarks", false))
+        }
     }
   }
 
@@ -2719,9 +2772,9 @@ class BusinessRuleValidationServiceSpec extends SpecBase with MockitoSugar with 
         </DAC6Disclosures>
       </DAC6_Arrangement>
     val service = app.injector.instanceOf[BusinessRuleValidationService]
-    service.extractDac6MetaData()(xml) mustBe Some(Dac6MetaData("DAC6NEW", None, None,
-      disclosureInformationPresent = false, initialDisclosureMA = false,
-      messageRefId = "GB0000000XXX"))
+    service.extractDac6MetaData()(xml) mustBe Some(
+      Dac6MetaData("DAC6NEW", None, None, disclosureInformationPresent = false, initialDisclosureMA = false, messageRefId = "GB0000000XXX")
+    )
   }
 
   "must return correct metadata for import instruction DAC6ADD" in {
@@ -2744,9 +2797,9 @@ class BusinessRuleValidationServiceSpec extends SpecBase with MockitoSugar with 
       </DAC6_Arrangement>
 
     val service = app.injector.instanceOf[BusinessRuleValidationService]
-    service.extractDac6MetaData()(xml) mustBe Some(Dac6MetaData("DAC6ADD", Some("AAA000000000"), None,
-      disclosureInformationPresent = true, initialDisclosureMA = false,
-      messageRefId = "GB0000000XXX"))
+    service.extractDac6MetaData()(xml) mustBe Some(
+      Dac6MetaData("DAC6ADD", Some("AAA000000000"), None, disclosureInformationPresent = true, initialDisclosureMA = false, messageRefId = "GB0000000XXX")
+    )
   }
 
   "must return correct metadata for import instruction DAC6ADD with RelevantTaxpayers who all have implementing dates" in {
@@ -2777,11 +2830,10 @@ class BusinessRuleValidationServiceSpec extends SpecBase with MockitoSugar with 
       </DAC6_Arrangement>
 
     val service = app.injector.instanceOf[BusinessRuleValidationService]
-    service.extractDac6MetaData()(xml) mustBe Some(Dac6MetaData("DAC6ADD", Some("AAA000000000"), None,
-      disclosureInformationPresent = true, initialDisclosureMA = false,
-      messageRefId = "GB0000000XXX"))
+    service.extractDac6MetaData()(xml) mustBe Some(
+      Dac6MetaData("DAC6ADD", Some("AAA000000000"), None, disclosureInformationPresent = true, initialDisclosureMA = false, messageRefId = "GB0000000XXX")
+    )
   }
-
 
   "must return correct metadata for import instruction DAC6ADD with RelevantTaxpayers who do not all have implementing dates" in {
     val xml =
@@ -2810,9 +2862,9 @@ class BusinessRuleValidationServiceSpec extends SpecBase with MockitoSugar with 
       </DAC6_Arrangement>
 
     val service = app.injector.instanceOf[BusinessRuleValidationService]
-    service.extractDac6MetaData()(xml) mustBe Some(Dac6MetaData("DAC6ADD", Some("AAA000000000"), None,
-      disclosureInformationPresent = true, initialDisclosureMA = false,
-      messageRefId = "GB0000000XXX"))
+    service.extractDac6MetaData()(xml) mustBe Some(
+      Dac6MetaData("DAC6ADD", Some("AAA000000000"), None, disclosureInformationPresent = true, initialDisclosureMA = false, messageRefId = "GB0000000XXX")
+    )
   }
 
   "must return correct metadata for import instruction DAC6REP" in {
@@ -2836,9 +2888,15 @@ class BusinessRuleValidationServiceSpec extends SpecBase with MockitoSugar with 
       </DAC6_Arrangement>
 
     val service = app.injector.instanceOf[BusinessRuleValidationService]
-    service.extractDac6MetaData()(xml) mustBe Some(Dac6MetaData("DAC6REP", Some("AAA000000000"), Some("AAA000000000"),
-      disclosureInformationPresent = true,
-      initialDisclosureMA = false, messageRefId = "GB0000000XXX"))
+    service.extractDac6MetaData()(xml) mustBe Some(
+      Dac6MetaData("DAC6REP",
+                   Some("AAA000000000"),
+                   Some("AAA000000000"),
+                   disclosureInformationPresent = true,
+                   initialDisclosureMA = false,
+                   messageRefId = "GB0000000XXX"
+      )
+    )
   }
 
   "must return correct metadata for import instruction DAC6DEL" in {
@@ -2862,9 +2920,15 @@ class BusinessRuleValidationServiceSpec extends SpecBase with MockitoSugar with 
       </DAC6_Arrangement>
 
     val service = app.injector.instanceOf[BusinessRuleValidationService]
-    service.extractDac6MetaData()(xml) mustBe Some(Dac6MetaData("DAC6DEL", Some("AAA000000000"), Some("AAA000000000"),
-      disclosureInformationPresent = true, initialDisclosureMA = false,
-      messageRefId = "GB0000000XXX"))
+    service.extractDac6MetaData()(xml) mustBe Some(
+      Dac6MetaData("DAC6DEL",
+                   Some("AAA000000000"),
+                   Some("AAA000000000"),
+                   disclosureInformationPresent = true,
+                   initialDisclosureMA = false,
+                   messageRefId = "GB0000000XXX"
+      )
+    )
   }
   "must throw exception if disclosureImportInstruction is invalid or missing" in {
     val xml =

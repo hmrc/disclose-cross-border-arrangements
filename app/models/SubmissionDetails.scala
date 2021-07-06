@@ -23,16 +23,12 @@ import java.time.format.DateTimeFormatter
 import java.time.{LocalDateTime, OffsetDateTime}
 import scala.xml.NodeSeq
 
-case class SubmissionMetaData(submissionTime: String,
-                              conversationID: String,
-                              fileName: Option[String])
+case class SubmissionMetaData(submissionTime: String, conversationID: String, fileName: Option[String])
 
 object SubmissionMetaData {
   val dateTimeFormat: DateTimeFormatter = DateTimeFormatter.ISO_INSTANT
 
-  def build(submissionTime: LocalDateTime,
-            conversationID: String,
-            fileName: String): SubmissionMetaData =
+  def build(submissionTime: LocalDateTime, conversationID: String, fileName: String): SubmissionMetaData =
     SubmissionMetaData(
       dateTimeFormat.format(submissionTime.toInstant(OffsetDateTime.now().getOffset)),
       conversationID,
@@ -47,7 +43,8 @@ case class SubmissionDetails(enrolmentID: String,
                              disclosureID: Option[String],
                              importInstruction: String,
                              initialDisclosureMA: Boolean,
-                             messageRefId: String)
+                             messageRefId: String
+)
 
 object SubmissionDetails {
 
@@ -61,15 +58,18 @@ object SubmissionDetails {
             disclosureID: String,
             submissionTime: LocalDateTime,
             initialDisclosureMA: Boolean,
-            messageRefId: String): SubmissionDetails = {
+            messageRefId: String
+  ): SubmissionDetails = {
 
     val arrID = Option {
-      ids.arrangementID.map(_.value)
+      ids.arrangementID
+        .map(_.value)
         .getOrElse((xml \\ "ArrangementID").text)
     }
 
     val discID = Option {
-      ids.disclosureID.map(_.value)
+      ids.disclosureID
+        .map(_.value)
         .getOrElse(disclosureID)
     }
 

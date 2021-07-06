@@ -18,7 +18,7 @@ package models
 
 import play.api.libs.json.{Json, OFormat}
 
-case class ArrangementId (prefix: String = "GBA", dateString: String, suffix: String) {
+case class ArrangementId(prefix: String = "GBA", dateString: String, suffix: String) {
   val value: String = prefix + dateString + suffix
 }
 
@@ -28,7 +28,7 @@ object ArrangementId {
   implicit val writes = Json.writes[ArrangementId]
 }
 
-case class DisclosureId  (prefix: String = "GBD", dateString: String, suffix: String) {
+case class DisclosureId(prefix: String = "GBD", dateString: String, suffix: String) {
   val value: String = prefix + dateString + suffix
 }
 

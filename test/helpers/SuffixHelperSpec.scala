@@ -20,9 +20,8 @@ import base.SpecBase
 
 class SuffixHelperSpec extends SpecBase {
 
-  val helper = new SuffixHelper
+  val helper                   = new SuffixHelper
   val arrangementIdSuffixRegex = "[A-Z0-9]{6}"
-
 
   "SuffixHelper" - {
     "Generate suffix" - {

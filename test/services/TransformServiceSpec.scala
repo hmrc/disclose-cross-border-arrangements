@@ -255,14 +255,16 @@ class TransformServiceSpec extends SpecBase with StreamlinedXmlEquality {
             organisationName = "Example"
           )
         ),
-        secondaryContact = Some(ContactInformationForOrganisation(
-          email = "ddd",
-          phone = Some("eee"),
-          mobile = Some("fff"),
-          organisation = OrganisationDetails(
-            organisationName = "AnotherExample"
+        secondaryContact = Some(
+          ContactInformationForOrganisation(
+            email = "ddd",
+            phone = Some("eee"),
+            mobile = Some("fff"),
+            organisation = OrganisationDetails(
+              organisationName = "AnotherExample"
+            )
           )
-        ))
+        )
       )
 
     val expected =
@@ -357,18 +359,19 @@ class TransformServiceSpec extends SpecBase with StreamlinedXmlEquality {
         </eis:file>
       </eis:DAC6UKSubmissionInboundRequest>
 
-    val result: NodeSeq = service.addNameSpaces(file, Seq(
-      NamespaceForNode("DAC6UKSubmissionInboundRequest", "eis"),
-      NamespaceForNode("DAC6_Arrangement", "dac6")
-    ))
+    val result: NodeSeq = service.addNameSpaces(file,
+                                                Seq(
+                                                  NamespaceForNode("DAC6UKSubmissionInboundRequest", "eis"),
+                                                  NamespaceForNode("DAC6_Arrangement", "dac6")
+                                                )
+    )
 
     result mustBe expected
   }
 
-
   "add namespace definitions for dac6 arrangement" in {
     val service = app.injector.instanceOf[TransformService]
-    val file = <DAC6_Arrangement version="2020-04-16T09:30:47Z">
+    val file    = <DAC6_Arrangement version="2020-04-16T09:30:47Z">
       <submission>Submitted Data</submission>
     </DAC6_Arrangement>
 

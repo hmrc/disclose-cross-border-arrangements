@@ -34,33 +34,42 @@ object UploadSessionRepository {
 
   def cacheTtl(config: Configuration): Int = config.get[Int]("mongodb.timeToLiveInSeconds")
 
-  def indexes(config: Configuration) = Seq(IndexModel(ascending("lastUpdated")
-    , IndexOptions().name("upload-last-updated-index").expireAfter(cacheTtl(config), TimeUnit.SECONDS) ))
+  def indexes(config: Configuration) = Seq(
+    IndexModel(ascending("lastUpdated"), IndexOptions().name("upload-last-updated-index").expireAfter(cacheTtl(config), TimeUnit.SECONDS))
+  )
 }
 
-class UploadSessionRepository @Inject()(mongo: MongoComponent, config: Configuration)(implicit ec: ExecutionContext
-) extends PlayMongoRepository[UploadSessionDetails] (
-  mongoComponent = mongo,
-  collectionName = "uploadSessionRepository",
-  domainFormat   = UploadSessionDetails.format,
-  indexes        = UploadSessionRepository.indexes(config),
-  replaceIndexes = true
-) {
+class UploadSessionRepository @Inject() (mongo: MongoComponent, config: Configuration)(implicit ec: ExecutionContext)
+    extends PlayMongoRepository[UploadSessionDetails](
+      mongoComponent = mongo,
+      collectionName = "uploadSessionRepository",
+      domainFormat = UploadSessionDetails.format,
+      indexes = UploadSessionRepository.indexes(config),
+      replaceIndexes = true
+    ) {
 
   def findByUploadId(uploadId: UploadId): Future[Option[UploadSessionDetails]] =
     collection.find(equal("uploadId", Codecs.toBson(uploadId))).first().toFutureOption()
 
-  def updateStatus(reference : Reference, newStatus : UploadStatus): Future[Boolean] = {
+  def updateStatus(reference: Reference, newStatus: UploadStatus): Future[Boolean] = {
 
-    val filter: Bson = equal("reference.value", Codecs.toBson(reference.value))
-    val modifier: Bson = set("status", Codecs.toBson(newStatus))
+    val filter: Bson                     = equal("reference.value", Codecs.toBson(reference.value))
+    val modifier: Bson                   = set("status", Codecs.toBson(newStatus))
     val options: FindOneAndUpdateOptions = FindOneAndUpdateOptions().upsert(true)
 
-    collection.findOneAndUpdate(filter, modifier, options).toFuture.map(_ => true)
+    collection
+      .findOneAndUpdate(filter, modifier, options)
+      .toFuture
+      .map(
+        _ => true
+      )
   }
 
-  def insert(uploadDetails: UploadSessionDetails): Future[Boolean] = {
-
-    collection.insertOne(uploadDetails).toFuture.map(_ => true)
-  }
+  def insert(uploadDetails: UploadSessionDetails): Future[Boolean] =
+    collection
+      .insertOne(uploadDetails)
+      .toFuture
+      .map(
+        _ => true
+      )
 }

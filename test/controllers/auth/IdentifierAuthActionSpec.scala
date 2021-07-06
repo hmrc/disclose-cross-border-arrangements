@@ -37,13 +37,15 @@ import scala.language.postfixOps
 
 class IdentifierAuthActionSpec extends PlaySpec with GuiceOneAppPerSuite with MockitoSugar {
 
-  private implicit class HelperOps[A](a: A) {
+  implicit private class HelperOps[A](a: A) {
     def ~[B](b: B) = new ~(a, b)
   }
 
   class Harness(authAction: IdentifierAuthAction) extends InjectedController {
-    def onPageLoad(): Action[AnyContent] = authAction { _ =>
-      Ok
+
+    def onPageLoad(): Action[AnyContent] = authAction {
+      _ =>
+        Ok
     }
   }
 
@@ -55,7 +57,8 @@ class IdentifierAuthActionSpec extends PlaySpec with GuiceOneAppPerSuite with Mo
     .configure(Configuration("metrics.enabled" -> "false"))
     .overrides(
       bind[AuthConnector].toInstance(mockAuthConnector)
-    ).build()
+    )
+    .build()
 
   "Identifier Auth Action" when {
     "the user is not logged in" must {
@@ -65,7 +68,7 @@ class IdentifierAuthActionSpec extends PlaySpec with GuiceOneAppPerSuite with Mo
 
         val authAction = application.injector.instanceOf[IdentifierAuthAction]
         val controller = new Harness(authAction)
-        val result = controller.onPageLoad()(FakeRequest("", ""))
+        val result     = controller.onPageLoad()(FakeRequest("", ""))
         status(result) mustBe UNAUTHORIZED
 
       }

@@ -20,14 +20,17 @@ import base.SpecBase
 
 class GenericErrorSpec extends SpecBase {
 
-  val mockGenericErrorSeq = Seq(GenericError(4, "British Shorthair"), GenericError(1, "Maine Coon"),
-    GenericError(3, "Siamese Cat"), GenericError(2, "Ragdoll"))
+  val mockGenericErrorSeq = Seq(GenericError(4, "British Shorthair"), GenericError(1, "Maine Coon"), GenericError(3, "Siamese Cat"), GenericError(2, "Ragdoll"))
 
   "orderByLineNumber" - {
 
     "must return a sequence of Generic Errors ordered by lineNumber" in {
 
-      mockGenericErrorSeq.sorted mustBe Seq(GenericError(1, "Maine Coon"), GenericError(2, "Ragdoll"), GenericError(3, "Siamese Cat"), GenericError(4, "British Shorthair"))
+      mockGenericErrorSeq.sorted mustBe Seq(GenericError(1, "Maine Coon"),
+                                            GenericError(2, "Ragdoll"),
+                                            GenericError(3, "Siamese Cat"),
+                                            GenericError(4, "British Shorthair")
+      )
 
     }
   }

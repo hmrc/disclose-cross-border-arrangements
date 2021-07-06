@@ -27,18 +27,15 @@ import repositories.{ArrangementIdRepository, DisclosureIdRepository, Submission
 import java.time.LocalDate
 import scala.concurrent.Future
 
-class IdServiceSpec extends SpecBase
-  with ScalaCheckPropertyChecks
-  with BeforeAndAfterEach {
+class IdServiceSpec extends SpecBase with ScalaCheckPropertyChecks with BeforeAndAfterEach {
 
-  val mockDateHelper: DateHelper = mock[DateHelper]
-  val mockSuffixHelper: SuffixHelper = mock[SuffixHelper]
-  val mockArrangementIdRepository: ArrangementIdRepository = mock[ArrangementIdRepository]
-  val mockDisclosureIdRepository: DisclosureIdRepository = mock[DisclosureIdRepository]
+  val mockDateHelper: DateHelper                                   = mock[DateHelper]
+  val mockSuffixHelper: SuffixHelper                               = mock[SuffixHelper]
+  val mockArrangementIdRepository: ArrangementIdRepository         = mock[ArrangementIdRepository]
+  val mockDisclosureIdRepository: DisclosureIdRepository           = mock[DisclosureIdRepository]
   val mockSubmissionDetailsRepository: SubmissionDetailsRepository = mock[SubmissionDetailsRepository]
 
-  val service = new IdService(mockDateHelper, mockSuffixHelper, mockArrangementIdRepository,
-    mockDisclosureIdRepository, mockSubmissionDetailsRepository)
+  val service             = new IdService(mockDateHelper, mockSuffixHelper, mockArrangementIdRepository, mockDisclosureIdRepository, mockSubmissionDetailsRepository)
   val testDate: LocalDate = LocalDate.of(2020, 6, 1)
   val enrolmentID: String = "XADAC0001234567"
 
@@ -47,92 +44,89 @@ class IdServiceSpec extends SpecBase
   when(mockSuffixHelper.generateSuffix()).thenReturn(newSuffix)
 
   val arrangementIdRegEx = "[A-Z]{2}[A]([2]\\d{3}(0[1-9]|1[0-2])(0[1-9]|[12]\\d|3[01]))([A-Z0-9]{6})"
-  val disclosureIdRegEx = "[A-Z]{2}[D]([2]\\d{3}(0[1-9]|1[0-2])(0[1-9]|[12]\\d|3[01]))([A-Z0-9]{6})"
+  val disclosureIdRegEx  = "[A-Z]{2}[D]([2]\\d{3}(0[1-9]|1[0-2])(0[1-9]|[12]\\d|3[01]))([A-Z0-9]{6})"
 
   val expectedDateString = "20200601"
 
   val newArrangementId: ArrangementId = ArrangementId(dateString = expectedDateString, suffix = newSuffix)
-  val newDisclosureId: DisclosureId = DisclosureId(dateString = expectedDateString, suffix = newSuffix)
+  val newDisclosureId: DisclosureId   = DisclosureId(dateString = expectedDateString, suffix = newSuffix)
 
-  override def beforeEach(): Unit = {
+  override def beforeEach(): Unit =
     reset(mockArrangementIdRepository, mockDisclosureIdRepository, mockSubmissionDetailsRepository)
-  }
 
   val arrangementIdPrefix = "GBA"
-  val disclosureIdPrefix = "GBD"
+  val disclosureIdPrefix  = "GBD"
 
   val arrangementID: String = arrangementIdPrefix + expectedDateString + newSuffix
-  val disclosureID: String = disclosureIdPrefix + expectedDateString + newSuffix
+  val disclosureID: String  = disclosureIdPrefix + expectedDateString + newSuffix
 
-  "IdService"- {
+  "IdService" - {
 
-    "generateArrangementId" -{
+    "generateArrangementId" - {
 
       "must generate an arrangement Id in the correct format and check for uniqueness" +
         "and the store in mongo" in {
-        when(mockArrangementIdRepository.doesArrangementIdExist(any())).thenReturn(Future.successful(false))
-        when(mockArrangementIdRepository.storeArrangementId(any())).thenReturn(Future.successful(newArrangementId))
+          when(mockArrangementIdRepository.doesArrangementIdExist(any())).thenReturn(Future.successful(false))
+          when(mockArrangementIdRepository.storeArrangementId(any())).thenReturn(Future.successful(newArrangementId))
 
-        val id = service.generateArrangementId().futureValue
-        id.value.matches(arrangementIdRegEx) mustBe true
-        id.prefix mustBe arrangementIdPrefix
-        id.dateString mustBe expectedDateString
-        verify(mockArrangementIdRepository, times(1)).doesArrangementIdExist(newArrangementId)
-        verify(mockArrangementIdRepository, times(1)).storeArrangementId(newArrangementId)
-      }
+          val id = service.generateArrangementId().futureValue
+          id.value.matches(arrangementIdRegEx) mustBe true
+          id.prefix mustBe arrangementIdPrefix
+          id.dateString mustBe expectedDateString
+          verify(mockArrangementIdRepository, times(1)).doesArrangementIdExist(newArrangementId)
+          verify(mockArrangementIdRepository, times(1)).storeArrangementId(newArrangementId)
+        }
 
       "must generate an arrangement Id in the correct format and check for uniqueness" +
         "and regenerate another Id if first Id is not unique" in {
-        when(mockArrangementIdRepository.doesArrangementIdExist(any())).thenReturn(Future.successful(true)).andThenAnswer(Future.successful(false))
-        when(mockArrangementIdRepository.storeArrangementId(any())).thenReturn(Future.successful(newArrangementId))
+          when(mockArrangementIdRepository.doesArrangementIdExist(any())).thenReturn(Future.successful(true)).andThenAnswer(Future.successful(false))
+          when(mockArrangementIdRepository.storeArrangementId(any())).thenReturn(Future.successful(newArrangementId))
 
-        val id = service.generateArrangementId().futureValue
-        id.value.matches(arrangementIdRegEx) mustBe true
-        id.prefix mustBe arrangementIdPrefix
-        id.dateString mustBe expectedDateString
-        verify(mockArrangementIdRepository, times(2)).doesArrangementIdExist(any())
-        verify(mockArrangementIdRepository, times(1)).storeArrangementId(any())
+          val id = service.generateArrangementId().futureValue
+          id.value.matches(arrangementIdRegEx) mustBe true
+          id.prefix mustBe arrangementIdPrefix
+          id.dateString mustBe expectedDateString
+          verify(mockArrangementIdRepository, times(2)).doesArrangementIdExist(any())
+          verify(mockArrangementIdRepository, times(1)).storeArrangementId(any())
 
-      }
+        }
 
     }
 
-    "generateDisclosureId" -{
+    "generateDisclosureId" - {
       "must generate a disclosure Id in the correct format and check for uniqueness" +
         "and the store in mongo" in {
-        when(mockDisclosureIdRepository.doesDisclosureIdExist(any())).thenReturn(Future.successful(false))
-        when(mockDisclosureIdRepository.storeDisclosureId(any())).thenReturn(Future.successful(newDisclosureId))
+          when(mockDisclosureIdRepository.doesDisclosureIdExist(any())).thenReturn(Future.successful(false))
+          when(mockDisclosureIdRepository.storeDisclosureId(any())).thenReturn(Future.successful(newDisclosureId))
 
-        val id = service.generateDisclosureId().futureValue
-        id.value.matches(disclosureIdRegEx) mustBe true
-        id.prefix mustBe disclosureIdPrefix
-        id.dateString mustBe expectedDateString
-        verify(mockDisclosureIdRepository, times(1)).doesDisclosureIdExist(newDisclosureId)
-        verify(mockDisclosureIdRepository, times(1)).storeDisclosureId(newDisclosureId)
-      }
+          val id = service.generateDisclosureId().futureValue
+          id.value.matches(disclosureIdRegEx) mustBe true
+          id.prefix mustBe disclosureIdPrefix
+          id.dateString mustBe expectedDateString
+          verify(mockDisclosureIdRepository, times(1)).doesDisclosureIdExist(newDisclosureId)
+          verify(mockDisclosureIdRepository, times(1)).storeDisclosureId(newDisclosureId)
+        }
 
       "must generate an disclosure Id in the correct format and check for uniqueness" +
         "and regenerate another Id if first Id is not unique" in {
-        when(mockDisclosureIdRepository.doesDisclosureIdExist(any())).thenReturn(Future.successful(true)).andThenAnswer(Future.successful(false))
-        when(mockDisclosureIdRepository.storeDisclosureId(any())).thenReturn(Future.successful(newDisclosureId))
+          when(mockDisclosureIdRepository.doesDisclosureIdExist(any())).thenReturn(Future.successful(true)).andThenAnswer(Future.successful(false))
+          when(mockDisclosureIdRepository.storeDisclosureId(any())).thenReturn(Future.successful(newDisclosureId))
 
-        val id = service.generateDisclosureId().futureValue
-        id.value.matches(disclosureIdRegEx) mustBe true
-        id.prefix mustBe disclosureIdPrefix
-        id.dateString mustBe expectedDateString
-        verify(mockDisclosureIdRepository, times(2)).doesDisclosureIdExist(any())
-        verify(mockDisclosureIdRepository, times(1)).storeDisclosureId(any())
+          val id = service.generateDisclosureId().futureValue
+          id.value.matches(disclosureIdRegEx) mustBe true
+          id.prefix mustBe disclosureIdPrefix
+          id.dateString mustBe expectedDateString
+          verify(mockDisclosureIdRepository, times(2)).doesDisclosureIdExist(any())
+          verify(mockDisclosureIdRepository, times(1)).storeDisclosureId(any())
 
-      }
+        }
     }
 
-    "does arrangementId exist" -{
+    "does arrangementId exist" - {
       "must return true if arrangementId is in correct format and exists" in {
         when(mockArrangementIdRepository.doesArrangementIdExist(any())).thenReturn(Future.successful(true))
 
-        val formattedArrangementId = ArrangementId(prefix = "GBA",
-                                                   dateString = expectedDateString,
-                                                   suffix = newSuffix)
+        val formattedArrangementId = ArrangementId(prefix = "GBA", dateString = expectedDateString, suffix = newSuffix)
         service.verifyArrangementId(arrangementID).futureValue mustBe Some(true)
 
         verify(mockArrangementIdRepository, times(1)).doesArrangementIdExist(formattedArrangementId)
@@ -141,16 +135,41 @@ class IdServiceSpec extends SpecBase
 
       "must return true for nonuk arrangment id in correct format" in {
 
-        val nonUkCodes = List("AT", "BE", "BG", "CY", "CZ", "DK", "EE", "FI", "FR", "DE", "GR", "HU", "HR", "IE", "IT",
-          "LV", "LT", "LU", "MT", "NL", "PL", "PT", "RO", "SK", "SI", "ES", "SE")
+        val nonUkCodes = List("AT",
+                              "BE",
+                              "BG",
+                              "CY",
+                              "CZ",
+                              "DK",
+                              "EE",
+                              "FI",
+                              "FR",
+                              "DE",
+                              "GR",
+                              "HU",
+                              "HR",
+                              "IE",
+                              "IT",
+                              "LV",
+                              "LT",
+                              "LU",
+                              "MT",
+                              "NL",
+                              "PL",
+                              "PT",
+                              "RO",
+                              "SK",
+                              "SI",
+                              "ES",
+                              "SE"
+        )
 
         nonUkCodes.foreach {
-          code => {
+          code =>
             val idAsString = s"${code}A" + expectedDateString + newSuffix
             service.verifyArrangementId(idAsString).futureValue mustBe Some(true)
 
             verify(mockArrangementIdRepository, times(0)).doesArrangementIdExist(any())
-          }
         }
       }
 
@@ -250,4 +269,3 @@ class IdServiceSpec extends SpecBase
     }
   }
 }
-

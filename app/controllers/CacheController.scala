@@ -32,12 +32,13 @@ import javax.inject.Inject
 import scala.concurrent.{ExecutionContext, Future}
 import scala.util.{Success, Try}
 
-class CacheController @Inject()(
-                                 authenticate: IdentifierAuthAction,
-                                 subscriptionCacheService: SubscriptionCacheService,
-                                 subscriptionConnector: SubscriptionConnector,
-                                 cc: ControllerComponents
-                               )(implicit ec: ExecutionContext) extends BackendController(cc) {
+class CacheController @Inject() (
+  authenticate: IdentifierAuthAction,
+  subscriptionCacheService: SubscriptionCacheService,
+  subscriptionConnector: SubscriptionConnector,
+  cc: ControllerComponents
+)(implicit ec: ExecutionContext)
+    extends BackendController(cc) {
 
   import APIDateTimeFormats._
 
@@ -58,7 +59,6 @@ class CacheController @Inject()(
 
   def retrieveSubscription: Action[JsValue] = authenticate(parse.json).async {
     implicit request =>
-
       val displaySubscriptionResult: JsResult[DisplaySubscriptionForDACRequest] =
         request.body.validate[DisplaySubscriptionForDACRequest]
 
@@ -67,49 +67,42 @@ class CacheController @Inject()(
         valid = subResult =>
           subscriptionCacheService.retrieveSubscriptionDetails(subResult.displaySubscriptionForDACRequest.requestDetail.IDNumber).flatMap {
             case Some(result) => Future.successful(Ok(Json.toJson(result)))
-            case None => for {
-              httpResponse <- subscriptionConnector.displaySubscriptionForDAC(subResult)
-            } yield {
-              convertToResult(httpResponse)
-            }
+            case None =>
+              for {
+                httpResponse <- subscriptionConnector.displaySubscriptionForDAC(subResult)
+              } yield convertToResult(httpResponse)
           }
       )
   }
 
   private def convertToResult(httpResponse: HttpResponse): Result = {
     httpResponse.status match {
-      case OK => Ok(httpResponse.body)
+      case OK        => Ok(httpResponse.body)
       case NOT_FOUND => NotFound(httpResponse.body)
 
-      case BAD_REQUEST => {
+      case BAD_REQUEST =>
         logDownStreamError(httpResponse.body)
         BadRequest(httpResponse.body)
-      }
 
-      case FORBIDDEN => {
+      case FORBIDDEN =>
         logDownStreamError(httpResponse.body)
         Forbidden(httpResponse.body)
-      }
 
-      case METHOD_NOT_ALLOWED => {
+      case METHOD_NOT_ALLOWED =>
         logDownStreamError(httpResponse.body)
         MethodNotAllowed(httpResponse.body)
-      }
 
-      case CONFLICT => {
+      case CONFLICT =>
         logDownStreamError(httpResponse.body)
         Conflict(httpResponse.body)
-      }
 
-      case INTERNAL_SERVER_ERROR => {
+      case INTERNAL_SERVER_ERROR =>
         logDownStreamError(httpResponse.body)
         InternalServerError(httpResponse.body)
-      }
 
-      case _ => {
+      case _ =>
         logDownStreamError(httpResponse.body)
         ServiceUnavailable(httpResponse.body)
-      }
     }
   }
 

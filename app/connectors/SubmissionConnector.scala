@@ -27,14 +27,14 @@ import java.util.UUID
 import scala.concurrent.{ExecutionContext, Future}
 import scala.xml.NodeSeq
 
-class SubmissionConnector @Inject()(
-                                     val config: AppConfig,
-                                     http: HttpClient
-                                   )(implicit ec: ExecutionContext) {
+class SubmissionConnector @Inject() (
+  val config: AppConfig,
+  http: HttpClient
+)(implicit ec: ExecutionContext) {
 
   val submissionUrl = s"${config.submissionUrl}/dac6/dct06/v1"
 
-  def submitDisclosure(submission: NodeSeq)(implicit hc:HeaderCarrier): Future[HttpResponse] = {
+  def submitDisclosure(submission: NodeSeq)(implicit hc: HeaderCarrier): Future[HttpResponse] = {
     val newHeaders: HeaderCarrier = hc
       .copy(authorization = Some(Authorization(s"Bearer ${config.bearerToken}")))
 
@@ -43,14 +43,14 @@ class SubmissionConnector @Inject()(
     http.POSTString[HttpResponse](submissionUrl, submission.mkString, extraHeaders)(implicitly, hc, ec)
   }
 
-  private def addHeaders()(implicit headerCarrier: HeaderCarrier): Seq[(String,String)] = {
+  private def addHeaders()(implicit headerCarrier: HeaderCarrier): Seq[(String, String)] = {
 
     //HTTP-date format defined by RFC 7231 e.g. Fri, 01 Aug 2020 15:51:38 GMT+1
     val formatter = DateTimeFormatter.ofPattern("EEE, dd MMM yyyy HH:mm:ss O")
 
     Seq(
       "x-forwarded-host" -> "mdtp",
-      "date" -> ZonedDateTime.now().format(formatter),
+      "date"             -> ZonedDateTime.now().format(formatter),
       "x-correlation-id" -> {
         headerCarrier.requestId
           .map(_.value)
@@ -62,9 +62,9 @@ class SubmissionConnector @Inject()(
           .getOrElse(UUID.randomUUID().toString)
           .replace("session-", "")
       },
-      "content-type"    -> "application/xml",
-      "accept"          -> "application/xml",
-      "Environment"      -> config.eisEnvironment
+      "content-type" -> "application/xml",
+      "accept"       -> "application/xml",
+      "Environment"  -> config.eisEnvironment
     )
   }
 

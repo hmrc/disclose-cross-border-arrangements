@@ -31,34 +31,35 @@ import scala.concurrent.{ExecutionContext, Future}
 
 object SubmissionDetailsRepository {
 
-  def indexes = Seq(IndexModel(ascending("submissionTime")
-    , IndexOptions().name("submission-time-ttl-index").expireAfter(6*365, TimeUnit.DAYS) ))
+  def indexes = Seq(IndexModel(ascending("submissionTime"), IndexOptions().name("submission-time-ttl-index").expireAfter(6 * 365, TimeUnit.DAYS)))
 }
 
-class SubmissionDetailsRepository @Inject()(mongo: MongoComponent)(implicit ec: ExecutionContext
-) extends PlayMongoRepository[SubmissionDetails] (
-  mongoComponent = mongo,
-  collectionName = "submission-details",
-  domainFormat   = SubmissionDetails.format,
-  indexes        = SubmissionDetailsRepository.indexes,
-  replaceIndexes = true
-) {
-
+class SubmissionDetailsRepository @Inject() (mongo: MongoComponent)(implicit ec: ExecutionContext)
+    extends PlayMongoRepository[SubmissionDetails](
+      mongoComponent = mongo,
+      collectionName = "submission-details",
+      domainFormat = SubmissionDetails.format,
+      indexes = SubmissionDetailsRepository.indexes,
+      replaceIndexes = true
+    ) {
 
   //TODO: Not guaranteed to be unique - you could replace a file multiple times
   def getSubmissionDetails(disclosureID: String): Future[Option[SubmissionDetails]] =
     collection.find(equal("disclosureID", disclosureID)).first().toFutureOption()
 
   def retrieveFirstDisclosureForArrangementId(arrangementID: String): Future[Option[SubmissionDetails]] =
-    collection.find( and( equal("arrangementID", arrangementID), equal("importInstruction", "New")))
-      .first().toFutureOption()
+    collection
+      .find(and(equal("arrangementID", arrangementID), equal("importInstruction", "New")))
+      .first()
+      .toFutureOption()
 
   val sortByLatestSubmission: Bson =
     orderBy(descending("submissionTime"), ascending("arrangementID", "disclosureID"))
 
   def retrieveSubmissionHistory(enrolmentID: String): Future[Seq[SubmissionDetails]] = {
     val maxDocs = 10000
-    collection.find(equal("enrolmentID", enrolmentID))
+    collection
+      .find(equal("enrolmentID", enrolmentID))
       .limit(maxDocs)
       .sort(sortByLatestSubmission)
       .toFuture()
@@ -68,30 +69,41 @@ class SubmissionDetailsRepository @Inject()(mongo: MongoComponent)(implicit ec: 
     collection.countDocuments(equal("enrolmentID", enrolmentID)).toFuture()
 
   def storeSubmissionDetails(submissionDetails: SubmissionDetails): Future[Boolean] =
-    collection.insertOne(submissionDetails).toFuture().map(_ => true)
+    collection
+      .insertOne(submissionDetails)
+      .toFuture()
+      .map(
+        _ => true
+      )
 
   def searchSubmissions(searchCriteria: String): Future[Seq[SubmissionDetails]] = {
-    val pattern = s"$searchCriteria.*"
-    val maxDocs = 50
+    val pattern               = s"$searchCriteria.*"
+    val maxDocs               = 50
     val caseInsensitiveOption = "i"
-    collection.find( or(
-      regex("arrangementID", pattern, caseInsensitiveOption)
-      , regex("disclosureID", pattern, caseInsensitiveOption)
-      , regex("messageRefId", pattern, caseInsensitiveOption)
-    )).limit(maxDocs)
+    collection
+      .find(
+        or(
+          regex("arrangementID", pattern, caseInsensitiveOption),
+          regex("disclosureID", pattern, caseInsensitiveOption),
+          regex("messageRefId", pattern, caseInsensitiveOption)
+        )
+      )
+      .limit(maxDocs)
       .sort(sortByLatestSubmission)
       .toFuture()
   }
 
   def doesDisclosureIdMatchEnrolmentID(disclosureID: String, enrolmentID: String): Future[Boolean] =
-    collection.find( and( equal("enrolmentID", enrolmentID), equal("disclosureID", disclosureID)))
+    collection
+      .find(and(equal("enrolmentID", enrolmentID), equal("disclosureID", disclosureID)))
       .sort(descending("submissionTime"))
       .first()
       .toFutureOption()
       .map(_.isDefined)
 
   def doesDisclosureIdMatchArrangementID(disclosureID: String, arrangementID: String): Future[Boolean] =
-    collection.find( and( equal("arrangementID", arrangementID), equal("disclosureID", disclosureID)))
+    collection
+      .find(and(equal("arrangementID", arrangementID), equal("disclosureID", disclosureID)))
       .sort(descending("submissionTime"))
       .first()
       .toFutureOption()

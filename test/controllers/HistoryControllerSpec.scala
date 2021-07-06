@@ -33,10 +33,7 @@ import repositories.SubmissionDetailsRepository
 import java.time.LocalDateTime
 import scala.concurrent.Future
 
-class HistoryControllerSpec extends SpecBase
-  with ScalaCheckPropertyChecks
-  with ModelGenerators
-  with BeforeAndAfterEach {
+class HistoryControllerSpec extends SpecBase with ScalaCheckPropertyChecks with ModelGenerators with BeforeAndAfterEach {
 
   import APIDateTimeFormats._
 
@@ -45,8 +42,9 @@ class HistoryControllerSpec extends SpecBase
   override def beforeEach(): Unit = reset(mockSubmissionDetailsRepository)
 
   val arrangementID = "GBA20200904AAAAAA"
-  val disclosureID = "GBD20200904AAAAAA"
-  val messageRefId = "GB1234567"
+  val disclosureID  = "GBD20200904AAAAAA"
+  val messageRefId  = "GB1234567"
+
   val initialSubmissionDetails: SubmissionDetails =
     SubmissionDetails(
       enrolmentID = "enrolmentID",
@@ -64,12 +62,13 @@ class HistoryControllerSpec extends SpecBase
       .overrides(
         bind[SubmissionDetailsRepository].toInstance(mockSubmissionDetailsRepository),
         bind[AuthAction].to[FakeAuthAction]
-      ).build()
+      )
+      .build()
 
   "noOfPreviousSubmissions" - {
     "must return ok with noOfPreviousSubmissions" in {
       when(mockSubmissionDetailsRepository.countNoOfPreviousSubmissions(any()))
-        .thenReturn(Future.successful(2 : Long))
+        .thenReturn(Future.successful(2: Long))
 
       val request = FakeRequest(GET, routes.HistoryController.noOfPreviousSubmissions("123").url)
 
@@ -82,7 +81,7 @@ class HistoryControllerSpec extends SpecBase
 
   "submissionDetails" - {
     "must return ok with submission details" in {
-      forAll(listWithMaxLength[SubmissionDetails](15)){
+      forAll(listWithMaxLength[SubmissionDetails](15)) {
         details =>
           when(mockSubmissionDetailsRepository.retrieveSubmissionHistory(any()))
             .thenReturn(Future.successful(details))
@@ -98,7 +97,7 @@ class HistoryControllerSpec extends SpecBase
 
     "must return Internal Service Error when there is a problem fetching results" in {
       when(mockSubmissionDetailsRepository.retrieveSubmissionHistory(any()))
-            .thenReturn(Future.failed(new Exception))
+        .thenReturn(Future.failed(new Exception))
 
       val request = FakeRequest(GET, routes.HistoryController.submissionDetails("123").url)
 
@@ -111,7 +110,7 @@ class HistoryControllerSpec extends SpecBase
 
   "disclosureDetails" - {
     "must return OK with submission details" in {
-      forAll(listWithMaxLength[SubmissionDetails](15)){
+      forAll(listWithMaxLength[SubmissionDetails](15)) {
         details =>
           when(mockSubmissionDetailsRepository.getSubmissionDetails(any()))
             .thenReturn(Future.successful(details.headOption))
@@ -193,7 +192,7 @@ class HistoryControllerSpec extends SpecBase
 
   "searchSubmissions" - {
     "must return an OK with the submission history if the search has found submissions" in {
-      val search = "fileName"
+      val search                = "fileName"
       val submissionDetailsList = List(initialSubmissionDetails)
 
       when(mockSubmissionDetailsRepository.searchSubmissions(search))

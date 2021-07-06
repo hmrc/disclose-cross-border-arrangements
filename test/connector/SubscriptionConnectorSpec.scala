@@ -33,20 +33,17 @@ import play.api.test.Helpers.{BAD_REQUEST, CONFLICT, FORBIDDEN, INTERNAL_SERVER_
 
 import scala.concurrent.ExecutionContext.Implicits.global
 
-class SubscriptionConnectorSpec extends SpecBase
-  with WireMockServerHandler
-  with ModelGenerators
-  with ScalaCheckPropertyChecks {
+class SubscriptionConnectorSpec extends SpecBase with WireMockServerHandler with ModelGenerators with ScalaCheckPropertyChecks {
 
   override lazy val app: Application = new GuiceApplicationBuilder()
     .configure(
       conf = "microservice.services.registration.port" -> server.port()
-    ).build()
+    )
+    .build()
 
   lazy val connector: SubscriptionConnector = app.injector.instanceOf[SubscriptionConnector]
 
-  val errorStatusCodes: Seq[Int] = Seq(BAD_REQUEST, FORBIDDEN, NOT_FOUND, METHOD_NOT_ALLOWED,
-                                       CONFLICT, INTERNAL_SERVER_ERROR, SERVICE_UNAVAILABLE)
+  val errorStatusCodes: Seq[Int] = Seq(BAD_REQUEST, FORBIDDEN, NOT_FOUND, METHOD_NOT_ALLOWED, CONFLICT, INTERNAL_SERVER_ERROR, SERVICE_UNAVAILABLE)
 
   "SubscriptionConnector" - {
 
@@ -65,11 +62,11 @@ class SubscriptionConnectorSpec extends SpecBase
       "must return status non-OK for an unsuccessful request to display subscription" in {
 
         forAll(arbitrary[DisplaySubscriptionForDACRequest], Gen.oneOf(errorStatusCodes)) {
-            (displaySubscriptionForDACRequest, statusCode) =>
-              stubResponse("/register-for-cross-border-arrangement-stubs/dac6/dct04/v1", statusCode)
+          (displaySubscriptionForDACRequest, statusCode) =>
+            stubResponse("/register-for-cross-border-arrangement-stubs/dac6/dct04/v1", statusCode)
 
-              val result = connector.displaySubscriptionForDAC(displaySubscriptionForDACRequest)
-              result.futureValue.status mustBe statusCode
+            val result = connector.displaySubscriptionForDAC(displaySubscriptionForDACRequest)
+            result.futureValue.status mustBe statusCode
         }
       }
     }

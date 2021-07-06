@@ -69,14 +69,14 @@ class DisplaySubscriptionForDACRequestSpec extends SpecBase {
       val json: JsObject = Json.obj(
         "displaySubscriptionForDACRequest" -> Json.obj(
           "requestCommon" -> Json.obj(
-            "regime" -> "DAC",
-            "conversationID" -> "bffaa447-b500-49e0-9c73-bfd81db9242f",
-            "receiptDate" -> "2020-09-23T16:12:11Z",
+            "regime"                   -> "DAC",
+            "conversationID"           -> "bffaa447-b500-49e0-9c73-bfd81db9242f",
+            "receiptDate"              -> "2020-09-23T16:12:11Z",
             "acknowledgementReference" -> "Abc12345",
-            "originatingSystem" -> "MDTP"
+            "originatingSystem"        -> "MDTP"
           ),
           "requestDetail" -> Json.obj(
-            "IDType" -> "DAC",
+            "IDType"   -> "DAC",
             "IDNumber" -> "1234567890"
           )
         )
@@ -87,7 +87,7 @@ class DisplaySubscriptionForDACRequestSpec extends SpecBase {
 
     "must generate a correct request common" in {
       val requestCommon = RequestCommon.createRequestCommon
-      val ackRefLength = requestCommon.acknowledgementReference.length
+      val ackRefLength  = requestCommon.acknowledgementReference.length
       ackRefLength >= 1 && ackRefLength <= 32 mustBe true
 
       requestCommon.regime mustBe "DAC"

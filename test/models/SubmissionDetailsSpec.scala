@@ -28,30 +28,29 @@ class SubmissionDetailsSpec extends SpecBase {
   val submissionTime = LocalDateTime.now
 
   val submissionDetails = SubmissionDetails(
-    enrolmentID = "enrolmentID"
-    , submissionTime = submissionTime
-    , fileName = "fileName"
-    , arrangementID = Some("arrangementID")
-    , disclosureID = Some("disclosureID")
-    , importInstruction = "New"
-    , initialDisclosureMA = false
-    , messageRefId = "messageRefId"
+    enrolmentID = "enrolmentID",
+    submissionTime = submissionTime,
+    fileName = "fileName",
+    arrangementID = Some("arrangementID"),
+    disclosureID = Some("disclosureID"),
+    importInstruction = "New",
+    initialDisclosureMA = false,
+    messageRefId = "messageRefId"
   )
 
   "SubmissionDetails" - {
 
     "must serialise SubmissionDetails in API calls" in {
 
-
       val json: JsObject = Json.obj(
-        "enrolmentID" -> "enrolmentID"
-        , "submissionTime" -> submissionTime.format(DateTimeFormatter.ISO_DATE_TIME)
-        , "fileName" -> "fileName"
-        , "arrangementID" -> "arrangementID"
-        , "disclosureID" -> "disclosureID"
-        , "importInstruction" -> "New"
-        , "initialDisclosureMA" -> false
-        , "messageRefId" -> "messageRefId"
+        "enrolmentID"         -> "enrolmentID",
+        "submissionTime"      -> submissionTime.format(DateTimeFormatter.ISO_DATE_TIME),
+        "fileName"            -> "fileName",
+        "arrangementID"       -> "arrangementID",
+        "disclosureID"        -> "disclosureID",
+        "importInstruction"   -> "New",
+        "initialDisclosureMA" -> false,
+        "messageRefId"        -> "messageRefId"
       )
 
       import APIDateTimeFormats._

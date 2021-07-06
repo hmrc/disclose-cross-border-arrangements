@@ -16,7 +16,6 @@
 
 package models.upscan
 
-
 import org.scalatest.matchers.must.Matchers
 import org.scalatest.wordspec.AnyWordSpec
 import play.api.libs.json.{JsError, Json}
@@ -27,20 +26,21 @@ class UploadStatusSpec extends AnyWordSpec with Matchers {
 
   "UploadStatus json Reads" must {
 
-    statuses.foreach { status =>
-      s"return $status" when {
-        s"_type is $status" in {
-          val json = s"""{"_type": "$status"}"""
-          Json.parse(json).as[UploadStatus] mustBe status
+    statuses.foreach {
+      status =>
+        s"return $status" when {
+          s"_type is $status" in {
+            val json = s"""{"_type": "$status"}"""
+            Json.parse(json).as[UploadStatus] mustBe status
+          }
         }
-      }
     }
 
     "return UploadedSuccessfully" when {
       "_type is UploadedSuccessfully" in {
-        val expectedName = "fileName"
-        val expectedUrl = "downloadUrl"
-        val json = s"""{"_type": "UploadedSuccessfully", "name": "$expectedName", "downloadUrl": "$expectedUrl"}"""
+        val expectedName     = "fileName"
+        val expectedUrl      = "downloadUrl"
+        val json             = s"""{"_type": "UploadedSuccessfully", "name": "$expectedName", "downloadUrl": "$expectedUrl"}"""
         val expectedResponse = UploadedSuccessfully(expectedName, expectedUrl)
         Json.parse(json).as[UploadStatus] mustBe expectedResponse
       }
@@ -49,7 +49,7 @@ class UploadStatusSpec extends AnyWordSpec with Matchers {
     "return JsonError" when {
       "_type is unexpected value" in {
         val unexpectedValue = "RandomValue"
-        val json = s"""{"_type": "$unexpectedValue"}"""
+        val json            = s"""{"_type": "$unexpectedValue"}"""
         Json.parse(json).validate[UploadStatus] mustBe JsError(s"""Unexpected value of _type: "$unexpectedValue"""")
       }
 
@@ -59,22 +59,22 @@ class UploadStatusSpec extends AnyWordSpec with Matchers {
       }
     }
 
-
     "UploadStatus writes" must {
 
-      statuses.foreach { status =>
-        s"set _type as $status" when {
-          s"status is $status" in {
-            val expectedJson = s"""{"_type":"$status"}"""
-            Json.toJson(status).toString() mustBe expectedJson
+      statuses.foreach {
+        status =>
+          s"set _type as $status" when {
+            s"status is $status" in {
+              val expectedJson = s"""{"_type":"$status"}"""
+              Json.toJson(status).toString() mustBe expectedJson
+            }
           }
-        }
       }
 
       "set _type as UploadedSuccessfully with name, downloadUrl and noOfRows in json" when {
         "status is UploadedSuccessfully" in {
           val expectedName = "fileName"
-          val expectedUrl = "downloadUrl"
+          val expectedUrl  = "downloadUrl"
           val expectedJson =
             s"""{"name":"$expectedName","downloadUrl":"$expectedUrl","_type":"UploadedSuccessfully"}"""
           val uploadStatus: UploadStatus = UploadedSuccessfully(expectedName, expectedUrl)

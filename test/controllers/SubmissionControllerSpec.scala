@@ -43,29 +43,22 @@ import java.util.UUID
 import scala.concurrent.Future
 import scala.xml.NodeSeq
 
-class SubmissionControllerSpec extends SpecBase
-  with MockitoSugar
-  with ScalaCheckDrivenPropertyChecks
-  with CacheModelGenerators
-  with BeforeAndAfterEach {
+class SubmissionControllerSpec extends SpecBase with MockitoSugar with ScalaCheckDrivenPropertyChecks with CacheModelGenerators with BeforeAndAfterEach {
 
   import APIDateTimeFormats._
 
-  val mockSubmissionService: SubmissionService = mock[SubmissionService]
-  val mockDateHelper: DateHelper = mock[DateHelper]
+  val mockSubmissionService: SubmissionService                     = mock[SubmissionService]
+  val mockDateHelper: DateHelper                                   = mock[DateHelper]
   val mockSubmissionDetailsRepository: SubmissionDetailsRepository = mock[SubmissionDetailsRepository]
-  val mockSubmissionConnector: SubmissionConnector = mock[SubmissionConnector]
-  val mockContactService: ContactService = mock[ContactService]
-  val mockSubscriptionCacheService: SubscriptionCacheService = mock[SubscriptionCacheService]
-  val mockSubscriptionConnector: SubscriptionConnector = mock[SubscriptionConnector]
+  val mockSubmissionConnector: SubmissionConnector                 = mock[SubmissionConnector]
+  val mockContactService: ContactService                           = mock[ContactService]
+  val mockSubscriptionCacheService: SubscriptionCacheService       = mock[SubscriptionCacheService]
+  val mockSubscriptionConnector: SubscriptionConnector             = mock[SubscriptionConnector]
 
+  val errorStatusCodes: Seq[Int] = Seq(BAD_REQUEST, FORBIDDEN, NOT_FOUND, METHOD_NOT_ALLOWED, CONFLICT, INTERNAL_SERVER_ERROR, SERVICE_UNAVAILABLE)
 
-  val errorStatusCodes: Seq[Int] = Seq(BAD_REQUEST, FORBIDDEN, NOT_FOUND, METHOD_NOT_ALLOWED,
-    CONFLICT, INTERNAL_SERVER_ERROR, SERVICE_UNAVAILABLE)
-
-  override def beforeEach(): Unit = {
+  override def beforeEach(): Unit =
     reset(mockSubmissionService, mockSubmissionDetailsRepository, mockSubmissionConnector, mockSubmissionConnector)
-  }
 
   "submission controller" - {
 
@@ -78,7 +71,8 @@ class SubmissionControllerSpec extends SpecBase
       disclosureID = Some("GBD20200601AAA000"),
       importInstruction = "Add",
       initialDisclosureMA = false,
-      messageRefId = "GB0000000XXX")
+      messageRefId = "GB0000000XXX"
+    )
 
     val application = applicationBuilder()
       .overrides(
@@ -107,7 +101,7 @@ class SubmissionControllerSpec extends SpecBase
 
       val submission = minimalPassing
 
-      val request = FakeRequest(POST, routes.SubmissionController.submitDisclosure().url).withXmlBody(submission)
+      val request                = FakeRequest(POST, routes.SubmissionController.submitDisclosure().url).withXmlBody(submission)
       val result: Future[Result] = route(application, request).value
 
       status(result) mustBe OK
@@ -117,7 +111,7 @@ class SubmissionControllerSpec extends SpecBase
       verify(mockSubmissionConnector, times(1)).submitDisclosure(argumentCaptor.capture())(any())
       verify(mockSubmissionDetailsRepository, times(1)).storeSubmissionDetails(ArgumentMatchers.eq(submissionDetails))
 
-      val xmlWithIds = argumentCaptor.getValue
+      val xmlWithIds            = argumentCaptor.getValue
       val generatedDisclosureId = (xmlWithIds \\ "DisclosureID").text
       generatedDisclosureId mustBe disclosureId.value
 
@@ -133,7 +127,7 @@ class SubmissionControllerSpec extends SpecBase
         .thenReturn(Future.failed(UpstreamErrorResponse("", INTERNAL_SERVER_ERROR)))
       val submission = minimalPassing
 
-      val request = FakeRequest(POST, routes.SubmissionController.submitDisclosure().url).withXmlBody(submission)
+      val request                = FakeRequest(POST, routes.SubmissionController.submitDisclosure().url).withXmlBody(submission)
       val result: Future[Result] = route(application, request).value
 
       status(result) mustBe INTERNAL_SERVER_ERROR
@@ -151,7 +145,7 @@ class SubmissionControllerSpec extends SpecBase
         .thenReturn(Future.failed(UpstreamErrorResponse("", INTERNAL_SERVER_ERROR)))
       val submission = oneError
 
-      val request = FakeRequest(POST, routes.SubmissionController.submitDisclosure().url).withXmlBody(submission)
+      val request                = FakeRequest(POST, routes.SubmissionController.submitDisclosure().url).withXmlBody(submission)
       val result: Future[Result] = route(application, request).value
 
       status(result) mustBe INTERNAL_SERVER_ERROR
@@ -169,7 +163,7 @@ class SubmissionControllerSpec extends SpecBase
         .thenReturn(Future.failed(UpstreamErrorResponse("", INTERNAL_SERVER_ERROR)))
       val submission = minimalPassing
 
-      val request = FakeRequest(POST, routes.SubmissionController.submitDisclosure().url).withXmlBody(submission)
+      val request                = FakeRequest(POST, routes.SubmissionController.submitDisclosure().url).withXmlBody(submission)
       val result: Future[Result] = route(application, request).value
 
       status(result) mustBe INTERNAL_SERVER_ERROR
@@ -190,7 +184,7 @@ class SubmissionControllerSpec extends SpecBase
 
       val submission = minimalPassing
 
-      val request = FakeRequest(POST, routes.SubmissionController.submitDisclosure().url).withXmlBody(submission)
+      val request                = FakeRequest(POST, routes.SubmissionController.submitDisclosure().url).withXmlBody(submission)
       val result: Future[Result] = route(application, request).value
 
       status(result) mustBe INTERNAL_SERVER_ERROR
@@ -222,7 +216,8 @@ class SubmissionControllerSpec extends SpecBase
       when(mockTransformService.addNameSpaces(any(), any())).thenReturn(minimalPassing)
 
       val submission = minimalPassing
-      val request = FakeRequest(POST, routes.SubmissionController.submitDisclosure().url).withXmlBody(submission)
+      val request = FakeRequest(POST, routes.SubmissionController.submitDisclosure().url)
+        .withXmlBody(submission)
         .withHeaders((HeaderNames.xSessionId, s"session-${UUID.randomUUID()}"))
       val result: Future[Result] = route(app, request).value
 
@@ -231,7 +226,7 @@ class SubmissionControllerSpec extends SpecBase
       val argumentCaptorData: ArgumentCaptor[SubmissionMetaData] = ArgumentCaptor.forClass(classOf[SubmissionMetaData])
       verify(mockTransformService, times(1)).addSubscriptionDetailsToSubmission(any(), any(), argumentCaptorData.capture())
 
-      val submissionMetaData = argumentCaptorData.getValue
+      val submissionMetaData   = argumentCaptorData.getValue
       val conversationIDLength = submissionMetaData.conversationID.length
       conversationIDLength >= 1 && conversationIDLength <= 36 mustBe true
     }
@@ -259,8 +254,8 @@ class SubmissionControllerSpec extends SpecBase
         .thenReturn(Future.failed(UpstreamErrorResponse("", INTERNAL_SERVER_ERROR)))
       when(mockTransformService.addNameSpaces(any(), any())).thenReturn(minimalPassing)
 
-      val submission = minimalPassing
-      val request = FakeRequest(POST, routes.SubmissionController.submitDisclosure().url).withXmlBody(submission)
+      val submission             = minimalPassing
+      val request                = FakeRequest(POST, routes.SubmissionController.submitDisclosure().url).withXmlBody(submission)
       val result: Future[Result] = route(app, request).value
 
       status(result) mustBe INTERNAL_SERVER_ERROR
@@ -268,7 +263,7 @@ class SubmissionControllerSpec extends SpecBase
       val argumentCaptorData: ArgumentCaptor[SubmissionMetaData] = ArgumentCaptor.forClass(classOf[SubmissionMetaData])
       verify(mockTransformService, times(1)).addSubscriptionDetailsToSubmission(any(), any(), argumentCaptorData.capture())
 
-      val submissionMetaData = argumentCaptorData.getValue
+      val submissionMetaData   = argumentCaptorData.getValue
       val conversationIDLength = submissionMetaData.conversationID.length
       conversationIDLength >= 1 && conversationIDLength <= 36 mustBe true
     }
@@ -277,10 +272,8 @@ class SubmissionControllerSpec extends SpecBase
 
       val disclosureId = DisclosureId("GBD", "20200601", "AAA000")
 
-
       forAll(Gen.oneOf(errorStatusCodes)) {
         statusCode =>
-
           when(mockSubmissionService.generateIDsForInstruction(any()))
             .thenReturn(Future.successful(GeneratedIDs(None, Some(disclosureId))))
           when(mockDateHelper.now).thenReturn(testDateTime)
@@ -291,13 +284,12 @@ class SubmissionControllerSpec extends SpecBase
           when(mockSubmissionConnector.submitDisclosure(any())(any()))
             .thenReturn(Future.successful(HttpResponse(statusCode, "")))
 
-        val submission = minimalPassing
+          val submission = minimalPassing
 
+          val request                = FakeRequest(POST, routes.SubmissionController.submitDisclosure().url).withXmlBody(submission)
+          val result: Future[Result] = route(application, request).value
 
-        val request = FakeRequest(POST, routes.SubmissionController.submitDisclosure().url).withXmlBody(submission)
-        val result: Future[Result] = route(application, request).value
-
-        status(result) mustBe statusCode
+          status(result) mustBe statusCode
       }
 
     }
@@ -306,8 +298,8 @@ class SubmissionControllerSpec extends SpecBase
       val fileName = "fileName"
 
       val arrangementID = "GBA20200904AAAAAA"
-      val disclosureID = "GBD20200904AAAAAA"
-      val messageRefId = "GB1234567"
+      val disclosureID  = "GBD20200904AAAAAA"
+      val messageRefId  = "GB1234567"
 
       val initialSubmissionDetails: SubmissionDetails =
         SubmissionDetails(

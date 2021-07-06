@@ -20,7 +20,7 @@ import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 
 case class FileName(fileName: String, disclosureID: String, generatedIDs: GeneratedIDs, submissionTime: LocalDateTime) {
-  val format = DateTimeFormatter.ofPattern("yyyyMMddHHmmss")
+  val format            = DateTimeFormatter.ofPattern("yyyyMMddHHmmss")
   val disclosureIdToUse = generatedIDs.disclosureID.map(_.value).getOrElse(disclosureID)
 
   override def toString: String = s"$fileName-$disclosureIdToUse-${submissionTime.format(format)}"

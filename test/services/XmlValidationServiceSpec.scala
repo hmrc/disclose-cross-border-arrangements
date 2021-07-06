@@ -30,22 +30,23 @@ import scala.collection.mutable.ListBuffer
 import scala.io.Source
 
 class XmlValidationServiceSpec extends SpecBase with TestXml {
-  val noErrors : ListBuffer[SaxParseError] = ListBuffer()
+  val noErrors: ListBuffer[SaxParseError] = ListBuffer()
 
   val application: Application = applicationBuilder()
     .overrides(
-    bind[XMLValidatingParser].toInstance(mock[XMLValidatingParser])
-  ).build()
+      bind[XMLValidatingParser].toInstance(mock[XMLValidatingParser])
+    )
+    .build()
 
   trait ActualSetup {
 
     //val testUrl: URL = getClass.getResource("/sitemap-v0.9.xsd")
 
     val schemaLang: String = javax.xml.XMLConstants.W3C_XML_SCHEMA_NS_URI
-    val isoXsdUrl: URL = getClass.getResource("/schemas/IsoTypes_v1.01.xsd")
-    val xsdUrl: URL = getClass.getResource("/schemas/UKDac6XSD_v0.5.xsd")
+    val isoXsdUrl: URL     = getClass.getResource("/schemas/IsoTypes_v1.01.xsd")
+    val xsdUrl: URL        = getClass.getResource("/schemas/UKDac6XSD_v0.5.xsd")
 
-    val isoXsdStream: StreamSource = new StreamSource(isoXsdUrl.openStream())
+    val isoXsdStream: StreamSource    = new StreamSource(isoXsdUrl.openStream())
     val ukDAC6XsdStream: StreamSource = new StreamSource(xsdUrl.openStream())
 
     val streams: Array[javax.xml.transform.Source] = Array(isoXsdStream, ukDAC6XsdStream)
@@ -82,7 +83,8 @@ class XmlValidationServiceSpec extends SpecBase with TestXml {
       val validsubmission =
         Source
           .fromInputStream(getClass.getResourceAsStream("/invalid.xml"))
-          .getLines.mkString("\n")
+          .getLines
+          .mkString("\n")
 
       val result = service.validateXml(validsubmission)
 
@@ -94,7 +96,8 @@ class XmlValidationServiceSpec extends SpecBase with TestXml {
       val validsubmission =
         Source
           .fromInputStream(getClass.getResourceAsStream("/valid.xml"))
-          .getLines.mkString("\n")
+          .getLines
+          .mkString("\n")
 
       val result = service.validateXml(validsubmission)
 

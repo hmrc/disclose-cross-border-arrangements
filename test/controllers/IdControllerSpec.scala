@@ -30,49 +30,49 @@ import services.{ArrangementIDNotFound, DisclosureIDNotFound, IdService, IdsCorr
 
 import scala.concurrent.Future
 
-class IdControllerSpec extends SpecBase
-with ScalaCheckPropertyChecks {
-
+class IdControllerSpec extends SpecBase with ScalaCheckPropertyChecks {
 
   val mockIdService: IdService = mock[IdService]
+
   val application: Application = new GuiceApplicationBuilder()
     .configure(Configuration("metrics.enabled" -> "false"))
     .overrides(
       bind[IdService].toInstance(mockIdService),
       bind[AuthAction].to[FakeAuthAction]
-    ).build()
+    )
+    .build()
 
   val validArrangementId: ArrangementId = ArrangementId(dateString = "20200601", suffix = "A1B1C1")
-  val validDisclosureId: DisclosureId = DisclosureId(dateString = "20210101", suffix = "A1B1C1")
-  val enrolmentID: String = "XADAC0001234567"
+  val validDisclosureId: DisclosureId   = DisclosureId(dateString = "20210101", suffix = "A1B1C1")
+  val enrolmentID: String               = "XADAC0001234567"
 
   "IdController" - {
     "verifyArrangementId" - {
       "return 204 for valid existing arrangement id" in {
 
         when(mockIdService.verifyArrangementId(any())).thenReturn(Future.successful(Some(true)))
-            val request =
-              FakeRequest(GET, routes.IdController.verifyArrangementId(validArrangementId.value).url)
-            val result = route(application, request).value
-            status(result) mustEqual NO_CONTENT
+        val request =
+          FakeRequest(GET, routes.IdController.verifyArrangementId(validArrangementId.value).url)
+        val result = route(application, request).value
+        status(result) mustEqual NO_CONTENT
       }
 
-     "return 404 for arrangement id in the correct format that does not exist" in {
+      "return 404 for arrangement id in the correct format that does not exist" in {
 
         when(mockIdService.verifyArrangementId(any())).thenReturn(Future.successful(Some(false)))
-            val request =
-              FakeRequest(GET, routes.IdController.verifyArrangementId(validArrangementId.value).url)
-            val result = route(application, request).value
-            status(result) mustEqual NOT_FOUND
+        val request =
+          FakeRequest(GET, routes.IdController.verifyArrangementId(validArrangementId.value).url)
+        val result = route(application, request).value
+        status(result) mustEqual NOT_FOUND
       }
 
       "return 400 for an invalid arrangement id" in {
 
         when(mockIdService.verifyArrangementId(any())).thenReturn(Future.successful(None))
-            val request =
-              FakeRequest(GET, routes.IdController.verifyArrangementId("invalid-id").url)
-            val result = route(application, request).value
-            status(result) mustEqual BAD_REQUEST
+        val request =
+          FakeRequest(GET, routes.IdController.verifyArrangementId("invalid-id").url)
+        val result = route(application, request).value
+        status(result) mustEqual BAD_REQUEST
       }
 
     }
@@ -139,8 +139,6 @@ with ScalaCheckPropertyChecks {
 
     }
 
-
   }
-
 
 }

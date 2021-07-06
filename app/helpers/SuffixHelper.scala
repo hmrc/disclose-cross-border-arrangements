@@ -20,8 +20,7 @@ import scala.util.Random
 
 class SuffixHelper {
 
-  def generateSuffix(suffixLength: Int = 6) : String = {
+  def generateSuffix(suffixLength: Int = 6): String =
     Random.alphanumeric.take(suffixLength).mkString("").toUpperCase
-  }
 
 }

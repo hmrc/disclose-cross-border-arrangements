@@ -29,31 +29,34 @@ case class UploadedSuccessfully(name: String, downloadUrl: String) extends Uploa
 
 object UploadStatus {
   implicit val uploadedSuccessfullyFormat: OFormat[UploadedSuccessfully] = Json.format[UploadedSuccessfully]
+
   implicit val read: Reads[UploadStatus] = new Reads[UploadStatus] {
+
     override def reads(json: JsValue): JsResult[UploadStatus] = {
       val jsObject = json.asInstanceOf[JsObject]
       jsObject.value.get("_type") match {
-        case Some(JsString("NotStarted")) => JsSuccess(NotStarted)
-        case Some(JsString("InProgress")) => JsSuccess(InProgress)
-        case Some(JsString("Failed")) => JsSuccess(Failed)
-        case Some(JsString("Quarantined")) => JsSuccess(Quarantined)
-        case Some(JsString("Rejected")) => JsSuccess(Rejected)
+        case Some(JsString("NotStarted"))           => JsSuccess(NotStarted)
+        case Some(JsString("InProgress"))           => JsSuccess(InProgress)
+        case Some(JsString("Failed"))               => JsSuccess(Failed)
+        case Some(JsString("Quarantined"))          => JsSuccess(Quarantined)
+        case Some(JsString("Rejected"))             => JsSuccess(Rejected)
         case Some(JsString("UploadedSuccessfully")) => Json.fromJson[UploadedSuccessfully](jsObject)(uploadedSuccessfullyFormat)
-        case Some(value) => JsError(s"Unexpected value of _type: $value")
-        case None => JsError("Missing _type field")
+        case Some(value)                            => JsError(s"Unexpected value of _type: $value")
+        case None                                   => JsError("Missing _type field")
       }
     }
   }
 
   implicit val write: Writes[UploadStatus] = new Writes[UploadStatus] {
+
     override def writes(p: UploadStatus): JsValue = {
       p match {
-        case NotStarted => JsObject(Map("_type" -> JsString("NotStarted")))
-        case InProgress => JsObject(Map("_type" -> JsString("InProgress")))
-        case Failed => JsObject(Map("_type" -> JsString("Failed")))
-        case Quarantined => JsObject(Map("_type" -> JsString("Quarantined")))
-        case Rejected => JsObject(Map("_type" -> JsString("Rejected")))
-        case s : UploadedSuccessfully => Json.toJson(s)(uploadedSuccessfullyFormat).as[JsObject] + ("_type" -> JsString("UploadedSuccessfully"))
+        case NotStarted              => JsObject(Map("_type" -> JsString("NotStarted")))
+        case InProgress              => JsObject(Map("_type" -> JsString("InProgress")))
+        case Failed                  => JsObject(Map("_type" -> JsString("Failed")))
+        case Quarantined             => JsObject(Map("_type" -> JsString("Quarantined")))
+        case Rejected                => JsObject(Map("_type" -> JsString("Rejected")))
+        case s: UploadedSuccessfully => Json.toJson(s)(uploadedSuccessfullyFormat).as[JsObject] + ("_type" -> JsString("UploadedSuccessfully"))
       }
     }
   }

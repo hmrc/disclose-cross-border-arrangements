@@ -24,13 +24,20 @@ class DisclosureIdRepositorySpec extends SpecBase {
 
     "must store disclosure Id correctly" in {
 
-        val repo = app.injector.instanceOf[DisclosureIdRepository]
+      val repo = app.injector.instanceOf[DisclosureIdRepository]
 
       implicit val ec: scala.concurrent.ExecutionContext = scala.concurrent.ExecutionContext.global
-        val disclosureId = DisclosureId(dateString = "date", suffix = "suffix")
-        whenReady (repo.storeDisclosureId(disclosureId).flatMap(_ => repo.doesDisclosureIdExist(disclosureId))) { result =>
+      val disclosureId                                   = DisclosureId(dateString = "date", suffix = "suffix")
+      whenReady(
+        repo
+          .storeDisclosureId(disclosureId)
+          .flatMap(
+            _ => repo.doesDisclosureIdExist(disclosureId)
+          )
+      ) {
+        result =>
           result mustBe true
-        }
       }
+    }
   }
 }

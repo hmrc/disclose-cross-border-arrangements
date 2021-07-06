@@ -25,15 +25,13 @@ import play.api.Application
 import play.api.http.Status._
 import play.api.inject.guice.GuiceApplicationBuilder
 
-class SubmissionConnectorSpec extends SpecBase
-  with GuiceOneAppPerSuite
-  with WireMockHelper
-  with ScalaFutures {
+class SubmissionConnectorSpec extends SpecBase with GuiceOneAppPerSuite with WireMockHelper with ScalaFutures {
 
   override def fakeApplication(): Application = new GuiceApplicationBuilder()
     .configure(
       "microservice.services.submission.port" -> server.port()
-    ).build()
+    )
+    .build()
 
   lazy val connector: SubmissionConnector = app.injector.instanceOf[SubmissionConnector]
 
@@ -50,7 +48,7 @@ class SubmissionConnectorSpec extends SpecBase
 
         val xml = <test></test>
 
-        whenReady(connector.submitDisclosure(xml)){
+        whenReady(connector.submitDisclosure(xml)) {
           result =>
             result.status mustBe OK
         }
@@ -67,7 +65,7 @@ class SubmissionConnectorSpec extends SpecBase
             )
         )
 
-        val xml = <test></test>
+        val xml    = <test></test>
         val result = connector.submitDisclosure(xml)
 
         result.futureValue.status mustBe BAD_REQUEST
@@ -82,7 +80,7 @@ class SubmissionConnectorSpec extends SpecBase
             )
         )
 
-        val xml = <test></test>
+        val xml    = <test></test>
         val result = connector.submitDisclosure(xml)
         result.futureValue.status mustBe SERVICE_UNAVAILABLE
       }

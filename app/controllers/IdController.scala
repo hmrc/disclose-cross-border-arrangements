@@ -24,39 +24,37 @@ import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
 import javax.inject.Inject
 import scala.concurrent.ExecutionContext
 
-class IdController @Inject()(
-                              authenticate: AuthAction,
-                              idService: IdService,
-                              cc: ControllerComponents
-                            )(implicit executionContext: ExecutionContext)
-extends BackendController(cc) {
+class IdController @Inject() (
+  authenticate: AuthAction,
+  idService: IdService,
+  cc: ControllerComponents
+)(implicit executionContext: ExecutionContext)
+    extends BackendController(cc) {
 
   val arrangementIdRegEx = "[A-Z]{2}[A]([2]\\d{3}(0[1-9]|1[0-2])(0[1-9]|[12]\\d|3[01]))([A-Z0-9]{6})"
 
   def verifyArrangementId(arrangementId: String): Action[AnyContent] = authenticate.async {
     implicit request =>
       idService.verifyArrangementId(arrangementId) map {
-        case Some(true) => NoContent
+        case Some(true)  => NoContent
         case Some(false) => NotFound("Arrangement Id does not exist")
-        case None => BadRequest("invalid format")
+        case None        => BadRequest("invalid format")
       }
   }
 
-  def verifyDisclosureIDs(arrangementId: String,
-                          disclosureId: String,
-                          enrolmentId: String): Action[AnyContent] = authenticate.async {
+  def verifyDisclosureIDs(arrangementId: String, disclosureId: String, enrolmentId: String): Action[AnyContent] = authenticate.async {
     implicit request =>
       val arrangementIDNotFound = "Arrangement ID not found"
-      val disclosureIDNotFound = "Disclosure ID doesn't match enrolment ID"
-      val idsDoNotMatch = "Arrangement ID and Disclosure ID are not from the same submission"
-      val idsNotFound = "IDs not found"
+      val disclosureIDNotFound  = "Disclosure ID doesn't match enrolment ID"
+      val idsDoNotMatch         = "Arrangement ID and Disclosure ID are not from the same submission"
+      val idsNotFound           = "IDs not found"
 
       idService.verifyIDs(arrangementId, disclosureId, enrolmentId) map {
-        case IdsCorrect => NoContent
+        case IdsCorrect                => NoContent
         case IdsInDifferentSubmissions => NotFound(idsDoNotMatch)
-        case ArrangementIDNotFound => NotFound(arrangementIDNotFound)
-        case DisclosureIDNotFound => NotFound(disclosureIDNotFound)
-        case IdsNotFound => BadRequest(idsNotFound)
+        case ArrangementIDNotFound     => NotFound(arrangementIDNotFound)
+        case DisclosureIDNotFound      => NotFound(disclosureIDNotFound)
+        case IdsNotFound               => BadRequest(idsNotFound)
       }
   }
 }

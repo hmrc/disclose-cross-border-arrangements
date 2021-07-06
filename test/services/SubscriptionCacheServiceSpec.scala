@@ -29,10 +29,7 @@ import repositories.SubscriptionCacheRepository
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
-class SubscriptionCacheServiceSpec extends SpecBase
-  with BeforeAndAfterEach
-  with CacheModelGenerators
-  with ScalaCheckPropertyChecks {
+class SubscriptionCacheServiceSpec extends SpecBase with BeforeAndAfterEach with CacheModelGenerators with ScalaCheckPropertyChecks {
 
   val mockCacheRepository: SubscriptionCacheRepository = mock[SubscriptionCacheRepository]
 
@@ -46,12 +43,12 @@ class SubscriptionCacheServiceSpec extends SpecBase
     "must retrieve a cached response from the repository and return a faked hod response" in {
       forAll(arbitrary[CreateSubscriptionForDACRequest]) {
         create =>
-        when(mockCacheRepository.get(any())).thenReturn(Future.successful(Some(create)))
+          when(mockCacheRepository.get(any())).thenReturn(Future.successful(Some(create)))
 
-        val service = application.injector.instanceOf[SubscriptionCacheService]
-        val result = service.retrieveSubscriptionDetails("myid")
+          val service = application.injector.instanceOf[SubscriptionCacheService]
+          val result  = service.retrieveSubscriptionDetails("myid")
 
-        result.futureValue.isDefined mustBe true
+          result.futureValue.isDefined mustBe true
       }
     }
 
@@ -59,7 +56,7 @@ class SubscriptionCacheServiceSpec extends SpecBase
       when(mockCacheRepository.get(any())).thenReturn(Future.successful(None))
 
       val service = application.injector.instanceOf[SubscriptionCacheService]
-      val result = service.retrieveSubscriptionDetails("myid")
+      val result  = service.retrieveSubscriptionDetails("myid")
 
       result.futureValue.isDefined mustBe false
     }
@@ -69,7 +66,7 @@ class SubscriptionCacheServiceSpec extends SpecBase
       forAll(arbitrary[CreateSubscriptionForDACRequest]) {
         create =>
           val service = application.injector.instanceOf[SubscriptionCacheService]
-          val result = service.storeSubscriptionDetails("myid", create)
+          val result  = service.storeSubscriptionDetails("myid", create)
 
           result.futureValue mustBe true
       }

@@ -209,7 +209,6 @@ trait TestXml {
       </DAC6Disclosures>
     </DAC6_Arrangement>
 
-
   val invalidXml = <DAC6_Arrangement version="First" xmlns="urn:ukdac6:v0.1">
     <Header>
       <MessageRefId>GB0000000XXX</MessageRefId>
@@ -397,6 +396,5 @@ trait TestXml {
       </DisclosureInformation>
     </DAC6Disclosures>
   </DAC6_Arrangement>
-
 
 }

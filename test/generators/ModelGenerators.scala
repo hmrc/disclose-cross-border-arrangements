@@ -28,29 +28,20 @@ trait ModelGenerators extends BaseGenerators with JavaTimeGenerators {
   implicit lazy val arbitrarySubmissionDetails: Arbitrary[SubmissionDetails] =
     Arbitrary {
       for {
-        enrolmentID <- arbitrary[String]
-        submissionTime <- arbitrary[LocalDateTime]
-        fileName <- arbitrary[String]
-        arrangementID <- Gen.option(arbitrary[String])
-        disclosureID <- Gen.option(arbitrary[String])
-        importInstruction <- Gen.oneOf("New", "Add", "Replace", "Delete")
+        enrolmentID         <- arbitrary[String]
+        submissionTime      <- arbitrary[LocalDateTime]
+        fileName            <- arbitrary[String]
+        arrangementID       <- Gen.option(arbitrary[String])
+        disclosureID        <- Gen.option(arbitrary[String])
+        importInstruction   <- Gen.oneOf("New", "Add", "Replace", "Delete")
         initialDisclosureMA <- Gen.oneOf(true, false)
-        messageRefId <- arbitrary[String]
-      } yield
-        SubmissionDetails(
-          enrolmentID,
-          submissionTime,
-          fileName,
-          arrangementID,
-          disclosureID,
-          importInstruction,
-          initialDisclosureMA,
-          messageRefId)
+        messageRefId        <- arbitrary[String]
+      } yield SubmissionDetails(enrolmentID, submissionTime, fileName, arrangementID, disclosureID, importInstruction, initialDisclosureMA, messageRefId)
     }
 
   implicit val arbitraryReturnParameters: Arbitrary[RequestParameter] = Arbitrary {
     for {
-      paramName <- alphaStr
+      paramName  <- alphaStr
       paramValue <- alphaStr
     } yield RequestParameter(paramName, paramValue)
   }
@@ -58,12 +49,12 @@ trait ModelGenerators extends BaseGenerators with JavaTimeGenerators {
   implicit lazy val arbitraryDisplaySubscriptionForDACRequest: Arbitrary[DisplaySubscriptionForDACRequest] = {
     Arbitrary {
       for {
-        idNumber <- stringsWithMaxLength(30)
-        conversationID <- Gen.option(stringsWithMaxLength(36))
-        receiptDate <- arbitrary[String]
+        idNumber                 <- stringsWithMaxLength(30)
+        conversationID           <- Gen.option(stringsWithMaxLength(36))
+        receiptDate              <- arbitrary[String]
         acknowledgementReference <- arbitrary[String]
-        originatingSystem <- arbitrary[String]
-        requestParameter <- Gen.option(Gen.listOf(arbitrary[RequestParameter]))
+        originatingSystem        <- arbitrary[String]
+        requestParameter         <- Gen.option(Gen.listOf(arbitrary[RequestParameter]))
       } yield {
         DisplaySubscriptionForDACRequest(
           DisplaySubscriptionDetails(
@@ -87,21 +78,21 @@ trait ModelGenerators extends BaseGenerators with JavaTimeGenerators {
 
   implicit val arbitraryContactInformationForIndividual: Arbitrary[ContactInformationForIndividual] = Arbitrary {
     for {
-      firstName <- alphaStr
-      lastName <- alphaStr
+      firstName  <- alphaStr
+      lastName   <- alphaStr
       middleName <- Gen.option(alphaStr)
-      email <- alphaStr
-      telephone <- Gen.option(alphaStr)
-      mobile <- Gen.option(alphaStr)
+      email      <- alphaStr
+      telephone  <- Gen.option(alphaStr)
+      mobile     <- Gen.option(alphaStr)
     } yield ContactInformationForIndividual(IndividualDetails(firstName, lastName, middleName), email, telephone, mobile)
   }
 
   implicit val arbitraryContactInformationForOrganisation: Arbitrary[ContactInformationForOrganisation] = Arbitrary {
     for {
-      name <- alphaStr
-      email <- alphaStr
+      name      <- alphaStr
+      email     <- alphaStr
       telephone <- Gen.option(alphaStr)
-      mobile <- Gen.option(alphaStr)
+      mobile    <- Gen.option(alphaStr)
     } yield ContactInformationForOrganisation(OrganisationDetails(name), email, telephone, mobile)
   }
 
@@ -114,14 +105,14 @@ trait ModelGenerators extends BaseGenerators with JavaTimeGenerators {
   implicit lazy val arbitraryUpdateSubscriptionForDACRequest: Arbitrary[UpdateSubscriptionForDACRequest] = {
     Arbitrary {
       for {
-        idNumber <- stringsWithMaxLength(30)
-        receiptDate <- alphaStr
+        idNumber                 <- stringsWithMaxLength(30)
+        receiptDate              <- alphaStr
         acknowledgementReference <- alphaStr
-        originatingSystem <- alphaStr
-        requestParameter <- Gen.option(Gen.listOf(arbitrary[RequestParameter]))
-        isGBUser <- arbitrary[Boolean]
-        primaryContact <- Gen.oneOf(arbitrary[ContactInformationForIndividual], arbitrary[ContactInformationForOrganisation])
-        secondaryContact <- Gen.option(arbitrary[SecondaryContact])
+        originatingSystem        <- alphaStr
+        requestParameter         <- Gen.option(Gen.listOf(arbitrary[RequestParameter]))
+        isGBUser                 <- arbitrary[Boolean]
+        primaryContact           <- Gen.oneOf(arbitrary[ContactInformationForIndividual], arbitrary[ContactInformationForOrganisation])
+        secondaryContact         <- Gen.option(arbitrary[SecondaryContact])
       } yield {
         UpdateSubscriptionForDACRequest(
           UpdateSubscriptionDetails(

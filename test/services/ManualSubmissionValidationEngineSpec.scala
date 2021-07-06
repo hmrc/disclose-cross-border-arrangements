@@ -34,20 +34,22 @@ import scala.xml.{Elem, NodeSeq}
 
 class ManualSubmissionValidationEngineSpec extends SpecBase with MockitoSugar {
 
-  val xsdError = "xsd-error"
-  val defaultError = "There is a problem with this line number"
-  val lineNumber = 0
+  val xsdError                            = "xsd-error"
+  val defaultError                        = "There is a problem with this line number"
+  val lineNumber                          = 0
   val noErrors: ListBuffer[SaxParseError] = ListBuffer()
 
-  val addressError1 = SaxParseError(20, "cvc-minLength-valid: Value '' with length = '0' is " +
-    "not facet-valid with respect to minLength '1' for type 'StringMin1Max400_Type'.")
+  val addressError1 = SaxParseError(20,
+                                    "cvc-minLength-valid: Value '' with length = '0' is " +
+                                      "not facet-valid with respect to minLength '1' for type 'StringMin1Max400_Type'."
+  )
 
   val enrolmentId = "123456"
 
   trait SetUp {
     val doesFileHaveBusinessErrors = false
 
-    val mockXmlValidationService: XMLValidationService = mock[XMLValidationService]
+    val mockXmlValidationService: XMLValidationService               = mock[XMLValidationService]
     val mockSubmissionDetailsRepository: SubmissionDetailsRepository = mock[SubmissionDetailsRepository]
 
     val mockMetaDataValidationService: MetaDataValidationService = mock[MetaDataValidationService]
@@ -58,49 +60,39 @@ class ManualSubmissionValidationEngineSpec extends SpecBase with MockitoSugar {
       new BusinessRuleValidationService(mockSubmissionDetailsRepository) {
 
         val dummyReader: ReaderT[Option, NodeSeq, Boolean] =
-          ReaderT[Option, NodeSeq, Boolean](xml => {
-            Some(!doesFileHaveBusinessErrors)
-          })
+          ReaderT[Option, NodeSeq, Boolean] {
+            xml =>
+              Some(!doesFileHaveBusinessErrors)
+          }
 
         def dummyValidation(): ReaderT[Option, NodeSeq, Validation] = {
           for {
             result <- dummyReader
-          } yield
-            Validation(
-              key = defaultError,
-              value = result
-            )
+          } yield Validation(
+            key = defaultError,
+            value = result
+          )
         }
 
-        override def validateFile()(implicit hc: HeaderCarrier, ec: ExecutionContext): ReaderT[Option, NodeSeq, Future[Seq[Validation]]] = {
+        override def validateFile()(implicit hc: HeaderCarrier, ec: ExecutionContext): ReaderT[Option, NodeSeq, Future[Seq[Validation]]] =
           for {
             v1 <- dummyValidation()
-          } yield
-            Future.successful(Seq(v1).filterNot(_.value))
-        }
+          } yield Future.successful(Seq(v1).filterNot(_.value))
 
-        override def extractDac6MetaData(): ReaderT[Option, NodeSeq, Dac6MetaData] = {
+        override def extractDac6MetaData(): ReaderT[Option, NodeSeq, Dac6MetaData] =
           for {
-            _ <-  dummyReader
-          }yield {
-            Dac6MetaData("DAC6NEW", disclosureInformationPresent = true,
-              initialDisclosureMA = false, messageRefId = "messageRefId")
-
-          }
-        }
+            _ <- dummyReader
+          } yield Dac6MetaData("DAC6NEW", disclosureInformationPresent = true, initialDisclosureMA = false, messageRefId = "messageRefId")
 
       }
 
-    val validationEngine = new ManualSubmissionValidationEngine(mockXmlValidationService,
-      mockBusinessRuleValidationService,
-      mockMetaDataValidationService,
-      mockAuditService)
+    val validationEngine =
+      new ManualSubmissionValidationEngine(mockXmlValidationService, mockBusinessRuleValidationService, mockMetaDataValidationService, mockAuditService)
 
-    val source = "src"
-    val elem: Elem = <dummyElement>Test</dummyElement>
+    val source        = "src"
+    val elem: Elem    = <dummyElement>Test</dummyElement>
     val mockXML: Elem = <DisclosureImportInstruction>DAC6NEW</DisclosureImportInstruction>
-    val mockMetaData = Some(Dac6MetaData("DAC6NEW", disclosureInformationPresent = true,
-      initialDisclosureMA = false, messageRefId = "messageRefId"))
+    val mockMetaData  = Some(Dac6MetaData("DAC6NEW", disclosureInformationPresent = true, initialDisclosureMA = false, messageRefId = "messageRefId"))
 
   }
   "ValidateManualSubmission" - {
@@ -136,8 +128,8 @@ class ManualSubmissionValidationEngineSpec extends SpecBase with MockitoSugar {
 
       when(mockXmlValidationService.validateManualSubmission(any())).thenReturn(noErrors)
 
-      when(mockMetaDataValidationService.verifyMetaDataForManualSubmission(any(), any())(any(), any())).thenReturn(
-        Future.successful(Left(Seq("metaDataRules.arrangementId.arrangementIdDoesNotMatchRecords"))))
+      when(mockMetaDataValidationService.verifyMetaDataForManualSubmission(any(), any())(any(), any()))
+        .thenReturn(Future.successful(Left(Seq("metaDataRules.arrangementId.arrangementIdDoesNotMatchRecords"))))
 
       val xml = <dummyTag></dummyTag>
 

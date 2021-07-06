@@ -25,7 +25,7 @@ import scala.concurrent.Future
 class UpscanCallbackDispatcher @Inject() (sessionStorage: UploadProgressTracker) {
   private val logger = LoggerFactory.getLogger(getClass)
 
-  def handleCallback(callback : CallbackBody): Future[Boolean] = {
+  def handleCallback(callback: CallbackBody): Future[Boolean] = {
     logger.debug("\n\nHandling the callback\n\n")
     val uploadStatus = callback match {
       case s: ReadyCallbackBody =>

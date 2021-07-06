@@ -30,14 +30,15 @@ import play.api.mvc.AnyContentAsEmpty
 import play.api.test.FakeRequest
 import uk.gov.hmrc.http.HeaderCarrier
 
-trait SpecBase extends AnyFreeSpec
-  with Matchers
-  with GuiceOneAppPerSuite
-  with OptionValues
-  with TryValues
-  with ScalaFutures
-  with IntegrationPatience
-  with MockitoSugar {
+trait SpecBase
+    extends AnyFreeSpec
+    with Matchers
+    with GuiceOneAppPerSuite
+    with OptionValues
+    with TryValues
+    with ScalaFutures
+    with IntegrationPatience
+    with MockitoSugar {
 
   def injector: Injector = app.injector
 

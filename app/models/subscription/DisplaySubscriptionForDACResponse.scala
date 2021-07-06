@@ -18,35 +18,37 @@ package models.subscription
 
 import play.api.libs.json._
 
-
 case class ResponseDetail(subscriptionID: String,
                           tradingName: Option[String],
                           isGBUser: Boolean,
                           primaryContact: PrimaryContact,
-                          secondaryContact: Option[SecondaryContact])
+                          secondaryContact: Option[SecondaryContact]
+)
+
 object ResponseDetail {
   implicit val format: OFormat[ResponseDetail] = Json.format[ResponseDetail]
 }
 
 case class ReturnParameters(paramName: String, paramValue: String)
+
 object ReturnParameters {
   implicit val format: Format[ReturnParameters] = Json.format[ReturnParameters]
 }
 
-case class ResponseCommon(status: String,
-                          statusText: Option[String],
-                          processingDate: String,
-                          returnParameters: Option[Seq[ReturnParameters]])
+case class ResponseCommon(status: String, statusText: Option[String], processingDate: String, returnParameters: Option[Seq[ReturnParameters]])
+
 object ResponseCommon {
   implicit val format: Format[ResponseCommon] = Json.format[ResponseCommon]
 }
 
 case class SubscriptionForDACResponse(responseCommon: ResponseCommon, responseDetail: ResponseDetail)
+
 object SubscriptionForDACResponse {
   implicit val format: OFormat[SubscriptionForDACResponse] = Json.format[SubscriptionForDACResponse]
 }
 
 case class DisplaySubscriptionForDACResponse(displaySubscriptionForDACResponse: SubscriptionForDACResponse)
+
 object DisplaySubscriptionForDACResponse {
   implicit val format: OFormat[DisplaySubscriptionForDACResponse] = Json.format[DisplaySubscriptionForDACResponse]
 }
