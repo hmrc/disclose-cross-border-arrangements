@@ -40,4 +40,3 @@ trait WireMockServerHandler extends BeforeAndAfterAll with BeforeAndAfterEach {
     server.stop()
   }
 }
-

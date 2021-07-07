@@ -32,17 +32,17 @@ import uk.gov.hmrc.play.http.HeaderCarrierConverter
 import scala.concurrent.{ExecutionContext, Future}
 import scala.util.{Success, Try}
 
-class SubscriptionController @Inject()(
-                                        authenticate: AuthAction,
-                                        subscriptionConnector: SubscriptionConnector,
-                                        cc: ControllerComponents
-                                      )(implicit ec: ExecutionContext) extends BackendController(cc) {
+class SubscriptionController @Inject() (
+  authenticate: AuthAction,
+  subscriptionConnector: SubscriptionConnector,
+  cc: ControllerComponents
+)(implicit ec: ExecutionContext)
+    extends BackendController(cc) {
 
   private val logger: Logger = Logger(this.getClass)
 
   def displaySubscriptionDetails: Action[JsValue] = authenticate(parse.json).async {
     implicit request =>
-
       implicit val hc: HeaderCarrier =
         HeaderCarrierConverter.fromRequestAndSession(request, request.session)
 
@@ -52,19 +52,17 @@ class SubscriptionController @Inject()(
       displaySubscriptionResult.fold(
         invalid = jsonValidation => {
           logger.warn(s"displaySubscriptionResult validation failed with error: $jsonValidation")
-          Future.successful(BadRequest("Json:Failed to read DisplaySubscriptionForDACRequest"))},
+          Future.successful(BadRequest("Json:Failed to read DisplaySubscriptionForDACRequest"))
+        },
         valid = request =>
           for {
             httpResponse <- subscriptionConnector.displaySubscriptionForDAC(request)
-          } yield {
-            convertToResult(httpResponse)
-          }
+          } yield convertToResult(httpResponse)
       )
   }
 
   def updateSubscription(): Action[JsValue] = Action(parse.json).async {
     implicit request =>
-
       implicit val hc: HeaderCarrier =
         HeaderCarrierConverter.fromRequestAndSession(request, request.session)
 
@@ -76,46 +74,38 @@ class SubscriptionController @Inject()(
         valid = request =>
           for {
             httpResponse <- subscriptionConnector.updateSubscriptionForDAC(request)
-          } yield {
-            convertToResult(httpResponse)
-          }
+          } yield convertToResult(httpResponse)
       )
   }
 
   private def convertToResult(httpResponse: HttpResponse): Result = {
     httpResponse.status match {
-      case OK => Ok(httpResponse.body)
+      case OK        => Ok(httpResponse.body)
       case NOT_FOUND => NotFound(httpResponse.body)
 
-      case BAD_REQUEST => {
+      case BAD_REQUEST =>
         logDownStreamError(httpResponse.body)
         BadRequest(httpResponse.body)
-      }
 
-      case FORBIDDEN => {
+      case FORBIDDEN =>
         logDownStreamError(httpResponse.body)
         Forbidden(httpResponse.body)
-      }
 
-      case METHOD_NOT_ALLOWED => {
+      case METHOD_NOT_ALLOWED =>
         logDownStreamError(httpResponse.body)
         MethodNotAllowed(httpResponse.body)
-      }
 
-      case CONFLICT => {
+      case CONFLICT =>
         logDownStreamError(httpResponse.body)
         Conflict(httpResponse.body)
-      }
 
-      case INTERNAL_SERVER_ERROR => {
+      case INTERNAL_SERVER_ERROR =>
         logDownStreamError(httpResponse.body)
         InternalServerError(httpResponse.body)
-      }
 
-      case _ => {
+      case _ =>
         logDownStreamError(httpResponse.body)
         ServiceUnavailable(httpResponse.body)
-      }
     }
   }
 

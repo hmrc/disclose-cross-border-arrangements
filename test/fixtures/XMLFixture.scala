@@ -41,7 +41,6 @@ object XMLFixture {
       </DAC6Disclosures>
     </DAC6_Arrangement>
 
-
   val dac6RelevantTaxPayers =
     <DAC6_Arrangement version="First" xmlns="urn:ukdac6:v0.1">
       <Header>

@@ -21,7 +21,18 @@ import base.SpecBase
 import connectors.SubscriptionConnector
 import helpers.JsonFixtures.contactsResponse
 import models.SubscriptionDetails
-import models.subscription.{ContactInformationForIndividual, ContactInformationForOrganisation, DisplaySubscriptionForDACResponse, IndividualDetails, OrganisationDetails, PrimaryContact, ResponseCommon, ResponseDetail, SecondaryContact, SubscriptionForDACResponse}
+import models.subscription.{
+  ContactInformationForIndividual,
+  ContactInformationForOrganisation,
+  DisplaySubscriptionForDACResponse,
+  IndividualDetails,
+  OrganisationDetails,
+  PrimaryContact,
+  ResponseCommon,
+  ResponseDetail,
+  SecondaryContact,
+  SubscriptionForDACResponse
+}
 import org.mockito.ArgumentMatchers.any
 import org.scalatest.BeforeAndAfterEach
 import play.api.http.Status._
@@ -32,12 +43,11 @@ import uk.gov.hmrc.http.HttpResponse
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
-class ContactServiceSpec extends SpecBase
-  with BeforeAndAfterEach {
+class ContactServiceSpec extends SpecBase with BeforeAndAfterEach {
 
   override def beforeEach(): Unit = reset(mockSubscriptionConnector, mockSubscriptionCacheService)
 
-  val mockSubscriptionConnector = mock[SubscriptionConnector]
+  val mockSubscriptionConnector    = mock[SubscriptionConnector]
   val mockSubscriptionCacheService = mock[SubscriptionCacheService]
 
   "Contact Service Spec" - {
@@ -57,11 +67,13 @@ class ContactServiceSpec extends SpecBase
       when(mockSubscriptionCacheService.retrieveSubscriptionDetails(any())(any()))
         .thenReturn(Future.successful(None))
 
-      val expectedSubscriptionDetails = SubscriptionDetails("111111111",
+      val expectedSubscriptionDetails = SubscriptionDetails(
+        "111111111",
         Some(""),
         true,
         ContactInformationForIndividual(IndividualDetails("First", "Last", None), "", Some(""), Some("")),
-        Some(ContactInformationForOrganisation(OrganisationDetails(""), "", None, None)))
+        Some(ContactInformationForOrganisation(OrganisationDetails(""), "", None, None))
+      )
 
       implicit val userRequest = UserRequest("", "", FakeRequest())
 
@@ -82,20 +94,32 @@ class ContactServiceSpec extends SpecBase
         .thenReturn(Future.successful(HttpResponse(OK, contactsResponse)))
 
       when(mockSubscriptionCacheService.retrieveSubscriptionDetails(any())(any()))
-        .thenReturn(Future.successful(Some(DisplaySubscriptionForDACResponse(
-          SubscriptionForDACResponse(
-            ResponseCommon("", None, "", None),
-            ResponseDetail("111111111",Some(""),
-              true,
-              PrimaryContact(Seq(ContactInformationForIndividual(IndividualDetails("First", "Last", None), "", Some(""), Some("")))),
-              Some(SecondaryContact(Seq(ContactInformationForOrganisation(OrganisationDetails(""), "", None, None)))))
-          )))))
+        .thenReturn(
+          Future.successful(
+            Some(
+              DisplaySubscriptionForDACResponse(
+                SubscriptionForDACResponse(
+                  ResponseCommon("", None, "", None),
+                  ResponseDetail(
+                    "111111111",
+                    Some(""),
+                    true,
+                    PrimaryContact(Seq(ContactInformationForIndividual(IndividualDetails("First", "Last", None), "", Some(""), Some("")))),
+                    Some(SecondaryContact(Seq(ContactInformationForOrganisation(OrganisationDetails(""), "", None, None))))
+                  )
+                )
+              )
+            )
+          )
+        )
 
-      val subscriptionDetails = SubscriptionDetails("111111111",
+      val subscriptionDetails = SubscriptionDetails(
+        "111111111",
         Some(""),
         true,
         ContactInformationForIndividual(IndividualDetails("First", "Last", None), "", Some(""), Some("")),
-        Some(ContactInformationForOrganisation(OrganisationDetails(""), "", None, None)))
+        Some(ContactInformationForOrganisation(OrganisationDetails(""), "", None, None))
+      )
 
       implicit val userRequest = UserRequest("", "", FakeRequest())
 

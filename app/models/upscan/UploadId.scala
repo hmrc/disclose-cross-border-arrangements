@@ -32,5 +32,8 @@ object UploadId {
   implicit val uploadIdFormat: OFormat[UploadId] = Json.format[UploadId]
 
   implicit def readsUploadId: Reads[UploadId] = Reads.StringReads.map(UploadId(_))
-  implicit def writesUploadId: Writes[UploadId] = Writes[UploadId](x => JsString(x.value))
+
+  implicit def writesUploadId: Writes[UploadId] = Writes[UploadId](
+    x => JsString(x.value)
+  )
 }

@@ -28,23 +28,29 @@ import scala.concurrent.{ExecutionContext, Future}
 
 object DisclosureIdRepository {
 
-  def indexes = Seq(IndexModel(ascending("dateString")
-    , IndexOptions().name("disclosure-id-date-index") ))
+  def indexes = Seq(IndexModel(ascending("dateString"), IndexOptions().name("disclosure-id-date-index")))
 }
 
-class DisclosureIdRepository @Inject()(mongo: MongoComponent)(implicit ec: ExecutionContext
-) extends PlayMongoRepository[DisclosureId] (
-  mongoComponent = mongo,
-  collectionName = "disclosure-id",
-  domainFormat   = DisclosureId.format,
-  indexes        = DisclosureIdRepository.indexes,
-  replaceIndexes = true
-) {
+class DisclosureIdRepository @Inject() (mongo: MongoComponent)(implicit ec: ExecutionContext)
+    extends PlayMongoRepository[DisclosureId](
+      mongoComponent = mongo,
+      collectionName = "disclosure-id",
+      domainFormat = DisclosureId.format,
+      indexes = DisclosureIdRepository.indexes,
+      replaceIndexes = true
+    ) {
 
-  def doesDisclosureIdExist(disclosureId: DisclosureId):Future[Boolean] =
-    collection.find( and( equal("dateString", disclosureId.dateString), equal("suffix", disclosureId.suffix)))
-      .toFuture().map(_.nonEmpty)
+  def doesDisclosureIdExist(disclosureId: DisclosureId): Future[Boolean] =
+    collection
+      .find(and(equal("dateString", disclosureId.dateString), equal("suffix", disclosureId.suffix)))
+      .toFuture()
+      .map(_.nonEmpty)
 
   def storeDisclosureId(disclosureId: DisclosureId): Future[DisclosureId] =
-    collection.insertOne(disclosureId).toFuture().map(_ => disclosureId)
+    collection
+      .insertOne(disclosureId)
+      .toFuture()
+      .map(
+        _ => disclosureId
+      )
 }

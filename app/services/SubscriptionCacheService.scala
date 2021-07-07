@@ -17,13 +17,23 @@
 package services
 
 import models.subscription.cache.{CreateSubscriptionForDACRequest, IndividualDetails, OrganisationDetails}
-import models.subscription.{ContactInformation, ContactInformationForIndividual, ContactInformationForOrganisation, DisplaySubscriptionForDACResponse, PrimaryContact, ResponseCommon, ResponseDetail, SecondaryContact, SubscriptionForDACResponse}
+import models.subscription.{
+  ContactInformation,
+  ContactInformationForIndividual,
+  ContactInformationForOrganisation,
+  DisplaySubscriptionForDACResponse,
+  PrimaryContact,
+  ResponseCommon,
+  ResponseDetail,
+  SecondaryContact,
+  SubscriptionForDACResponse
+}
 import repositories.SubscriptionCacheRepository
 
 import javax.inject.Inject
 import scala.concurrent.{ExecutionContext, Future}
 
-class SubscriptionCacheService @Inject()(cacheRepository: SubscriptionCacheRepository) {
+class SubscriptionCacheService @Inject() (cacheRepository: SubscriptionCacheRepository) {
 
   def storeSubscriptionDetails(id: String, subscription: CreateSubscriptionForDACRequest): Future[Boolean] =
     cacheRepository.set(id, subscription)
@@ -31,37 +41,38 @@ class SubscriptionCacheService @Inject()(cacheRepository: SubscriptionCacheRepos
   def retrieveSubscriptionDetails(id: String)(implicit ec: ExecutionContext): Future[Option[DisplaySubscriptionForDACResponse]] = {
     //Fake response message from our cached details
     cacheRepository.get(id).map {
-      result => result.map {
-        subRequest =>
-          val requestDetail = subRequest.createSubscriptionForDACRequest.requestDetail
-          DisplaySubscriptionForDACResponse(
-            SubscriptionForDACResponse(
-              ResponseCommon("",None,"",None),
-              ResponseDetail(
-                subRequest.subscriptionID,
-                requestDetail.tradingName,
-                requestDetail.isGBUser,
-                PrimaryContact(Seq(convertContactInformation(requestDetail.primaryContact.contactInformation))),
-                requestDetail.secondaryContact.map(a => SecondaryContact(Seq(convertContactInformation(a.contactInformation))))
+      result =>
+        result.map {
+          subRequest =>
+            val requestDetail = subRequest.createSubscriptionForDACRequest.requestDetail
+            DisplaySubscriptionForDACResponse(
+              SubscriptionForDACResponse(
+                ResponseCommon("", None, "", None),
+                ResponseDetail(
+                  subRequest.subscriptionID,
+                  requestDetail.tradingName,
+                  requestDetail.isGBUser,
+                  PrimaryContact(Seq(convertContactInformation(requestDetail.primaryContact.contactInformation))),
+                  requestDetail.secondaryContact.map(
+                    a => SecondaryContact(Seq(convertContactInformation(a.contactInformation)))
+                  )
+                )
               )
             )
-          )
-      }
+        }
     }
   }
 
-  private def convertContactInformation(contactInformation: models.subscription.cache.ContactInformation): ContactInformation = {
+  private def convertContactInformation(contactInformation: models.subscription.cache.ContactInformation): ContactInformation =
     contactInformation match {
-      case models.subscription.cache.ContactInformationForIndividual(individual, email, phone, mobile) => ContactInformationForIndividual(convertIndividual(individual), email, phone, mobile)
-      case models.subscription.cache.ContactInformationForOrganisation(organisation, email, phone, mobile) => ContactInformationForOrganisation(convertOrganisation(organisation), email, phone, mobile)
+      case models.subscription.cache.ContactInformationForIndividual(individual, email, phone, mobile) =>
+        ContactInformationForIndividual(convertIndividual(individual), email, phone, mobile)
+      case models.subscription.cache.ContactInformationForOrganisation(organisation, email, phone, mobile) =>
+        ContactInformationForOrganisation(convertOrganisation(organisation), email, phone, mobile)
     }
-  }
 
   private def convertIndividual(individualDetails: IndividualDetails): models.subscription.IndividualDetails =
-    models.subscription.IndividualDetails(
-      individualDetails.firstName,
-      individualDetails.lastName,
-      individualDetails.middleName)
+    models.subscription.IndividualDetails(individualDetails.firstName, individualDetails.lastName, individualDetails.middleName)
 
   private def convertOrganisation(organisation: OrganisationDetails) =
     models.subscription.OrganisationDetails(organisation.organisationName)

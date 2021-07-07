@@ -27,10 +27,11 @@ import java.time.format.DateTimeFormatter
 import java.util.UUID
 import scala.concurrent.{ExecutionContext, Future}
 
-class SubscriptionConnector @Inject()(val config: AppConfig, val http: HttpClient) {
+class SubscriptionConnector @Inject() (val config: AppConfig, val http: HttpClient) {
 
-  def displaySubscriptionForDAC(subscriptionForDACRequest: DisplaySubscriptionForDACRequest)
-                               (implicit hc: HeaderCarrier, ec: ExecutionContext): Future[HttpResponse] = {
+  def displaySubscriptionForDAC(
+    subscriptionForDACRequest: DisplaySubscriptionForDACRequest
+  )(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[HttpResponse] = {
 
     val displaySubscriptionUrl = s"${config.registrationUrl}/dac6/dct04/v1"
     //x-conversation-id must match conversationID in RequestCommon otherwise EIS will throw a 400 Bad Request
@@ -38,20 +39,29 @@ class SubscriptionConnector @Inject()(val config: AppConfig, val http: HttpClien
 
     val extraHeader: Seq[(String, String)] = extraHeaders(conversationID)
 
-    http.POST[DisplaySubscriptionForDACRequest, HttpResponse](displaySubscriptionUrl, subscriptionForDACRequest, extraHeader)(wts =
-      DisplaySubscriptionForDACRequest.format, rds = httpReads, hc = hc, ec = ec)
+    http.POST[DisplaySubscriptionForDACRequest, HttpResponse](displaySubscriptionUrl, subscriptionForDACRequest, extraHeader)(
+      wts = DisplaySubscriptionForDACRequest.format,
+      rds = httpReads,
+      hc = hc,
+      ec = ec
+    )
   }
 
-  def updateSubscriptionForDAC(updateSubscriptionForDACRequest: UpdateSubscriptionForDACRequest)
-                               (implicit hc: HeaderCarrier, ec: ExecutionContext): Future[HttpResponse] = {
+  def updateSubscriptionForDAC(
+    updateSubscriptionForDACRequest: UpdateSubscriptionForDACRequest
+  )(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[HttpResponse] = {
 
     val displaySubscriptionUrl = s"${config.registrationUrl}/dac6/dct05/v1"
-    val conversationID = hc.sessionId.map(_.value).getOrElse(UUID.randomUUID().toString)
+    val conversationID         = hc.sessionId.map(_.value).getOrElse(UUID.randomUUID().toString)
 
     val extraHeader: Seq[(String, String)] = extraHeaders(conversationID)
 
-    http.POST[UpdateSubscriptionForDACRequest, HttpResponse](displaySubscriptionUrl, updateSubscriptionForDACRequest, extraHeader)(wts =
-      UpdateSubscriptionForDACRequest.format, rds = httpReads, hc = hc, ec = ec)
+    http.POST[UpdateSubscriptionForDACRequest, HttpResponse](displaySubscriptionUrl, updateSubscriptionForDACRequest, extraHeader)(
+      wts = UpdateSubscriptionForDACRequest.format,
+      rds = httpReads,
+      hc = hc,
+      ec = ec
+    )
   }
 
   private def extraHeaders(conversationID: String)(implicit headerCarrier: HeaderCarrier): Seq[(String, String)] = {
@@ -61,7 +71,7 @@ class SubscriptionConnector @Inject()(val config: AppConfig, val http: HttpClien
     newHeaders.headers(Seq(HeaderNames.authorisation)).++(addHeaders(conversationID))
   }
 
-  private def addHeaders(conversationID: String)(implicit headerCarrier: HeaderCarrier): Seq[(String,String)] = {
+  private def addHeaders(conversationID: String)(implicit headerCarrier: HeaderCarrier): Seq[(String, String)] = {
 
     //HTTP-date format defined by RFC 7231 e.g. Fri, 01 Aug 2020 15:51:38 GMT+1
     val formatter = DateTimeFormatter.ofPattern("EEE, dd MMM yyyy HH:mm:ss O")
@@ -74,10 +84,10 @@ class SubscriptionConnector @Inject()(val config: AppConfig, val http: HttpClien
           .getOrElse(UUID.randomUUID().toString)
       },
       "x-conversation-id" -> conversationID,
-      "x-forwarded-host" -> "mdtp",
-      "content-type"    -> "application/json",
-      "accept"          -> "application/json",
-      "Environment"      -> config.eisEnvironment
+      "x-forwarded-host"  -> "mdtp",
+      "content-type"      -> "application/json",
+      "accept"            -> "application/json",
+      "Environment"       -> config.eisEnvironment
     )
   }
 

@@ -29,13 +29,11 @@ object JsonFixtures {
           "111111111",
           Some(""),
           true,
-          PrimaryContact(Seq(
-            ContactInformationForIndividual(IndividualDetails("First","Last", None), "", Some(""), Some("")
-          ))),
-          Some(SecondaryContact(Seq(
-            ContactInformationForOrganisation(OrganisationDetails(""), "", None, None))
-        ))
-        )))
+          PrimaryContact(Seq(ContactInformationForIndividual(IndividualDetails("First", "Last", None), "", Some(""), Some("")))),
+          Some(SecondaryContact(Seq(ContactInformationForOrganisation(OrganisationDetails(""), "", None, None))))
+        )
+      )
+    )
 
   val contactsResponse =
     """
@@ -72,11 +70,7 @@ object JsonFixtures {
       |}
       |}""".stripMargin
 
-  def updateDetailsPayloadNoSecondContact(idNumber: JsString,
-                                          isGBUser: JsBoolean,
-                                          firstName: JsString,
-                                          lastName: JsString,
-                                          primaryEmail: JsString): String = {
+  def updateDetailsPayloadNoSecondContact(idNumber: JsString, isGBUser: JsBoolean, firstName: JsString, lastName: JsString, primaryEmail: JsString): String = {
     s"""
        |{
        |  "updateSubscriptionForDACRequest": {
@@ -113,7 +107,8 @@ object JsonFixtures {
                            lastName: JsString,
                            email: JsString,
                            organisationName: JsString,
-                           phone: JsString): String = {
+                           phone: JsString
+  ): String = {
     s"""
        |{
        |  "updateSubscriptionForDACRequest": {
@@ -151,37 +146,34 @@ object JsonFixtures {
        |""".stripMargin
   }
 
-  def updateDetailsJsonNoSecondContact(idNumber: String,
-                                       isGBUser: Boolean,
-                                       firstName: String,
-                                       lastName: String,
-                                       primaryEmail: String): JsObject = {
+  def updateDetailsJsonNoSecondContact(idNumber: String, isGBUser: Boolean, firstName: String, lastName: String, primaryEmail: String): JsObject = {
     Json.obj(
       "updateSubscriptionForDACRequest" -> Json.obj(
         "requestCommon" -> Json.obj(
-          "regime" -> "DAC",
-          "receiptDate" -> "2020-09-23T16:12:11Z",
+          "regime"                   -> "DAC",
+          "receiptDate"              -> "2020-09-23T16:12:11Z",
           "acknowledgementReference" -> "AB123c",
-          "originatingSystem" -> "MDTP",
+          "originatingSystem"        -> "MDTP",
           "requestParameters" -> Json.arr(
             Json.obj(
-              "paramName" -> "Name",
+              "paramName"  -> "Name",
               "paramValue" -> "Value"
             )
           )
         ),
         "requestDetail" -> Json.obj(
-          "IDType" -> "SAFE",
+          "IDType"   -> "SAFE",
           "IDNumber" -> idNumber,
           "isGBUser" -> isGBUser,
-          "primaryContact" -> Json.arr(Json.obj(
-            "individual" -> Json.obj(
-              "firstName" -> firstName,
-              "lastName" -> lastName
-            ),
-            "email" -> primaryEmail
-          ))
-
+          "primaryContact" -> Json.arr(
+            Json.obj(
+              "individual" -> Json.obj(
+                "firstName" -> firstName,
+                "lastName"  -> lastName
+              ),
+              "email" -> primaryEmail
+            )
+          )
         )
       )
     )
@@ -193,40 +185,44 @@ object JsonFixtures {
                         lastName: String,
                         email: String,
                         organisationName: String,
-                        phone: String): JsObject = {
+                        phone: String
+  ): JsObject = {
     Json.obj(
       "updateSubscriptionForDACRequest" -> Json.obj(
         "requestCommon" -> Json.obj(
-          "regime" -> "DAC",
-          "receiptDate" -> "2020-09-23T16:12:11Z",
+          "regime"                   -> "DAC",
+          "receiptDate"              -> "2020-09-23T16:12:11Z",
           "acknowledgementReference" -> "AB123c",
-          "originatingSystem" -> "MDTP",
+          "originatingSystem"        -> "MDTP",
           "requestParameters" -> Json.arr(
             Json.obj(
-              "paramName" -> "Name",
+              "paramName"  -> "Name",
               "paramValue" -> "Value"
             )
           )
         ),
         "requestDetail" -> Json.obj(
-          "IDType" -> "SAFE",
+          "IDType"   -> "SAFE",
           "IDNumber" -> idNumber,
           "isGBUser" -> isGBUser,
-          "primaryContact" -> Json.arr(Json.obj(
-            "individual" -> Json.obj(
-              "firstName" -> firstName,
-              "lastName" -> lastName
-            ),
-            "email" -> email
-          )),
-          "secondaryContact" -> Json.arr(Json.obj(
-            "organisation" -> Json.obj(
-              "organisationName" -> organisationName
-            ),
-            "email" -> email,
-            "phone" -> phone
-          ))
-
+          "primaryContact" -> Json.arr(
+            Json.obj(
+              "individual" -> Json.obj(
+                "firstName" -> firstName,
+                "lastName"  -> lastName
+              ),
+              "email" -> email
+            )
+          ),
+          "secondaryContact" -> Json.arr(
+            Json.obj(
+              "organisation" -> Json.obj(
+                "organisationName" -> organisationName
+              ),
+              "email" -> email,
+              "phone" -> phone
+            )
+          )
         )
       )
     )

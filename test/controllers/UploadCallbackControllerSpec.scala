@@ -37,7 +37,6 @@ class UploadCallbackControllerSpec extends SpecBase with JsonMatchers {
       bind[UpscanCallbackDispatcher].toInstance(mockUpscanCallbackDispatcher)
     )
 
-
   "UploadCallback Controller" - {
     "must accept a callback and send to the dispatcher and return an ok" in {
       val controller = application.injector.instanceOf[UploadCallbackController]

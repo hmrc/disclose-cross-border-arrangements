@@ -18,10 +18,9 @@ package helpers
 
 import java.time.{LocalDate, LocalDateTime}
 
-
 class DateHelper {
 
-  def today: LocalDate = LocalDate.now()
+  def today: LocalDate   = LocalDate.now()
   def now: LocalDateTime = LocalDateTime.now()
 
 }

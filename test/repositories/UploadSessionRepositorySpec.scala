@@ -21,24 +21,27 @@ import models.upscan.{Quarantined, Reference, UploadId, UploadSessionDetails}
 import org.bson.types.ObjectId
 
 import java.util.UUID
+
 class UploadSessionRepositorySpec extends SpecBase {
   lazy val uploadRep = app.injector.instanceOf[UploadSessionRepository]
-  val uploadId = UploadId(UUID.randomUUID().toString)
-  val uploadDetails = UploadSessionDetails(ObjectId.get(), uploadId, Reference("xxxx"),Quarantined)
+  val uploadId       = UploadId(UUID.randomUUID().toString)
+  val uploadDetails  = UploadSessionDetails(ObjectId.get(), uploadId, Reference("xxxx"), Quarantined)
   "Insert" - {
     "must insert UploadStatus" in {
-      val uploadDetails = UploadSessionDetails(ObjectId.get(), uploadId, Reference("xxxx"),Quarantined)
-      val res = uploadRep.insert(uploadDetails)
-      whenReady(res) { result =>
-        result mustBe true
+      val uploadDetails = UploadSessionDetails(ObjectId.get(), uploadId, Reference("xxxx"), Quarantined)
+      val res           = uploadRep.insert(uploadDetails)
+      whenReady(res) {
+        result =>
+          result mustBe true
       }
     }
     "must read UploadStatus" in {
       val res = uploadRep.findByUploadId(uploadId)
-      whenReady(res) { case Some(result) =>
-        result.uploadId mustBe (uploadDetails.uploadId)
-        result.reference mustBe (uploadDetails.reference)
-        result.status mustBe (uploadDetails.status)
+      whenReady(res) {
+        case Some(result) =>
+          result.uploadId mustBe (uploadDetails.uploadId)
+          result.reference mustBe (uploadDetails.reference)
+          result.status mustBe (uploadDetails.status)
       }
     }
   }

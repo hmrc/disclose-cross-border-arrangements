@@ -24,14 +24,20 @@ class ArrangementIdRepositorySpec extends SpecBase {
 
     "must store arrangement Id correctly" in {
 
-
-        val repo = app.injector.instanceOf[ArrangementIdRepository]
+      val repo = app.injector.instanceOf[ArrangementIdRepository]
 
       implicit val ec: scala.concurrent.ExecutionContext = scala.concurrent.ExecutionContext.global
-        val arrangementId = ArrangementId(dateString = "date", suffix = "suffix")
-        whenReady (repo.storeArrangementId(arrangementId).flatMap(_ => repo.doesArrangementIdExist(arrangementId))) { result =>
+      val arrangementId                                  = ArrangementId(dateString = "date", suffix = "suffix")
+      whenReady(
+        repo
+          .storeArrangementId(arrangementId)
+          .flatMap(
+            _ => repo.doesArrangementIdExist(arrangementId)
+          )
+      ) {
+        result =>
           result mustBe true
-        }
       }
     }
+  }
 }

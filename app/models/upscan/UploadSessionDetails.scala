@@ -20,10 +20,7 @@ import org.bson.types.ObjectId
 import play.api.libs.json._
 import uk.gov.hmrc.mongo.play.json.formats.MongoFormats
 
-case class UploadSessionDetails(_id : ObjectId,
-                                uploadId : UploadId,
-                                reference : Reference,
-                                status : UploadStatus)
+case class UploadSessionDetails(_id: ObjectId, uploadId: UploadId, reference: Reference, status: UploadStatus)
 
 object UploadSessionDetails {
   val status = "status"
@@ -36,6 +33,6 @@ object UploadSessionDetails {
 
   implicit val referenceFormat: OFormat[Reference] = Json.format[Reference]
 
-  implicit val format: OFormat[UploadSessionDetails] =   Json.format[UploadSessionDetails]
+  implicit val format: OFormat[UploadSessionDetails] = Json.format[UploadSessionDetails]
 
 }

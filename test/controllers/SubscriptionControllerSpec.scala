@@ -34,9 +34,7 @@ import uk.gov.hmrc.http.HttpResponse
 
 import scala.concurrent.Future
 
-class SubscriptionControllerSpec extends SpecBase
-  with ModelGenerators
-  with ScalaCheckPropertyChecks {
+class SubscriptionControllerSpec extends SpecBase with ModelGenerators with ScalaCheckPropertyChecks {
 
   val mockSubscriptionConnector: SubscriptionConnector = mock[SubscriptionConnector]
 
@@ -44,10 +42,10 @@ class SubscriptionControllerSpec extends SpecBase
     .overrides(
       bind[SubscriptionConnector].toInstance(mockSubscriptionConnector),
       bind[AuthAction].to[FakeAuthAction]
-    ).build()
+    )
+    .build()
 
-  val errorStatusCodes: Seq[Int] = Seq(BAD_REQUEST, FORBIDDEN, NOT_FOUND, METHOD_NOT_ALLOWED,
-                                       CONFLICT, INTERNAL_SERVER_ERROR, SERVICE_UNAVAILABLE)
+  val errorStatusCodes: Seq[Int] = Seq(BAD_REQUEST, FORBIDDEN, NOT_FOUND, METHOD_NOT_ALLOWED, CONFLICT, INTERNAL_SERVER_ERROR, SERVICE_UNAVAILABLE)
 
   "SubscriptionController" - {
     "displaySubscriptionDetails" - {
@@ -87,7 +85,6 @@ class SubscriptionControllerSpec extends SpecBase
 
         forAll(arbitrary[UpdateSubscriptionForDACRequest]) {
           updateSubscriptionForDAC =>
-
             when(mockSubscriptionConnector.updateSubscriptionForDAC(any())(any(), any()))
               .thenReturn(Future.successful(HttpResponse(OK, "")))
 
@@ -103,7 +100,6 @@ class SubscriptionControllerSpec extends SpecBase
 
         forAll(arbitrary[UpdateSubscriptionForDACRequest], Gen.oneOf(errorStatusCodes)) {
           (updateSubscriptionForDAC, statusCode) =>
-
             when(mockSubscriptionConnector.updateSubscriptionForDAC(any())(any(), any()))
               .thenReturn(Future.successful(HttpResponse(statusCode, "")))
 

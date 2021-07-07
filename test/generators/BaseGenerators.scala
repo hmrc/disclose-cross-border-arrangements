@@ -47,10 +47,14 @@ trait BaseGenerators {
   }
 
   def intsLargerThanMaxValue: Gen[BigInt] =
-    arbitrary[BigInt] suchThat (x => x > Int.MaxValue)
+    arbitrary[BigInt] suchThat (
+      x => x > Int.MaxValue
+    )
 
   def intsSmallerThanMinValue: Gen[BigInt] =
-    arbitrary[BigInt] suchThat (x => x < Int.MinValue)
+    arbitrary[BigInt] suchThat (
+      x => x < Int.MinValue
+    )
 
   def nonNumerics: Gen[String] =
     alphaStr suchThat (_.nonEmpty)

@@ -29,23 +29,29 @@ import scala.concurrent.{ExecutionContext, Future}
 
 object ArrangementIdRepository {
 
-  def indexes = Seq(IndexModel(ascending("dateString")
-    , IndexOptions().name("arrangement-id-date-index") ))
+  def indexes = Seq(IndexModel(ascending("dateString"), IndexOptions().name("arrangement-id-date-index")))
 }
 
-class ArrangementIdRepository @Inject()(mongo: MongoComponent)(implicit ec: ExecutionContext
-) extends PlayMongoRepository[ArrangementId] (
-  mongoComponent = mongo,
-  collectionName = "arrangement-id",
-  domainFormat   = ArrangementId.format,
-  indexes        = ArrangementIdRepository.indexes,
-  replaceIndexes = true
-) {
+class ArrangementIdRepository @Inject() (mongo: MongoComponent)(implicit ec: ExecutionContext)
+    extends PlayMongoRepository[ArrangementId](
+      mongoComponent = mongo,
+      collectionName = "arrangement-id",
+      domainFormat = ArrangementId.format,
+      indexes = ArrangementIdRepository.indexes,
+      replaceIndexes = true
+    ) {
 
-  def doesArrangementIdExist(arrangementId: ArrangementId):Future[Boolean] =
-    collection.find( and( equal("dateString", arrangementId.dateString), equal("suffix", arrangementId.suffix)))
-      .toFuture().map(_.nonEmpty)
+  def doesArrangementIdExist(arrangementId: ArrangementId): Future[Boolean] =
+    collection
+      .find(and(equal("dateString", arrangementId.dateString), equal("suffix", arrangementId.suffix)))
+      .toFuture()
+      .map(_.nonEmpty)
 
   def storeArrangementId(arrangementId: ArrangementId): Future[ArrangementId] =
-    collection.insertOne(arrangementId).toFuture().map(_ => arrangementId)
+    collection
+      .insertOne(arrangementId)
+      .toFuture()
+      .map(
+        _ => arrangementId
+      )
 }

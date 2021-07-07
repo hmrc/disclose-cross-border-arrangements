@@ -19,23 +19,26 @@ package models
 import play.api.libs.json.Json
 
 case class SourceFaultDetail(detail: Seq[String])
+
 object SourceFaultDetail {
   implicit val format = Json.format[SourceFaultDetail]
 }
 
 case class ErrorDetail(
-                        timestamp: String,
-                        correlationId: String,
-                        errorCode: String,
-                        errorMessage: String,
-                        source: String,
-                        sourceFaultDetail: Option[SourceFaultDetail]
-                      )
+  timestamp: String,
+  correlationId: String,
+  errorCode: String,
+  errorMessage: String,
+  source: String,
+  sourceFaultDetail: Option[SourceFaultDetail]
+)
+
 object ErrorDetail {
   implicit val format = Json.format[ErrorDetail]
 }
 
 case class ErrorDetails(errorDetail: ErrorDetail)
+
 object ErrorDetails {
   implicit val format = Json.format[ErrorDetails]
 }

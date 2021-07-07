@@ -19,9 +19,9 @@ package models
 import models.subscription.ContactInformation
 
 case class SubscriptionDetails(
-                            subscriptionID: String,
-                            tradingName: Option[String],
-                            isGBUser: Boolean,
-                            primaryContact: ContactInformation,
-                            secondaryContact: Option[ContactInformation]
-                          )
+  subscriptionID: String,
+  tradingName: Option[String],
+  isGBUser: Boolean,
+  primaryContact: ContactInformation,
+  secondaryContact: Option[ContactInformation]
+)

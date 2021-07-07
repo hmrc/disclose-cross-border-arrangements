@@ -21,18 +21,20 @@ import play.api.Configuration
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
 
 @Singleton
-class AppConfig @Inject()(config: Configuration, servicesConfig: ServicesConfig) {
+class AppConfig @Inject() (config: Configuration, servicesConfig: ServicesConfig) {
   lazy val appName: String = config.get[String]("appName")
 
-  val authBaseUrl: String = servicesConfig.baseUrl("auth")
+  val authBaseUrl: String  = servicesConfig.baseUrl("auth")
   lazy val registrationUrl = s"${servicesConfig.baseUrl("registration")}${config.get[String]("microservice.services.registration.startUrl")}"
 
   val auditingEnabled: Boolean = config.get[Boolean]("auditing.enabled")
   val graphiteHost: String     = config.get[String]("microservice.metrics.graphite.host")
 
-  lazy val bearerToken: String = config.get[String]("microservice.services.submission.bearer-token")
+  lazy val bearerToken: String    = config.get[String]("microservice.services.submission.bearer-token")
   lazy val eisEnvironment: String = config.get[String]("microservice.services.submission.environment")
-  lazy val submissionUrl: String = s"${config.get[Service]("microservice.services.submission").baseUrl}${config.get[String]("microservice.services.submission.startUrl")}"
+
+  lazy val submissionUrl: String =
+    s"${config.get[Service]("microservice.services.submission").baseUrl}${config.get[String]("microservice.services.submission.startUrl")}"
   lazy val validationAuditToggle: Boolean = config.get[Boolean]("validationAuditToggle")
 
 }

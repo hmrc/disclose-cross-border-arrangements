@@ -16,7 +16,7 @@
 
 package models
 
-import play.api.libs.json.{Writes, __}
+import play.api.libs.json.{__, Writes}
 
 case class GeneratedIDs(arrangementID: Option[ArrangementId], disclosureID: Option[DisclosureId])
 
@@ -27,6 +27,8 @@ object GeneratedIDs {
     (
       (__ \ "arrangementID").writeNullable[String] and
         (__ \ "disclosureID").writeNullable[String]
-      )(gen => (gen.arrangementID.map(_.value), gen.disclosureID.map(_.value)))
+    )(
+      gen => (gen.arrangementID.map(_.value), gen.disclosureID.map(_.value))
+    )
 
 }

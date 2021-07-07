@@ -38,13 +38,10 @@ import uk.gov.hmrc.http.HttpResponse
 
 import scala.concurrent.Future
 
-class CacheControllerSpec extends SpecBase
-  with CacheModelGenerators
-  with BeforeAndAfterEach
-  with ScalaCheckPropertyChecks {
+class CacheControllerSpec extends SpecBase with CacheModelGenerators with BeforeAndAfterEach with ScalaCheckPropertyChecks {
 
   val mockSubscriptionCacheService: SubscriptionCacheService = mock[SubscriptionCacheService]
-  val mockSubscriptionConnector: SubscriptionConnector = mock[SubscriptionConnector]
+  val mockSubscriptionConnector: SubscriptionConnector       = mock[SubscriptionConnector]
 
   val application: Application =
     applicationBuilder()
@@ -52,7 +49,8 @@ class CacheControllerSpec extends SpecBase
         bind[SubscriptionCacheService].toInstance(mockSubscriptionCacheService),
         bind[SubscriptionConnector].toInstance(mockSubscriptionConnector),
         bind[IdentifierAuthAction].to[FakeIdentifierAuthAction]
-      ).build()
+      )
+      .build()
 
   override def beforeEach(): Unit = {
     reset(mockSubscriptionCacheService)
@@ -60,38 +58,53 @@ class CacheControllerSpec extends SpecBase
   }
 
   val errorStatusCodes: Seq[Int] = Seq(
-    BAD_REQUEST, FORBIDDEN, NOT_FOUND, METHOD_NOT_ALLOWED,
-    CONFLICT, INTERNAL_SERVER_ERROR, SERVICE_UNAVAILABLE
+    BAD_REQUEST,
+    FORBIDDEN,
+    NOT_FOUND,
+    METHOD_NOT_ALLOWED,
+    CONFLICT,
+    INTERNAL_SERVER_ERROR,
+    SERVICE_UNAVAILABLE
   )
 
   "Cache Controller" - {
     "must store a subscription when given a valid create subscription payload" in {
-     when(mockSubscriptionCacheService.storeSubscriptionDetails(any(), any()))
-       .thenReturn(Future.successful(true))
+      when(mockSubscriptionCacheService.storeSubscriptionDetails(any(), any()))
+        .thenReturn(Future.successful(true))
 
-     forAll(arbitrary[CreateSubscriptionForDACRequest]){
-       subscriptionRequest =>
-         val payload = Json.toJson(subscriptionRequest)
-         val request = FakeRequest(POST, routes.CacheController.storeSubscriptionDetails().url)
-           .withJsonBody(payload)
+      forAll(arbitrary[CreateSubscriptionForDACRequest]) {
+        subscriptionRequest =>
+          val payload = Json.toJson(subscriptionRequest)
+          val request = FakeRequest(POST, routes.CacheController.storeSubscriptionDetails().url)
+            .withJsonBody(payload)
 
-         val result: Future[Result] = route(application, request).value
+          val result: Future[Result] = route(application, request).value
 
-         status(result) mustBe OK
+          status(result) mustBe OK
 
-     }
+      }
     }
 
     "must retrieve a subscription from the cache where one exists" in {
       when(mockSubscriptionCacheService.retrieveSubscriptionDetails(any())(any()))
-        .thenReturn(Future.successful(Some(DisplaySubscriptionForDACResponse(
-          SubscriptionForDACResponse(
-            ResponseCommon("", None, "", None),
-            ResponseDetail("111111111", Some(""),
-              isGBUser = true,
-              PrimaryContact(Seq(ContactInformationForIndividual(IndividualDetails("First", "Last", None), "", Some(""), Some("")))),
-              Some(SecondaryContact(Seq(ContactInformationForOrganisation(OrganisationDetails(""), "", None, None)))))
-          )))))
+        .thenReturn(
+          Future.successful(
+            Some(
+              DisplaySubscriptionForDACResponse(
+                SubscriptionForDACResponse(
+                  ResponseCommon("", None, "", None),
+                  ResponseDetail(
+                    "111111111",
+                    Some(""),
+                    isGBUser = true,
+                    PrimaryContact(Seq(ContactInformationForIndividual(IndividualDetails("First", "Last", None), "", Some(""), Some("")))),
+                    Some(SecondaryContact(Seq(ContactInformationForOrganisation(OrganisationDetails(""), "", None, None))))
+                  )
+                )
+              )
+            )
+          )
+        )
 
       forAll(arbitrary[DisplaySubscriptionForDACRequest]) {
         display =>

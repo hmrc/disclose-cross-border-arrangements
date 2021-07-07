@@ -35,19 +35,19 @@ import scala.concurrent.{ExecutionContext, Future}
 import scala.util.{Success, Try}
 import scala.xml.NodeSeq
 
-class SubmissionController @Inject()(
-                                      authenticate: IdentifierAuthAction,
-                                      cc: ControllerComponents,
-                                      submissionService: SubmissionService,
-                                      transformService: TransformService,
-                                      contactService: ContactService,
-                                      validationService: XMLValidationService,
-                                      submissionConnector: SubmissionConnector,
-                                      dateHelper: DateHelper,
-                                      submissionDetailsRepository: SubmissionDetailsRepository,
-                                      auditService: AuditService
-                                    )(implicit ec: ExecutionContext)
-  extends BackendController(cc) {
+class SubmissionController @Inject() (
+  authenticate: IdentifierAuthAction,
+  cc: ControllerComponents,
+  submissionService: SubmissionService,
+  transformService: TransformService,
+  contactService: ContactService,
+  validationService: XMLValidationService,
+  submissionConnector: SubmissionConnector,
+  dateHelper: DateHelper,
+  submissionDetailsRepository: SubmissionDetailsRepository,
+  auditService: AuditService
+)(implicit ec: ExecutionContext)
+    extends BackendController(cc) {
 
   import APIDateTimeFormats._
 
@@ -57,19 +57,22 @@ class SubmissionController @Inject()(
     implicit request =>
       {
         //receive xml and find import instructions
-        val xml = request.body
-        val fileName = (xml \ "fileName").text
-        val enrolmentID = (xml \ "enrolmentID").text
-        val importInstruction = ImportInstruction((xml \\ "DisclosureImportInstruction").text)
-        val disclosureID = (xml \\ "DisclosureID").text
-        val submissionFile: NodeSeq = (xml \ "file" \ "DAC6_Arrangement")
-        val submissionTime = dateHelper.now
-        val initialDisclosureMA = (xml \\ "InitialDisclosureMA").text.toBoolean
-        val messageRefId = (xml \\ "MessageRefId").text
+        val xml                     = request.body
+        val fileName                = (xml \ "fileName").text
+        val enrolmentID             = (xml \ "enrolmentID").text
+        val importInstruction       = ImportInstruction((xml \\ "DisclosureImportInstruction").text)
+        val disclosureID            = (xml \\ "DisclosureID").text
+        val submissionFile: NodeSeq = xml \ "file" \ "DAC6_Arrangement"
+        val submissionTime          = dateHelper.now
+        val initialDisclosureMA     = (xml \\ "InitialDisclosureMA").text.toBoolean
+        val messageRefId            = (xml \\ "MessageRefId").text
 
-
-        val conversationID: String = hc.headers(HeaderNames.explicitlyIncludedHeaders)
-          .find(_._1 == xSessionId).map(n => n._2.replaceAll("session-", ""))
+        val conversationID: String = hc
+          .headers(HeaderNames.explicitlyIncludedHeaders)
+          .find(_._1 == xSessionId)
+          .map(
+            n => n._2.replaceAll("session-", "")
+          )
           .getOrElse(UUID.randomUUID().toString)
 
         val submissionMetaData = SubmissionMetaData.build(submissionTime, conversationID, fileName)
@@ -87,10 +90,12 @@ class SubmissionController @Inject()(
           submission: NodeSeq = transformService.addSubscriptionDetailsToSubmission(transformedFile, subscriptionData, submissionMetaData)
 
           //change namespaces
-          disclosureSubmission: NodeSeq  = transformService.addNameSpaces(submission, Seq(
-              NamespaceForNode("DAC6UKSubmissionInboundRequest", "eis"),
-              NamespaceForNode("DAC6_Arrangement", "dac6")
-            ))
+          disclosureSubmission: NodeSeq = transformService.addNameSpaces(submission,
+                                                                         Seq(
+                                                                           NamespaceForNode("DAC6UKSubmissionInboundRequest", "eis"),
+                                                                           NamespaceForNode("DAC6_Arrangement", "dac6")
+                                                                         )
+          )
 
           //validate the payload
           _ = validationService.validateXml(disclosureSubmission.mkString).left.map {
@@ -105,7 +110,7 @@ class SubmissionController @Inject()(
           response <- submissionConnector.submitDisclosure(disclosureSubmission)
 
         } yield {
-          if(response.status == OK) {
+          if (response.status == OK) {
             val submissionDetails = SubmissionDetails.build(
               xml = xml,
               ids = ids,
@@ -115,11 +120,12 @@ class SubmissionController @Inject()(
               disclosureID = disclosureID,
               submissionTime = submissionTime,
               initialDisclosureMA = initialDisclosureMA,
-              messageRefId = messageRefId)
+              messageRefId = messageRefId
+            )
 
             submissionDetailsRepository.storeSubmissionDetails(submissionDetails).map {
               succeeded =>
-                if(succeeded) Ok(Json.toJson(ids))
+                if (succeeded) Ok(Json.toJson(ids))
                 else {
                   logger.error("Unable to store submission detail to database")
                   throw new Exception("Unable to store submission detail to database")
@@ -138,45 +144,41 @@ class SubmissionController @Inject()(
 
   def getHistory(enrolmentId: String): Action[AnyContent] = authenticate.async {
     implicit request =>
-
-      submissionDetailsRepository.retrieveSubmissionHistory(enrolmentId).map {
-        history =>
-          Ok(Json.toJson(SubmissionHistory(history)))
-      }.recover {
-        case ex:Exception =>
-          logger.error("Error retrieving submission history", ex)
-          InternalServerError
-      }
+      submissionDetailsRepository
+        .retrieveSubmissionHistory(enrolmentId)
+        .map {
+          history =>
+            Ok(Json.toJson(SubmissionHistory(history)))
+        }
+        .recover {
+          case ex: Exception =>
+            logger.error("Error retrieving submission history", ex)
+            InternalServerError
+        }
   }
 
   private def convertToResult(httpResponse: HttpResponse): Result = {
     httpResponse.status match {
-      case OK => Ok(httpResponse.body)
+      case OK        => Ok(httpResponse.body)
       case NOT_FOUND => NotFound(httpResponse.body)
-      case BAD_REQUEST => {
+      case BAD_REQUEST =>
         logDownStreamError(httpResponse.body)
         BadRequest(httpResponse.body)
-      }
-      case FORBIDDEN => {
+      case FORBIDDEN =>
         logDownStreamError(httpResponse.body)
         Forbidden(httpResponse.body)
-      }
-      case METHOD_NOT_ALLOWED => {
+      case METHOD_NOT_ALLOWED =>
         logDownStreamError(httpResponse.body)
         MethodNotAllowed(httpResponse.body)
-      }
-      case CONFLICT => {
+      case CONFLICT =>
         logDownStreamError(httpResponse.body)
         Conflict(httpResponse.body)
-      }
-      case INTERNAL_SERVER_ERROR => {
+      case INTERNAL_SERVER_ERROR =>
         logDownStreamError(httpResponse.body)
         InternalServerError(httpResponse.body)
-      }
-      case _ => {
+      case _ =>
         logDownStreamError(httpResponse.body)
         ServiceUnavailable(httpResponse.body)
-      }
     }
   }
 

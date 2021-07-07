@@ -33,28 +33,34 @@ object SubscriptionCacheRepository {
 
   def cacheTtl(config: Configuration): Int = config.get[Int]("mongodb.subscriptionCacheTTLInSeconds")
 
-  def indexes(config: Configuration) = Seq(IndexModel(ascending("lastUpdated")
-    , IndexOptions().name("subscription-last-updated-index").expireAfter(cacheTtl(config), TimeUnit.SECONDS) ))
+  def indexes(config: Configuration) = Seq(
+    IndexModel(ascending("lastUpdated"), IndexOptions().name("subscription-last-updated-index").expireAfter(cacheTtl(config), TimeUnit.SECONDS))
+  )
 }
 
-class SubscriptionCacheRepository @Inject()(mongo: MongoComponent, config: Configuration)(implicit ec: ExecutionContext
-) extends PlayMongoRepository[CreateSubscriptionForDACRequest] (
-  mongoComponent = mongo,
-  collectionName = "subscriptionCacheRepository",
-  domainFormat   = CreateSubscriptionForDACRequest.format,
-  indexes        = SubscriptionCacheRepository.indexes(config),
-  replaceIndexes = true
-) {
+class SubscriptionCacheRepository @Inject() (mongo: MongoComponent, config: Configuration)(implicit ec: ExecutionContext)
+    extends PlayMongoRepository[CreateSubscriptionForDACRequest](
+      mongoComponent = mongo,
+      collectionName = "subscriptionCacheRepository",
+      domainFormat = CreateSubscriptionForDACRequest.format,
+      indexes = SubscriptionCacheRepository.indexes(config),
+      replaceIndexes = true
+    ) {
 
   def get(id: String): Future[Option[CreateSubscriptionForDACRequest]] =
     collection.find(equal("_id", id)).first().toFutureOption()
 
   def set(id: String, subscription: CreateSubscriptionForDACRequest): Future[Boolean] = {
 
-    val filter = equal("_id", id)
-    val data = subscription copy (lastUpdated = LocalDateTime.now)
+    val filter  = equal("_id", id)
+    val data    = subscription copy (lastUpdated = LocalDateTime.now)
     val options = ReplaceOptions().upsert(true)
 
-    collection.replaceOne(filter, data, options).toFuture.map(_ => true)
+    collection
+      .replaceOne(filter, data, options)
+      .toFuture
+      .map(
+        _ => true
+      )
   }
 }

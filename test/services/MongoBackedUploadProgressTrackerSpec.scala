@@ -49,9 +49,7 @@ class MongoBackedUploadProgressTrackerSpec extends SpecBase {
         Reference("123"),
         InProgress
       )
-      when(mockUploadSessionRepository.findByUploadId(uploadId)).thenReturn(
-        Future.successful(
-          Some(uploadDetails)))
+      when(mockUploadSessionRepository.findByUploadId(uploadId)).thenReturn(Future.successful(Some(uploadDetails)))
       val result = Await.result(sut.getUploadResult(uploadId), 10 seconds)
       result.get mustBe InProgress
     }
@@ -59,9 +57,7 @@ class MongoBackedUploadProgressTrackerSpec extends SpecBase {
     "must register an upload result" in {
       val reference = Reference("")
 
-      when(mockUploadSessionRepository.updateStatus(reference, InProgress)).thenReturn(
-        Future.successful(
-          true))
+      when(mockUploadSessionRepository.updateStatus(reference, InProgress)).thenReturn(Future.successful(true))
       val result = Await.result(sut.registerUploadResult(reference, InProgress), 10 seconds)
       result mustEqual true
     }

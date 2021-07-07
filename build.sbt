@@ -24,6 +24,7 @@ lazy val microservice = Project(appName, file("."))
     ScoverageKeys.coverageMinimum := 80,
     ScoverageKeys.coverageFailOnMinimum := true,
     ScoverageKeys.coverageHighlighting := true,
+    scalafmtOnCompile in ThisBuild := true,
     resolvers += Resolver.jcenterRepo)
 
 lazy val testSettings: Seq[Def.Setting[_]] = Seq(

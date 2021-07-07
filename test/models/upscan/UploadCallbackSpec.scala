@@ -66,6 +66,6 @@ class UploadCallbackSpec extends SpecBase {
       )
 
       Json.parse(json).as[CallbackBody] mustBe expectedResult
-      }
-   }
+    }
+  }
 }

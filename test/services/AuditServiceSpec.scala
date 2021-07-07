@@ -15,6 +15,7 @@
  */
 
 package services
+
 import base.SpecBase
 import models.{Dac6MetaData, SaxParseError}
 import org.mockito.ArgumentCaptor
@@ -32,11 +33,10 @@ import scala.collection.mutable.ListBuffer
 import scala.concurrent.Future
 
 class AuditServiceSpec extends SpecBase with BeforeAndAfterEach {
-  val auditConnector =  mock[AuditConnector]
+  val auditConnector = mock[AuditConnector]
 
-  override def beforeEach() = {
+  override def beforeEach() =
     reset(auditConnector)
-  }
 
   override lazy val app = new GuiceApplicationBuilder()
     .overrides(
@@ -47,7 +47,7 @@ class AuditServiceSpec extends SpecBase with BeforeAndAfterEach {
   val auditService = app.injector.instanceOf[AuditService]
 
   val xml =
-  <DAC6_Arrangement version="First" xmlns="urn:ukdac6:v0.1">
+    <DAC6_Arrangement version="First" xmlns="urn:ukdac6:v0.1">
       <Header>
         <MessageRefId>GB0000000XXX</MessageRefId>
         <Timestamp>2020-05-14T17:10:00</Timestamp>
@@ -60,27 +60,29 @@ class AuditServiceSpec extends SpecBase with BeforeAndAfterEach {
 
   val auditType = "disclosureFileSubmission"
 
-
   "Audit service must" - {
     "must generate correct payload for failed Manual Submission parsing" in {
-      forAll(arbitrary[String], arbitrary[Option[String]], arbitrary[Option[String]], arbitrary[String]) { (enrolmentID, arrangementID, disclosureID, messageRefID) =>
-        reset(auditConnector)
+      forAll(arbitrary[String], arbitrary[Option[String]], arbitrary[Option[String]], arbitrary[String]) {
+        (enrolmentID, arrangementID, disclosureID, messageRefID) =>
+          reset(auditConnector)
 
-        when(auditConnector.sendExtendedEvent(any())(any(), any()))
-          .thenReturn(Future.successful(AuditResult.Success))
+          when(auditConnector.sendExtendedEvent(any())(any(), any()))
+            .thenReturn(Future.successful(AuditResult.Success))
 
-        val metaData = Dac6MetaData(importInstruction = "DAC6NEW",
-          arrangementID = arrangementID,
-          disclosureID = disclosureID,
-          disclosureInformationPresent = true,
-          initialDisclosureMA = true,
-          messageRefId = messageRefID)
+          val metaData = Dac6MetaData(
+            importInstruction = "DAC6NEW",
+            arrangementID = arrangementID,
+            disclosureID = disclosureID,
+            disclosureInformationPresent = true,
+            initialDisclosureMA = true,
+            messageRefId = messageRefID
+          )
 
-        val parseErrors = ListBuffer(SaxParseError(1, "error-message"), SaxParseError(2, "error-message2"))
-        auditService.auditManualSubmissionParseFailure(enrolmentID, Some(metaData), parseErrors)
+          val parseErrors = ListBuffer(SaxParseError(1, "error-message"), SaxParseError(2, "error-message2"))
+          auditService.auditManualSubmissionParseFailure(enrolmentID, Some(metaData), parseErrors)
 
-        val errorsArray =
-          s"""|[
+          val errorsArray =
+            s"""|[
               |{
               |"lineNumber" : 1,
               |"errorMessage" : error-message
@@ -90,26 +92,25 @@ class AuditServiceSpec extends SpecBase with BeforeAndAfterEach {
               |}
               |]""".stripMargin
 
-        val arrangmentIdValue = arrangementID.getOrElse("None Provided")
-        val disclosureIdValue = disclosureID.getOrElse("None Provided")
+          val arrangmentIdValue = arrangementID.getOrElse("None Provided")
+          val disclosureIdValue = disclosureID.getOrElse("None Provided")
 
-        val expectedjson = Json.obj(
-          "enrolmentID" -> enrolmentID,
-          "arrangementID" -> arrangmentIdValue,
-          "disclosureID" -> disclosureIdValue,
-          "messageRefID" -> metaData.messageRefId,
-          "disclosureImportInstruction" -> "DAC6NEW",
-          "initialDisclosureMA" -> "true",
-          "errors" -> errorsArray)
+          val expectedjson = Json.obj(
+            "enrolmentID"                 -> enrolmentID,
+            "arrangementID"               -> arrangmentIdValue,
+            "disclosureID"                -> disclosureIdValue,
+            "messageRefID"                -> metaData.messageRefId,
+            "disclosureImportInstruction" -> "DAC6NEW",
+            "initialDisclosureMA"         -> "true",
+            "errors"                      -> errorsArray
+          )
 
-        val eventCaptor = ArgumentCaptor.forClass(classOf[ExtendedDataEvent])
+          val eventCaptor = ArgumentCaptor.forClass(classOf[ExtendedDataEvent])
 
-        verify(auditConnector, times(1)).sendExtendedEvent(eventCaptor.capture())(any(), any())
+          verify(auditConnector, times(1)).sendExtendedEvent(eventCaptor.capture())(any(), any())
 
-        eventCaptor.getValue.detail mustBe expectedjson
+          eventCaptor.getValue.detail mustBe expectedjson
       }
     }
   }
 }
-
-

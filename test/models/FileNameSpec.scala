@@ -26,8 +26,8 @@ class FileNameSpec extends AnyFreeSpec with Matchers {
 
   object File extends FileName("fileName", "disclosureID", genId, time)
 
-  val genId: GeneratedIDs = GeneratedIDs(Some(ArrangementId("GBA", "20200601", "AAA000")), Some(DisclosureId("GBD", "20200701", "AAA001")))
-  val time: LocalDateTime = LocalDateTime.now
+  val genId: GeneratedIDs       = GeneratedIDs(Some(ArrangementId("GBA", "20200601", "AAA000")), Some(DisclosureId("GBD", "20200701", "AAA001")))
+  val time: LocalDateTime       = LocalDateTime.now
   val format: DateTimeFormatter = DateTimeFormatter.ofPattern("yyyyMMddHHmmss")
 
   ".toString" - {
@@ -38,4 +38,3 @@ class FileNameSpec extends AnyFreeSpec with Matchers {
     }
   }
 }
-

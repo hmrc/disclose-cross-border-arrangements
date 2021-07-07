@@ -21,10 +21,12 @@ import models.subscription.{ContactInformationForIndividual, ContactInformationF
 
 object ContactFixtures {
 
-  val contact = SubscriptionDetails("111111111",
+  val contact = SubscriptionDetails(
+    "111111111",
     Some("a"),
     true,
     ContactInformationForIndividual(IndividualDetails("First", "Last", None), "a", Some("A"), Some("A")),
-    Some(ContactInformationForOrganisation(OrganisationDetails("o"), "a", None, None)))
+    Some(ContactInformationForOrganisation(OrganisationDetails("o"), "a", None, None))
+  )
 
 }

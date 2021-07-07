@@ -27,18 +27,18 @@ import javax.inject.Inject
 import scala.concurrent.ExecutionContext
 import scala.xml.NodeSeq
 
-class ManualSubmissionValidationController @Inject()(identify: IdentifierAuthAction,
-                                                     cc: ControllerComponents,
-                                                     validationEngine: ManualSubmissionValidationEngine ,
-                                                    )(implicit ec: ExecutionContext)
-  extends BackendController(cc) {
+class ManualSubmissionValidationController @Inject() (identify: IdentifierAuthAction,
+                                                      cc: ControllerComponents,
+                                                      validationEngine: ManualSubmissionValidationEngine
+)(implicit ec: ExecutionContext)
+    extends BackendController(cc) {
 
-  def validateManualSubmission: Action[NodeSeq] =  identify.async(parse.xml) {
+  def validateManualSubmission: Action[NodeSeq] = identify.async(parse.xml) {
     implicit request =>
       validationEngine.validateManualSubmission(request.body, request.enrolmentID) map {
         case Some(ManualSubmissionValidationSuccess(messageRefId)) => Ok(Json.toJson(ManualSubmissionValidationSuccess(messageRefId)))
-        case Some(ManualSubmissionValidationFailure(Seq(errors))) => Ok(Json.toJson(ManualSubmissionValidationFailure(Seq(errors))))
-        case None => BadRequest("Invalid_XML")
+        case Some(ManualSubmissionValidationFailure(Seq(errors)))  => Ok(Json.toJson(ManualSubmissionValidationFailure(Seq(errors))))
+        case None                                                  => BadRequest("Invalid_XML")
       }
   }
 }

@@ -27,7 +27,9 @@ import java.time.format.DateTimeFormatter
 object APIDateTimeFormats {
 
   lazy val localDateTimeWrites: Writes[LocalDateTime] =
-    Writes.apply[LocalDateTime]{date => JsString(date.format(DateTimeFormatter.ISO_DATE_TIME))}
+    Writes.apply[LocalDateTime] {
+      date => JsString(date.format(DateTimeFormatter.ISO_DATE_TIME))
+    }
 
   implicit val writes: OWrites[SubmissionDetails] = (
     (JsPath \ "enrolmentID").write[String] and
@@ -38,13 +40,15 @@ object APIDateTimeFormats {
       (JsPath \ "importInstruction").write[String] and
       (JsPath \ "initialDisclosureMA").write[Boolean] and
       (JsPath \ "messageRefId").write[String]
-    ) (unlift(SubmissionDetails.unapply))
+  )(unlift(SubmissionDetails.unapply))
 
   implicit val cacheWrites: OWrites[CreateSubscriptionForDACRequest] = (
     (__ \ "createSubscriptionForDACRequest").write[SubscriptionForDACRequest] and
       (__ \ "subscriptionID").write[String] and
       (__ \ "lastUpdated").write[LocalDateTime](localDateTimeWrites)
-    )(r => (r.createSubscriptionForDACRequest, r.subscriptionID, r.lastUpdated))
+  )(
+    r => (r.createSubscriptionForDACRequest, r.subscriptionID, r.lastUpdated)
+  )
 
   implicit val format: OFormat[SubmissionHistory] = Json.format[SubmissionHistory]
 }

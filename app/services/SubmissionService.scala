@@ -21,12 +21,12 @@ import models.{Add, Delete, GeneratedIDs, ImportInstruction, New, Replace}
 
 import scala.concurrent.{ExecutionContext, Future}
 
-class SubmissionService @Inject()(idService: IdService)(implicit val ec: ExecutionContext){
+class SubmissionService @Inject() (idService: IdService)(implicit val ec: ExecutionContext) {
 
   def generateIDsForInstruction(instruction: ImportInstruction): Future[GeneratedIDs] = {
     instruction match {
-      case New => generateArrangementAndDisclosure
-      case Add => generateDisclosure
+      case New              => generateArrangementAndDisclosure
+      case Add              => generateDisclosure
       case Replace | Delete => Future.successful(GeneratedIDs(None, None))
     }
   }
@@ -34,16 +34,12 @@ class SubmissionService @Inject()(idService: IdService)(implicit val ec: Executi
   def generateArrangementAndDisclosure: Future[GeneratedIDs] =
     for {
       arrangementID <- idService.generateArrangementId()
-      disclosureID <- idService.generateDisclosureId()
-    } yield {
-      GeneratedIDs(Some(arrangementID), Some(disclosureID))
-    }
+      disclosureID  <- idService.generateDisclosureId()
+    } yield GeneratedIDs(Some(arrangementID), Some(disclosureID))
 
   def generateDisclosure: Future[GeneratedIDs] =
-    for{
+    for {
       disclosureID <- idService.generateDisclosureId()
-    } yield {
-      GeneratedIDs(None, Some(disclosureID))
-    }
+    } yield GeneratedIDs(None, Some(disclosureID))
 
 }

@@ -26,36 +26,31 @@ import scala.concurrent.{ExecutionContext, Future}
 
 trait UploadProgressTracker {
 
-  def requestUpload(uploadId : UploadId, fileReference : Reference) : Future[Boolean]
+  def requestUpload(uploadId: UploadId, fileReference: Reference): Future[Boolean]
 
-  def registerUploadResult(reference : Reference, uploadStatus : UploadStatus): Future[Boolean]
+  def registerUploadResult(reference: Reference, uploadStatus: UploadStatus): Future[Boolean]
 
-  def getUploadResult(id : UploadId): Future[Option[UploadStatus]]
+  def getUploadResult(id: UploadId): Future[Option[UploadStatus]]
 
 }
 
-
-class MongoBackedUploadProgressTracker @Inject()(repository : UploadSessionRepository)(implicit ec : ExecutionContext) extends UploadProgressTracker {
+class MongoBackedUploadProgressTracker @Inject() (repository: UploadSessionRepository)(implicit ec: ExecutionContext) extends UploadProgressTracker {
   private val logger = LoggerFactory.getLogger(getClass)
 
-  override def requestUpload(uploadId : UploadId, fileReference : Reference) : Future[Boolean] = {
-
+  override def requestUpload(uploadId: UploadId, fileReference: Reference): Future[Boolean] =
     repository.insert(UploadSessionDetails(ObjectId.get(), uploadId, fileReference, InProgress))
-  }
 
   override def registerUploadResult(fileReference: Reference, uploadStatus: UploadStatus): Future[Boolean] = {
     logger.debug("In the register " + fileReference.toString + "   " + uploadStatus.toString)
     repository.updateStatus(fileReference, uploadStatus)
   }
 
-
   override def getUploadResult(id: UploadId): Future[Option[UploadStatus]] = {
     logger.debug("Getting the upload result from the database")
-    for (result <- repository.findByUploadId(id)) yield {
-      result map {x =>
+    for (result <- repository.findByUploadId(id)) yield result map {
+      x =>
         logger.debug("The status is " + x.status)
         x.status
-      }
     }
   }
 

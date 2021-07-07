@@ -20,12 +20,11 @@ import base.SpecBase
 import org.bson.types.ObjectId
 import play.api.libs.json.Json
 
-
 class UploadSessionDetailsSpec extends SpecBase {
 
   def str2Hex(str: String): Array[Byte] = {
     val bytes = new Array[Byte](str.length / 2)
-    var i = 0
+    var i     = 0
     while (i < bytes.length) {
       bytes(i) = Integer.parseInt(str.substring(2 * i, 2 * i + 2), 16).toByte
       i += 1

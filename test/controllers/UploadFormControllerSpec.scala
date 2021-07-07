@@ -32,22 +32,19 @@ import services.UploadProgressTracker
 
 import scala.concurrent.Future
 
-class UploadFormControllerSpec  extends SpecBase
-  with ScalaCheckPropertyChecks
-  with ModelGenerators
-  with BeforeAndAfterEach {
+class UploadFormControllerSpec extends SpecBase with ScalaCheckPropertyChecks with ModelGenerators with BeforeAndAfterEach {
 
   val mockUploadSessionRepository: UploadSessionRepository = mock[UploadSessionRepository]
-  val mockUploadProgressTracker: UploadProgressTracker = mock[UploadProgressTracker]
+  val mockUploadProgressTracker: UploadProgressTracker     = mock[UploadProgressTracker]
 
-  
   val application: Application =
     applicationBuilder()
       .overrides(
         bind[UploadProgressTracker].toInstance(mockUploadProgressTracker),
         bind[UploadSessionRepository].toInstance(mockUploadSessionRepository),
         bind[AuthAction].to[FakeAuthAction]
-      ).build()
+      )
+      .build()
 
   "getDetails" - {
     "must return ok with status" in {

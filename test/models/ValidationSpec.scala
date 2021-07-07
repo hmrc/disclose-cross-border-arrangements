@@ -29,7 +29,7 @@ class ValidationSpec extends SpecBase with TestXml {
         val validator = new Validation("businessrules.initialDisclosure.needRelevantTaxPayer", false)
 
         val result = validator.toGenericError
-        result mustBe (GenericError(0 , "InitialDisclosureMA is false so there should be a RelevantTaxpayer"))
+        result mustBe (GenericError(0, "InitialDisclosureMA is false so there should be a RelevantTaxpayer"))
       }
 
       "must correct error message when other info is provided when hallmark absent" in {
@@ -37,7 +37,7 @@ class ValidationSpec extends SpecBase with TestXml {
         val validator = new Validation("businessrules.dac6D10OtherInfo.needHallMarkToProvideInfo", false)
 
         val result = validator.toGenericError
-        result mustBe (GenericError(0 , "DAC6D1OtherInfo has been provided but hallmark DAC6D1Other has not been selected"))
+        result mustBe (GenericError(0, "DAC6D1OtherInfo has been provided but hallmark DAC6D1Other has not been selected"))
       }
 
       "must correct error message - RelevantTaxpayerDiscloser has been provided so there must be at least one RelevantTaxpayer" in {
@@ -45,7 +45,7 @@ class ValidationSpec extends SpecBase with TestXml {
         val validator = new Validation("businessrules.relevantTaxpayerDiscloser.needRelevantTaxPayer", false)
 
         val result = validator.toGenericError
-        result mustBe (GenericError(0 , "RelevantTaxpayerDiscloser has been provided so there must be at least one RelevantTaxpayer"))
+        result mustBe (GenericError(0, "RelevantTaxpayerDiscloser has been provided so there must be at least one RelevantTaxpayer"))
       }
 
       "must correct error message - IntermediaryDiscloser has been provided so there must be at least one Intermediary" in {
@@ -53,7 +53,7 @@ class ValidationSpec extends SpecBase with TestXml {
         val validator = new Validation("businessrules.intermediaryDiscloser.needIntermediary", false)
 
         val result = validator.toGenericError
-        result mustBe (GenericError(0 , "IntermediaryDiscloser has been provided so there must be at least one Intermediary"))
+        result mustBe (GenericError(0, "IntermediaryDiscloser has been provided so there must be at least one Intermediary"))
       }
 
       "must correct error message - Check the TaxpayerImplementingDate for all arrangements is on or after 25 June 2018" in {
@@ -61,7 +61,7 @@ class ValidationSpec extends SpecBase with TestXml {
         val validator = new Validation("businessrules.taxPayerImplementingDates.needToBeAfterStart", false)
 
         val result = validator.toGenericError
-        result mustBe (GenericError(0 , "Check the TaxpayerImplementingDate for all arrangements is on or after 25 June 2018"))
+        result mustBe (GenericError(0, "Check the TaxpayerImplementingDate for all arrangements is on or after 25 June 2018"))
       }
 
       "must correct error message - InitialDisclosureMA is true and there are RelevantTaxpayers so each RelevantTaxpayer must have a TaxpayerImplementingDate" in {
@@ -69,7 +69,9 @@ class ValidationSpec extends SpecBase with TestXml {
         val validator = new Validation("businessrules.initialDisclosureMA.missingRelevantTaxPayerDates", false)
 
         val result = validator.toGenericError
-        result mustBe (GenericError(0 , "InitialDisclosureMA is true and there are RelevantTaxpayers so each RelevantTaxpayer must have a TaxpayerImplementingDate"))
+        result mustBe (GenericError(0,
+                                    "InitialDisclosureMA is true and there are RelevantTaxpayers so each RelevantTaxpayer must have a TaxpayerImplementingDate"
+        ))
       }
 
       "must correct error message - ArrangementID relates to a previous initial disclosure where InitialDisclosureMA is true so each RelevantTaxpayer must have a TaxpayerImplementingDate" in {
@@ -77,7 +79,12 @@ class ValidationSpec extends SpecBase with TestXml {
         val validator = new Validation("businessrules.initialDisclosureMA.firstDisclosureHasInitialDisclosureMAAsTrue", false)
 
         val result = validator.toGenericError
-        result mustBe (GenericError(0 , "ArrangementID relates to a previous initial disclosure where InitialDisclosureMA is true so each RelevantTaxpayer must have a TaxpayerImplementingDate"))
+        result mustBe (
+          GenericError(
+            0,
+            "ArrangementID relates to a previous initial disclosure where InitialDisclosureMA is true so each RelevantTaxpayer must have a TaxpayerImplementingDate"
+          )
+        )
       }
 
       "must correct error message - MainBenefitTest1 is false or blank but the hallmarks A, B, C1bi, C1c and/or C1d have been selected" in {
@@ -85,7 +92,7 @@ class ValidationSpec extends SpecBase with TestXml {
         val validator = new Validation("businessrules.mainBenefitTest1.oneOfSpecificHallmarksMustBePresent", false)
 
         val result = validator.toGenericError
-        result mustBe (GenericError(0 , "MainBenefitTest1 is false or blank but the hallmarks A, B, C1bi, C1c and/or C1d have been selected"))
+        result mustBe (GenericError(0, "MainBenefitTest1 is false or blank but the hallmarks A, B, C1bi, C1c and/or C1d have been selected"))
       }
 
       "must correct error message - The DisclosureInformation/ImplementingDate on which the first step in the implementation of the reportable cross-border arrangement has been made or will be made must be on or after 25 June 2018" in {
@@ -93,7 +100,12 @@ class ValidationSpec extends SpecBase with TestXml {
         val validator = new Validation("businessrules.implementingDates.needToBeAfterStart", false)
 
         val result = validator.toGenericError
-        result mustBe (GenericError(0 , "The DisclosureInformation/ImplementingDate on which the first step in the implementation of the reportable cross-border arrangement has been made or will be made must be on or after 25 June 2018"))
+        result mustBe (
+          GenericError(
+            0,
+            "The DisclosureInformation/ImplementingDate on which the first step in the implementation of the reportable cross-border arrangement has been made or will be made must be on or after 25 June 2018"
+          )
+        )
       }
 
       "must correct error message - DisclosureImportInstruction is DAC6ADD so there should be an ArrangementID and no DisclosureID" in {
@@ -101,7 +113,7 @@ class ValidationSpec extends SpecBase with TestXml {
         val validator = new Validation("businessrules.addDisclosure.mustHaveArrangementIDButNotDisclosureID", false)
 
         val result = validator.toGenericError
-        result mustBe (GenericError(0 , "DisclosureImportInstruction is DAC6ADD so there should be an ArrangementID and no DisclosureID"))
+        result mustBe (GenericError(0, "DisclosureImportInstruction is DAC6ADD so there should be an ArrangementID and no DisclosureID"))
       }
 
       "must correct error message - DisclosureImportInstruction is DAC6NEW so there should be no ArrangementID or DisclosureID" in {
@@ -109,7 +121,7 @@ class ValidationSpec extends SpecBase with TestXml {
         val validator = new Validation("businessrules.newDisclosure.mustNotHaveArrangementIDOrDisclosureID", false)
 
         val result = validator.toGenericError
-        result mustBe (GenericError(0 , "DisclosureImportInstruction is DAC6NEW so there should be no ArrangementID or DisclosureID"))
+        result mustBe (GenericError(0, "DisclosureImportInstruction is DAC6NEW so there should be no ArrangementID or DisclosureID"))
       }
 
       "must correct error message - DisclosureImportInstruction is DAC6REP so there should be an ArrangementID and a DisclosureID" in {
@@ -117,7 +129,7 @@ class ValidationSpec extends SpecBase with TestXml {
         val validator = new Validation("businessrules.repDisclosure.mustHaveArrangementIDDisclosureIDAndMessageRefID", false)
 
         val result = validator.toGenericError
-        result mustBe (GenericError(0 , "DisclosureImportInstruction is DAC6REP so there should be an ArrangementID and a DisclosureID"))
+        result mustBe (GenericError(0, "DisclosureImportInstruction is DAC6REP so there should be an ArrangementID and a DisclosureID"))
       }
 
       "must correct error message - DisclosureImportInstruction is DAC6DEL so there should be an ArrangementID and a DisclosureID" in {
@@ -125,7 +137,7 @@ class ValidationSpec extends SpecBase with TestXml {
         val validator = new Validation("businessrules.delDisclosure.mustHaveArrangementIDDisclosureIDAndMessageRefID", false)
 
         val result = validator.toGenericError
-        result mustBe (GenericError(0 , "DisclosureImportInstruction is DAC6DEL so there should be an ArrangementID and a DisclosureID"))
+        result mustBe (GenericError(0, "DisclosureImportInstruction is DAC6DEL so there should be an ArrangementID and a DisclosureID"))
       }
 
       "must correct error message - InitialDisclosureMA is true so DisclosureImportInstruction cannot be DAC6ADD" in {
@@ -133,7 +145,7 @@ class ValidationSpec extends SpecBase with TestXml {
         val validator = new Validation("businessrules.addDisclosure.mustNotBeInitialDisclosureMA", false)
 
         val result = validator.toGenericError
-        result mustBe (GenericError(0 , "InitialDisclosureMA is true so DisclosureImportInstruction cannot be DAC6ADD"))
+        result mustBe (GenericError(0, "InitialDisclosureMA is true so DisclosureImportInstruction cannot be DAC6ADD"))
       }
 
       "must correct error message - Remove the TaxpayerImplementingDate for any arrangements that are not marketable" in {
@@ -141,7 +153,7 @@ class ValidationSpec extends SpecBase with TestXml {
         val validator = new Validation("businessrules.nonMA.cantHaveRelevantTaxPayer", false)
 
         val result = validator.toGenericError
-        result mustBe (GenericError(0 , "Remove the TaxpayerImplementingDate for any arrangements that are not marketable"))
+        result mustBe (GenericError(0, "Remove the TaxpayerImplementingDate for any arrangements that are not marketable"))
       }
 
       "must correct error message - Check BirthDate field is on or after 1 January 1900 for all RelevantTaxPayers" in {
@@ -149,7 +161,7 @@ class ValidationSpec extends SpecBase with TestXml {
         val validator = new Validation("businessrules.RelevantTaxPayersBirthDates.maxDateOfBirthExceeded", false)
 
         val result = validator.toGenericError
-        result mustBe (GenericError(0 , "Check BirthDate field is on or after 1 January 1900 for all RelevantTaxPayers"))
+        result mustBe (GenericError(0, "Check BirthDate field is on or after 1 January 1900 for all RelevantTaxPayers"))
       }
 
       "must correct error message - Check BirthDate field is on or after 1 January 1900 for Disclosing" in {
@@ -157,7 +169,7 @@ class ValidationSpec extends SpecBase with TestXml {
         val validator = new Validation("businessrules.DisclosingBirthDates.maxDateOfBirthExceeded", false)
 
         val result = validator.toGenericError
-        result mustBe (GenericError(0 , "Check BirthDate field is on or after 1 January 1900 for Disclosing"))
+        result mustBe (GenericError(0, "Check BirthDate field is on or after 1 January 1900 for Disclosing"))
       }
 
       "must correct error message - Check BirthDate field is on or after 1 January 1900 for all intermediaries" in {
@@ -165,7 +177,7 @@ class ValidationSpec extends SpecBase with TestXml {
         val validator = new Validation("businessrules.IntermediaryBirthDates.maxDateOfBirthExceeded", false)
 
         val result = validator.toGenericError
-        result mustBe (GenericError(0 , "Check BirthDate field is on or after 1 January 1900 for all intermediaries"))
+        result mustBe (GenericError(0, "Check BirthDate field is on or after 1 January 1900 for all intermediaries"))
       }
 
       "must correct error message - Check BirthDate field is on or after 1 January 1900 for all AffectedPersons" in {
@@ -173,7 +185,7 @@ class ValidationSpec extends SpecBase with TestXml {
         val validator = new Validation("businessrules.AffectedPersonsBirthDates.maxDateOfBirthExceeded", false)
 
         val result = validator.toGenericError
-        result mustBe (GenericError(0 , "Check BirthDate field is on or after 1 January 1900 for all AffectedPersons"))
+        result mustBe (GenericError(0, "Check BirthDate field is on or after 1 January 1900 for all AffectedPersons"))
       }
 
       "must correct error message - Check BirthDate field is on or after 1 January 1900 for all AssociatedEnterprises" in {
@@ -181,7 +193,7 @@ class ValidationSpec extends SpecBase with TestXml {
         val validator = new Validation("businessrules.AssociatedEnterprisesBirthDates.maxDateOfBirthExceeded", false)
 
         val result = validator.toGenericError
-        result mustBe (GenericError(0 , "Check BirthDate field is on or after 1 January 1900 for all AssociatedEnterprises"))
+        result mustBe (GenericError(0, "Check BirthDate field is on or after 1 January 1900 for all AssociatedEnterprises"))
       }
 
       "MD -must provide correct error message - ArrangementID does not match HMRC's records" in {
@@ -189,7 +201,7 @@ class ValidationSpec extends SpecBase with TestXml {
         val validator = new Validation("metaDataRules.arrangementId.arrangementIdDoesNotMatchRecords", false)
 
         val result = validator.toGenericError
-        result mustBe (GenericError(0 , "ArrangementID does not match HMRC's records"))
+        result mustBe (GenericError(0, "ArrangementID does not match HMRC's records"))
       }
 
       "MD -must provide correct error message - Provide DisclosureInformation in this DAC6REP file, to replace the original arrangement details" in {
@@ -197,7 +209,7 @@ class ValidationSpec extends SpecBase with TestXml {
         val validator = new Validation("metaDataRules.disclosureInformation.noInfoWhenReplacingDAC6NEW", false)
 
         val result = validator.toGenericError
-        result mustBe (GenericError(0 , "Provide DisclosureInformation in this DAC6REP file, to replace the original arrangement details"))
+        result mustBe (GenericError(0, "Provide DisclosureInformation in this DAC6REP file, to replace the original arrangement details"))
       }
 
       "MD -must provide correct error message - Provide DisclosureInformation in this DAC6REP file. This is a mandatory field for arrangements that are not marketable" in {
@@ -205,7 +217,9 @@ class ValidationSpec extends SpecBase with TestXml {
         val validator = new Validation("metaDataRules.disclosureInformation.noInfoForNonMaDAC6REP", false)
 
         val result = validator.toGenericError
-        result mustBe (GenericError(0 , "Provide DisclosureInformation in this DAC6REP file. This is a mandatory field for arrangements that are not marketable"))
+        result mustBe (GenericError(0,
+                                    "Provide DisclosureInformation in this DAC6REP file. This is a mandatory field for arrangements that are not marketable"
+        ))
       }
 
       "MD -must provide correct error message - Change the InitialDisclosureMA to match the original declaration. If the arrangement has since become marketable, you will need to make a new report" in {
@@ -213,7 +227,12 @@ class ValidationSpec extends SpecBase with TestXml {
         val validator = new Validation("metaDataRules.initialDisclosureMA.arrangementNowMarketable", false)
 
         val result = validator.toGenericError
-        result mustBe (GenericError(0 , "Change the InitialDisclosureMA to match the original declaration. If the arrangement has since become marketable, you will need to make a new report"))
+        result mustBe (
+          GenericError(
+            0,
+            "Change the InitialDisclosureMA to match the original declaration. If the arrangement has since become marketable, you will need to make a new report"
+          )
+        )
       }
 
       "MD -must provide correct error message - Change the InitialDisclosureMA to match the original declaration. If the arrangement is no longer marketable, you will need to make a new report" in {
@@ -221,7 +240,12 @@ class ValidationSpec extends SpecBase with TestXml {
         val validator = new Validation("metaDataRules.initialDisclosureMA.arrangementNoLongerMarketable", false)
 
         val result = validator.toGenericError
-        result mustBe (GenericError(0 , "Change the InitialDisclosureMA to match the original declaration. If the arrangement is no longer marketable, you will need to make a new report"))
+        result mustBe (
+          GenericError(
+            0,
+            "Change the InitialDisclosureMA to match the original declaration. If the arrangement is no longer marketable, you will need to make a new report"
+          )
+        )
       }
 
       "MD -must provide correct error message - DisclosureID does not match the ArrangementID provided" in {
@@ -229,7 +253,7 @@ class ValidationSpec extends SpecBase with TestXml {
         val validator = new Validation("metaDataRules.disclosureId.disclosureIDDoesNotMatchArrangementID", false)
 
         val result = validator.toGenericError
-        result mustBe (GenericError(0 , "DisclosureID does not match the ArrangementID provided"))
+        result mustBe (GenericError(0, "DisclosureID does not match the ArrangementID provided"))
       }
 
       "MD -must provide correct error message - DisclosureID has not been generated by this individual or organisation" in {
@@ -237,7 +261,7 @@ class ValidationSpec extends SpecBase with TestXml {
         val validator = new Validation("metaDataRules.disclosureId.disclosureIDDoesNotMatchUser", false)
 
         val result = validator.toGenericError
-        result mustBe (GenericError(0 , "DisclosureID has not been generated by this individual or organisation"))
+        result mustBe (GenericError(0, "DisclosureID has not been generated by this individual or organisation"))
       }
 
       "MD -must provide correct error message - Provide DisclosureInformation in this DAC6NEW file" in {
@@ -245,7 +269,7 @@ class ValidationSpec extends SpecBase with TestXml {
         val validator = new Validation("metaDataRules.disclosureInformation.disclosureInformationMissingFromDAC6NEW", false)
 
         val result = validator.toGenericError
-        result mustBe (GenericError(0 , "Provide DisclosureInformation in this DAC6NEW file"))
+        result mustBe (GenericError(0, "Provide DisclosureInformation in this DAC6NEW file"))
       }
 
       "MD -must provide correct error message - Provide DisclosureInformation in this DAC6ADD file. This is a mandatory field for arrangements that are not marketable" in {
@@ -253,14 +277,21 @@ class ValidationSpec extends SpecBase with TestXml {
         val validator = new Validation("metaDataRules.disclosureInformation.disclosureInformationMissingFromDAC6ADD", false)
 
         val result = validator.toGenericError
-        result mustBe (GenericError(0 , "Provide DisclosureInformation in this DAC6ADD file. This is a mandatory field for arrangements that are not marketable"))
+        result mustBe (GenericError(0,
+                                    "Provide DisclosureInformation in this DAC6ADD file. This is a mandatory field for arrangements that are not marketable"
+        ))
       }
       "MD -must provide correct error message - The MessageRefID should start with GB, then your User ID, followed by identifying characters of your choice. It must be 200 characters or less" in {
 
         val validator = new Validation("metaDataRules.messageRefId.wrongFormat", false)
 
         val result = validator.toGenericError
-        result mustBe (GenericError(0 , "The MessageRefID should start with GB, then your User ID, followed by identifying characters of your choice. It must be 200 characters or less"))
+        result mustBe (
+          GenericError(
+            0,
+            "The MessageRefID should start with GB, then your User ID, followed by identifying characters of your choice. It must be 200 characters or less"
+          )
+        )
       }
 
       "MD -must provide correct error message - Check UserID is correct, it must match the ID you got at registration to create a valid MessageRefID" in {
@@ -268,7 +299,7 @@ class ValidationSpec extends SpecBase with TestXml {
         val validator = new Validation("metaDataRules.messageRefId.noUserId", false)
 
         val result = validator.toGenericError
-        result mustBe (GenericError(0 , "Check UserID is correct, it must match the ID you got at registration to create a valid MessageRefID"))
+        result mustBe (GenericError(0, "Check UserID is correct, it must match the ID you got at registration to create a valid MessageRefID"))
       }
 
       "MD -must provide correct error message - Check your MessageRefID is unique. It should start with GB, then your User ID, followed by unique identifying characters of your choice. It must be 200 characters or less" in {
@@ -276,7 +307,12 @@ class ValidationSpec extends SpecBase with TestXml {
         val validator = new Validation("metaDataRules.messageRefId.notUnique", false)
 
         val result = validator.toGenericError
-        result mustBe (GenericError(0 , "Check your MessageRefID is unique. It should start with GB, then your User ID, followed by unique identifying characters of your choice. It must be 200 characters or less"))
+        result mustBe (
+          GenericError(
+            0,
+            "Check your MessageRefID is unique. It should start with GB, then your User ID, followed by unique identifying characters of your choice. It must be 200 characters or less"
+          )
+        )
       }
 
       "must provide correct error message - No Key supplied" in {
@@ -284,7 +320,7 @@ class ValidationSpec extends SpecBase with TestXml {
         val validator = new Validation("None", false)
 
         val result = validator.toGenericError
-        result mustBe (GenericError(0 , "There is a problem with this line number"))
+        result mustBe (GenericError(0, "There is a problem with this line number"))
       }
 
       "key -must provide correct error message - InitialDisclosureMA needRelevantTaxPayer" in {
@@ -406,7 +442,6 @@ class ValidationSpec extends SpecBase with TestXml {
         val result = validator.path
         result mustBe "AssociatedEnterprises"
       }
-
 
       "key -must provide correct error message - ArrangementID maxDateOfBirthExceeded" in {
 

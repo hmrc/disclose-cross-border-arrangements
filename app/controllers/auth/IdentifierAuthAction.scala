@@ -31,31 +31,31 @@ import uk.gov.hmrc.play.http.HeaderCarrierConverter
 import javax.inject.Inject
 import scala.concurrent.{ExecutionContext, Future}
 
-class IdentifierAuthActionImpl @Inject()(
-                                          override val authConnector: AuthConnector,
-                                          val parser: BodyParsers.Default
-                              )(implicit val executionContext: ExecutionContext)
-  extends IdentifierAuthAction with AuthorisedFunctions {
+class IdentifierAuthActionImpl @Inject() (
+  override val authConnector: AuthConnector,
+  val parser: BodyParsers.Default
+)(implicit val executionContext: ExecutionContext)
+    extends IdentifierAuthAction
+    with AuthorisedFunctions {
   private val logger = LoggerFactory.getLogger(getClass)
 
-  private val enrolmentKey: String = "HMRC-DAC6-ORG"
+  private val enrolmentKey: String   = "HMRC-DAC6-ORG"
   private val enrolmentIDKey: String = "DAC6ID"
 
   override def invokeBlock[A](request: Request[A], block: UserRequest[A] => Future[Result]): Future[Result] = {
     implicit val hc: HeaderCarrier = HeaderCarrierConverter.fromRequest(request)
 
     authorised(Enrolment(enrolmentKey)).retrieve(Retrievals.internalId and Retrievals.authorisedEnrolments) {
-      case Some(internalID) ~ Enrolments(enrolments) => {
+      case Some(internalID) ~ Enrolments(enrolments) =>
         val enrolmentID = {
           (for {
-            enrolment <- enrolments.find(_.key.equals(enrolmentKey))
+            enrolment           <- enrolments.find(_.key.equals(enrolmentKey))
             enrolmentIdentifier <- enrolment.getIdentifier(enrolmentIDKey)
           } yield enrolmentIdentifier.value)
             .getOrElse(throw new Exception("EnrolmentID Required for DAC6"))
         }
 
         block(UserRequest(internalID, enrolmentID, request))
-      }
       case None ~ _ => Future.successful(Status(UNAUTHORIZED))
     } recover {
       case _: NoActiveSession =>

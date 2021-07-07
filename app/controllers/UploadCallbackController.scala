@@ -27,14 +27,23 @@ import scala.concurrent.ExecutionContext
 import uk.gov.hmrc.play.bootstrap.controller.WithJsonBody
 
 @Singleton
-class UploadCallbackController @Inject()( override implicit val messagesApi: MessagesApi,
-                                          val controllerComponents: MessagesControllerComponents,
-                                          val upscanCallbackDispatcher : UpscanCallbackDispatcher)(
-                                          implicit val ec : ExecutionContext) extends BaseController with WithJsonBody with I18nSupport {
+class UploadCallbackController @Inject() (val controllerComponents: MessagesControllerComponents,
+                                          val upscanCallbackDispatcher: UpscanCallbackDispatcher,
+                                          implicit override val messagesApi: MessagesApi
+)(implicit val ec: ExecutionContext)
+    extends BaseController
+    with WithJsonBody
+    with I18nSupport {
 
-  val callback: Action[JsValue] = Action.async(parse.json) { implicit request =>
-    withJsonBody[CallbackBody] { feedback: CallbackBody =>
-      upscanCallbackDispatcher.handleCallback(feedback).map(_ => Ok)
-    }
+  val callback: Action[JsValue] = Action.async(parse.json) {
+    implicit request =>
+      withJsonBody[CallbackBody] {
+        feedback: CallbackBody =>
+          upscanCallbackDispatcher
+            .handleCallback(feedback)
+            .map(
+              _ => Ok
+            )
+      }
   }
 }

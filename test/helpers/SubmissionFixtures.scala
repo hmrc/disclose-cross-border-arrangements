@@ -17,8 +17,9 @@
 package helpers
 
 object SubmissionFixtures {
- val minimalPassing =
-   <submission>
+
+  val minimalPassing =
+    <submission>
      <fileName>my-file.xml</fileName>
      <enrolmentID>enrolmentID</enrolmentID>
      <file>
