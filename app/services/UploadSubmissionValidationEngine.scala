@@ -26,28 +26,32 @@ import scala.collection.mutable.ListBuffer
 import scala.concurrent.{ExecutionContext, Future}
 import scala.xml.Elem
 
-class UploadSubmissionValidationEngine @Inject()(xmlValidationService: XMLValidationService,
-                                                 businessRuleValidationService: BusinessRuleValidationService,
-                                                 metaDataValidationService: MetaDataValidationService,
-                                                 xmlErrorMessageHelper: XmlErrorMessageHelper,
-                                                 errorMessageHelper: ErrorMessageHelper,
-                                                 auditService: AuditService) {
+class UploadSubmissionValidationEngine @Inject() (xmlValidationService: XMLValidationService,
+                                                  businessRuleValidationService: BusinessRuleValidationService,
+                                                  metaDataValidationService: MetaDataValidationService,
+                                                  xmlErrorMessageHelper: XmlErrorMessageHelper,
+                                                  errorMessageHelper: ErrorMessageHelper,
+                                                  auditService: AuditService
+) {
 
-  private val logger = LoggerFactory.getLogger(getClass)
+  private val logger   = LoggerFactory.getLogger(getClass)
   private val noErrors = Seq()
 
-  def validateUploadSubmission(upScanUrl: Option[String], enrolmentId: String)
-                              (implicit hc: HeaderCarrier, ec: ExecutionContext) : Future[Option[UploadSubmissionValidationResult]] = {
+  def validateUploadSubmission(upScanUrl: Option[String], enrolmentId: String)(implicit
+    hc: HeaderCarrier,
+    ec: ExecutionContext
+  ): Future[Option[UploadSubmissionValidationResult]] = {
 
-//    val elem: Elem = xml.asInstanceOf[Elem]
-    val xmlUrl = upScanUrl.fold(throw new Exception("Unable to retrieve XML from Upscan URL"))(xmlLocation => xmlLocation)
+    val xmlUrl = upScanUrl.fold(throw new Exception("Unable to retrieve XML from Upscan URL"))(
+      xmlLocation => xmlLocation
+    )
 
     try {
       val xmlAndXmlValidationStatus: (Elem, Seq[GenericError]) = performXmlValidation(xmlUrl)
-      val metaData: Option[Dac6MetaData] = businessRuleValidationService.extractDac6MetaData()(xmlAndXmlValidationStatus._1)
+      val metaData: Option[Dac6MetaData]                       = businessRuleValidationService.extractDac6MetaData()(xmlAndXmlValidationStatus._1)
 
       for {
-        metaDataResult <- metaDataValidationService.verifyMetaDataForUploadSubmission(metaData, enrolmentId, xmlAndXmlValidationStatus._1)
+        metaDataResult      <- metaDataValidationService.verifyMetaDataForUploadSubmission(metaData, enrolmentId, xmlAndXmlValidationStatus._1)
         businessRulesResult <- performBusinessRulesValidation(xmlAndXmlValidationStatus._1)
       } yield {
 
@@ -79,27 +83,29 @@ class UploadSubmissionValidationEngine @Inject()(xmlValidationService: XMLValida
     }
   }
 
-  def performBusinessRulesValidation(elem: Elem)
-                                    (implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Seq[GenericError]] = {
+  def performBusinessRulesValidation(elem: Elem)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Seq[GenericError]] = {
 
     businessRuleValidationService.validateFile()(hc, ec)(elem) match {
-      case Some(value) => value.map {
-        seqValidation: Seq[Validation] =>
-          errorMessageHelper.convertToGenericErrors(seqValidation, elem)
-      }
+      case Some(value) =>
+        value.map {
+          seqValidation: Seq[Validation] =>
+            errorMessageHelper.convertToGenericErrors(seqValidation, elem)
+        }
       case None => Future.successful(noErrors)
     }
   }
 
-  private def combineUploadResults(xmlResult: Seq[GenericError], businessRulesResult: Seq[GenericError],
-                             metaDataResult:  Either[Seq[GenericError], Dac6MetaData]): Seq[GenericError] = {
+  private def combineUploadResults(xmlResult: Seq[GenericError],
+                                   businessRulesResult: Seq[GenericError],
+                                   metaDataResult: Either[Seq[GenericError], Dac6MetaData]
+  ): Seq[GenericError] = {
 
     val combinedErrors = (xmlResult ++ businessRulesResult ++ metaDataResult.left.getOrElse(Seq.empty)).sortBy(_.lineNumber)
 
     if (combinedErrors.isEmpty)
-        noErrors
+      noErrors
     else {
-        combinedErrors
+      combinedErrors
     }
   }
 }

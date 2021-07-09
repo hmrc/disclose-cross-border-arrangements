@@ -26,9 +26,13 @@ class ErrorMessageHelper {
 
     val xmlArray = xml.toString().split("\n")
 
-    val validationWithLineNumber =  validations.map(validation => validation.setLineNumber(xmlArray))
+    val validationWithLineNumber = validations.map(
+      validation => validation.setLineNumber(xmlArray)
+    )
 
-    validationWithLineNumber.map(validation => validation.toGenericError)
+    validationWithLineNumber.map(
+      validation => validation.toGenericError
+    )
 
   }
 }

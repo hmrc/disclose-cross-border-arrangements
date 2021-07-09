@@ -25,32 +25,36 @@ import scala.collection.mutable.ListBuffer
 import scala.concurrent.{ExecutionContext, Future}
 import scala.xml.{Elem, NodeSeq}
 
-class ManualSubmissionValidationEngine @Inject()(xmlValidationService: XMLValidationService,
-                                                 businessRuleValidationService: BusinessRuleValidationService,
-                                                 metaDataValidationService: MetaDataValidationService,
-                                                 auditService: AuditService) {
+class ManualSubmissionValidationEngine @Inject() (xmlValidationService: XMLValidationService,
+                                                  businessRuleValidationService: BusinessRuleValidationService,
+                                                  metaDataValidationService: MetaDataValidationService,
+                                                  auditService: AuditService
+) {
 
-  private val logger = LoggerFactory.getLogger(getClass)
+  private val logger                = LoggerFactory.getLogger(getClass)
   private val noErrors: Seq[String] = Seq()
 
-  def validateManualSubmission(xml: NodeSeq, enrolmentId: String)
-                              (implicit hc: HeaderCarrier, ec: ExecutionContext) : Future[Option[ManualSubmissionValidationResult]] = {
+  def validateManualSubmission(xml: NodeSeq, enrolmentId: String)(implicit
+    hc: HeaderCarrier,
+    ec: ExecutionContext
+  ): Future[Option[ManualSubmissionValidationResult]] = {
 
     val elem: Elem = xml.asInstanceOf[Elem]
 
     try {
       val xmlAndXmlValidationStatus: ListBuffer[SaxParseError] = performXmlValidation(elem)
-      val metaData = businessRuleValidationService.extractDac6MetaData()(elem)
+      val metaData                                             = businessRuleValidationService.extractDac6MetaData()(elem)
 
       for {
-        metaDataResult <- metaDataValidationService.verifyMetaDataForManualSubmission(metaData, enrolmentId)
+        metaDataResult      <- metaDataValidationService.verifyMetaDataForManualSubmission(metaData, enrolmentId)
         businessRulesResult <- performBusinessRulesValidation(elem)
       } yield {
         combineResults(xmlAndXmlValidationStatus, businessRulesResult, metaDataResult) match {
 
-          case None =>  auditService.auditManualSubmissionParseFailure(enrolmentId, metaData, xmlAndXmlValidationStatus)
-                         None
-          case Some(Seq()) => Some(ManualSubmissionValidationSuccess(metaDataResult.right.getOrElse(metaData.fold("id")(_.messageRefId))))
+          case None =>
+            auditService.auditManualSubmissionParseFailure(enrolmentId, metaData, xmlAndXmlValidationStatus)
+            None
+          case Some(Seq())       => Some(ManualSubmissionValidationSuccess(metaDataResult.right.getOrElse(metaData.fold("id")(_.messageRefId))))
           case Some(Seq(errors)) => Some(ManualSubmissionValidationFailure(Seq(errors)))
         }
       }
@@ -61,29 +65,30 @@ class ManualSubmissionValidationEngine @Inject()(xmlValidationService: XMLValida
     }
   }
 
-  private def combineResults(xmlResult: ListBuffer[SaxParseError], businessRulesResult: Seq[String],
-                             metaDataResult:  Either[Seq[String], String]):  Option[Seq[String]] = {
+  private def combineResults(xmlResult: ListBuffer[SaxParseError],
+                             businessRulesResult: Seq[String],
+                             metaDataResult: Either[Seq[String], String]
+  ): Option[Seq[String]] = {
 
-    if(xmlResult.isEmpty){
-      if(metaDataResult.isLeft) {
+    if (xmlResult.isEmpty) {
+      if (metaDataResult.isLeft) {
         Some(businessRulesResult ++ metaDataResult.left.get)
       } else Some(businessRulesResult)
     } else None
   }
 
-  def performXmlValidation(elem: Elem): ListBuffer[SaxParseError] = {
+  def performXmlValidation(elem: Elem): ListBuffer[SaxParseError] =
     xmlValidationService.validateManualSubmission(elem)
-  }
 
-  def performBusinessRulesValidation(elem: Elem)
-                                    (implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Seq[String]] = {
+  def performBusinessRulesValidation(elem: Elem)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Seq[String]] = {
 
     businessRuleValidationService.validateFile()(hc, ec)(elem) match {
-      case Some(value) => value.map {
-        seqValidation =>
-          seqValidation.map(_.key)
+      case Some(value) =>
+        value.map {
+          seqValidation =>
+            seqValidation.map(_.key)
 
-      }
+        }
       case None => Future.successful(noErrors)
     }
   }

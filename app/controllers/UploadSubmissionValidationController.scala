@@ -26,13 +26,13 @@ import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
 import javax.inject.Inject
 import scala.concurrent.ExecutionContext
 
-class UploadSubmissionValidationController @Inject()(identify: IdentifierAuthAction,
-                                                     cc: ControllerComponents,
-                                                     validationEngine: UploadSubmissionValidationEngine,
-                                                    )(implicit ec: ExecutionContext)
-  extends BackendController(cc) {
+class UploadSubmissionValidationController @Inject() (identify: IdentifierAuthAction,
+                                                      cc: ControllerComponents,
+                                                      validationEngine: UploadSubmissionValidationEngine
+)(implicit ec: ExecutionContext)
+    extends BackendController(cc) {
 
-  def validateUploadSubmission: Action[AnyContent] =  identify.async {
+  def validateUploadSubmission: Action[AnyContent] = identify.async {
     implicit request =>
       validationEngine.validateUploadSubmission(request.body.asText, request.enrolmentID) map {
         case Some(UploadSubmissionValidationSuccess(dac6metaData)) =>

@@ -21,8 +21,7 @@ import play.api.libs.json.{JsSuccess, Json}
 
 class UploadSubmissionValidationResultSpec extends SpecBase {
 
-  val mockMetaData = Dac6MetaData("DAC6NEW", disclosureInformationPresent = true,
-    initialDisclosureMA = false, messageRefId = "messageRefId")
+  val mockMetaData = Dac6MetaData("DAC6NEW", disclosureInformationPresent = true, initialDisclosureMA = false, messageRefId = "messageRefId")
 
   "XML Validation Status" - {
     "must marshall correctly for validation success" in {
@@ -39,7 +38,7 @@ class UploadSubmissionValidationResultSpec extends SpecBase {
 
       val expectedResult = JsSuccess(UploadSubmissionValidationSuccess(mockMetaData))
 
-      Json.parse(json).validate[UploadSubmissionValidationResult]mustBe expectedResult
+      Json.parse(json).validate[UploadSubmissionValidationResult] mustBe expectedResult
     }
 
     "must marshall correctly for validation failure" in {
@@ -61,7 +60,8 @@ class UploadSubmissionValidationResultSpec extends SpecBase {
         Seq(
           GenericError(50, "It's an error"),
           GenericError(52, "Oh no!")
-        ))
+        )
+      )
 
       Json.parse(json).as[UploadSubmissionValidationResult] mustBe expectedResult
     }

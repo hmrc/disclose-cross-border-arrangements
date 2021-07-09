@@ -30,63 +30,34 @@ import javax.inject.Inject
 import scala.collection.mutable.ListBuffer
 import scala.concurrent.ExecutionContext
 
-class AuditService @Inject()(appConfig: AppConfig, auditConnector: AuditConnector)(implicit ec: ExecutionContext) {
+class AuditService @Inject() (appConfig: AppConfig, auditConnector: AuditConnector)(implicit ec: ExecutionContext) {
   private val logger = LoggerFactory.getLogger(getClass)
-  val noneProvided = "None Provided"
+  val noneProvided   = "None Provided"
 
   def auditValidationFailures(subscriptionID: String, errors: Seq[SaxParseError])(implicit hc: HeaderCarrier): Unit = {
-    val auditType = "Validation"
+    val auditType       = "Validation"
     val transactionName = "/disclose-cross-border-arrangements/validation"
-    val path = "/disclose-cross-border-arrangements/validation"
+    val path            = "/disclose-cross-border-arrangements/validation"
 
     val auditJson = Json.obj(
       "subscriptionID" -> subscriptionID,
       "validationErrors" -> errors
-        .map(error => s"${error.lineNumber}: ${error.errorMessage}")
+        .map(
+          error => s"${error.lineNumber}: ${error.errorMessage}"
+        )
         .mkString(",")
     )
 
-    auditConnector.sendExtendedEvent(ExtendedDataEvent(
-      auditSource = appConfig.appName,
-      auditType = auditType,
-      detail = auditJson,
-      tags = AuditExtensions.auditHeaderCarrier(hc).toAuditDetails()
-      ++ AuditExtensions.auditHeaderCarrier(hc).toAuditTags(transactionName, path)
-    )) map { ar: AuditResult => ar match {
-        case Failure(msg, ex) =>
-        ex match {
-        case Some(throwable) =>
-        logger.warn(s"The attempt to issue audit event $auditType failed with message : $msg", throwable)
-        case None =>
-        logger.warn(s"The attempt to issue audit event $auditType failed with message : $msg")
-      }
-        ar
-        case Disabled =>
-        logger.warn(s"The attempt to issue audit event $auditType was unsuccessful, as auditing is currently disabled in config"); ar
-        case _ => logger.debug(s"Audit event $auditType issued successsfully."); ar
-      }}
-  }
-
-  def auditManualSubmissionParseFailure(enrolmentID: String, metaData: Option[Dac6MetaData], errors: ListBuffer[SaxParseError])(implicit hc: HeaderCarrier): Unit = {
-
-    val auditType = "ManualSubmissionParseFailure"
-
-    val auditMap: JsObject = Json.obj(
-      "enrolmentID" -> enrolmentID,
-      "arrangementID" -> metaData.fold(noneProvided)(data => data.arrangementID.getOrElse(noneProvided)),
-      "disclosureID" ->metaData.fold(noneProvided)(data => data.disclosureID.getOrElse(noneProvided)),
-      "messageRefID" -> metaData.fold(noneProvided)(data => data.messageRefId),
-      "disclosureImportInstruction" -> metaData.fold("Unknown Import Instruction")(data => data.importInstruction),
-      "initialDisclosureMA" -> metaData.fold("InitialDisclosureMA value not supplied")(data => data.initialDisclosureMA.toString),
-      "errors" -> buildManualErrorPayload(errors))
-
-    if(appConfig.validationAuditToggle) {
-      auditConnector.sendExtendedEvent(ExtendedDataEvent(
+    auditConnector.sendExtendedEvent(
+      ExtendedDataEvent(
         auditSource = appConfig.appName,
         auditType = auditType,
-        detail = auditMap,
+        detail = auditJson,
         tags = AuditExtensions.auditHeaderCarrier(hc).toAuditDetails()
-      )) map { ar: AuditResult =>
+          ++ AuditExtensions.auditHeaderCarrier(hc).toAuditTags(transactionName, path)
+      )
+    ) map {
+      ar: AuditResult =>
         ar match {
           case Failure(msg, ex) =>
             ex match {
@@ -98,66 +69,130 @@ class AuditService @Inject()(appConfig: AppConfig, auditConnector: AuditConnecto
             ar
           case Disabled =>
             logger.warn(s"The attempt to issue audit event $auditType was unsuccessful, as auditing is currently disabled in config"); ar
-          case _ => logger.debug(s"Audit event $auditType issued successfully."); ar
+          case _ => logger.debug(s"Audit event $auditType issued successsfully."); ar
         }
+    }
+  }
+
+  def auditManualSubmissionParseFailure(enrolmentID: String, metaData: Option[Dac6MetaData], errors: ListBuffer[SaxParseError])(implicit
+    hc: HeaderCarrier
+  ): Unit = {
+
+    val auditType = "ManualSubmissionParseFailure"
+
+    val auditMap: JsObject = Json.obj(
+      "enrolmentID" -> enrolmentID,
+      "arrangementID" -> metaData.fold(noneProvided)(
+        data => data.arrangementID.getOrElse(noneProvided)
+      ),
+      "disclosureID" -> metaData.fold(noneProvided)(
+        data => data.disclosureID.getOrElse(noneProvided)
+      ),
+      "messageRefID" -> metaData.fold(noneProvided)(
+        data => data.messageRefId
+      ),
+      "disclosureImportInstruction" -> metaData.fold("Unknown Import Instruction")(
+        data => data.importInstruction
+      ),
+      "initialDisclosureMA" -> metaData.fold("InitialDisclosureMA value not supplied")(
+        data => data.initialDisclosureMA.toString
+      ),
+      "errors" -> buildManualErrorPayload(errors)
+    )
+
+    if (appConfig.validationAuditToggle) {
+      auditConnector.sendExtendedEvent(
+        ExtendedDataEvent(
+          auditSource = appConfig.appName,
+          auditType = auditType,
+          detail = auditMap,
+          tags = AuditExtensions.auditHeaderCarrier(hc).toAuditDetails()
+        )
+      ) map {
+        ar: AuditResult =>
+          ar match {
+            case Failure(msg, ex) =>
+              ex match {
+                case Some(throwable) =>
+                  logger.warn(s"The attempt to issue audit event $auditType failed with message : $msg", throwable)
+                case None =>
+                  logger.warn(s"The attempt to issue audit event $auditType failed with message : $msg")
+              }
+              ar
+            case Disabled =>
+              logger.warn(s"The attempt to issue audit event $auditType was unsuccessful, as auditing is currently disabled in config"); ar
+            case _ => logger.debug(s"Audit event $auditType issued successfully."); ar
+          }
       }
     } else {
       logger.warn(s"Validation has failed and auditing currently disabled for this event type")
     }
   }
 
-  def auditUploadSubmissionFailure(enrolmentId: String, metaData: Option[Dac6MetaData], errors: Seq[GenericError])
-                                  (implicit hc: HeaderCarrier): Unit = {
+  def auditUploadSubmissionFailure(enrolmentId: String, metaData: Option[Dac6MetaData], errors: Seq[GenericError])(implicit hc: HeaderCarrier): Unit = {
 
     val validationFailureType = "UploadSubmissionParseFailure"
 
     val auditMap: JsObject = Json.obj(
       "enrolmentID" -> enrolmentId,
-      "arrangementID" -> metaData.fold(noneProvided)(data => data.arrangementID.getOrElse(noneProvided)),
-      "disclosureID" ->metaData.fold(noneProvided)(data => data.disclosureID.getOrElse(noneProvided)),
-      "messageRefID" -> metaData.fold(noneProvided)(data => data.messageRefId),
-      "disclosureImportInstruction" -> metaData.fold("Unknown Import Instruction")(data => data.importInstruction),
-      "initialDisclosureMA" -> metaData.fold("InitialDisclosureMA value not supplied")(data => data.initialDisclosureMA.toString),
-      "errors" -> buildUploadErrorPayload(errors),
+      "arrangementID" -> metaData.fold(noneProvided)(
+        data => data.arrangementID.getOrElse(noneProvided)
+      ),
+      "disclosureID" -> metaData.fold(noneProvided)(
+        data => data.disclosureID.getOrElse(noneProvided)
+      ),
+      "messageRefID" -> metaData.fold(noneProvided)(
+        data => data.messageRefId
+      ),
+      "disclosureImportInstruction" -> metaData.fold("Unknown Import Instruction")(
+        data => data.importInstruction
+      ),
+      "initialDisclosureMA" -> metaData.fold("InitialDisclosureMA value not supplied")(
+        data => data.initialDisclosureMA.toString
+      ),
+      "errors" -> buildUploadErrorPayload(errors)
     )
 
-    if(appConfig.validationAuditToggle) {
-      auditConnector.sendExtendedEvent(ExtendedDataEvent(
-        auditSource = appConfig.appName,
-        auditType = validationFailureType,
-        detail = auditMap,
-        tags = AuditExtensions.auditHeaderCarrier(hc).toAuditDetails()
-      )) map { ar: AuditResult =>
-        ar match {
-          case Failure(msg, ex) =>
-            ex match {
-              case Some(throwable) =>
-                logger.warn(s"The attempt to issue audit event $validationFailureType failed with message : $msg", throwable)
-              case None =>
-                logger.warn(s"The attempt to issue audit event $validationFailureType failed with message : $msg")
-            }
-            ar
-          case Disabled =>
-            logger.warn(s"The attempt to issue audit event $validationFailureType was unsuccessful, as auditing is currently disabled in config"); ar
-          case _ => logger.debug(s"Audit event $validationFailureType issued successfully."); ar
-        }
+    if (appConfig.validationAuditToggle) {
+      auditConnector.sendExtendedEvent(
+        ExtendedDataEvent(
+          auditSource = appConfig.appName,
+          auditType = validationFailureType,
+          detail = auditMap,
+          tags = AuditExtensions.auditHeaderCarrier(hc).toAuditDetails()
+        )
+      ) map {
+        ar: AuditResult =>
+          ar match {
+            case Failure(msg, ex) =>
+              ex match {
+                case Some(throwable) =>
+                  logger.warn(s"The attempt to issue audit event $validationFailureType failed with message : $msg", throwable)
+                case None =>
+                  logger.warn(s"The attempt to issue audit event $validationFailureType failed with message : $msg")
+              }
+              ar
+            case Disabled =>
+              logger.warn(s"The attempt to issue audit event $validationFailureType was unsuccessful, as auditing is currently disabled in config"); ar
+            case _ => logger.debug(s"Audit event $validationFailureType issued successfully."); ar
+          }
       }
     } else {
       logger.warn(s"Validation has failed and auditing currently disabled for this event type")
     }
   }
 
-
   private def buildManualErrorPayload(errors: ListBuffer[SaxParseError]): String = {
 
-    val formattedErrors = errors.map {error =>
-
-      s"""|{
+    val formattedErrors = errors
+      .map {
+        error =>
+          s"""|{
           |"lineNumber" : ${error.lineNumber},
           |"errorMessage" : ${error.errorMessage}
           |}""".stripMargin
-    }.mkString(",")
-
+      }
+      .mkString(",")
 
     s"""|[
         |$formattedErrors
@@ -167,12 +202,15 @@ class AuditService @Inject()(appConfig: AppConfig, auditConnector: AuditConnecto
 
   private def buildUploadErrorPayload(errors: Seq[GenericError]): String = {
 
-    val formattedErrors = errors.map {error =>
-      s"""|{
+    val formattedErrors = errors
+      .map {
+        error =>
+          s"""|{
           |"lineNumber" : ${error.lineNumber},
           |"errorMessage" : ${error.messageKey}
           |}""".stripMargin
-    }.mkString(",")
+      }
+      .mkString(",")
 
     s"""|[
         |$formattedErrors
