@@ -22,7 +22,7 @@ import play.api.libs.json.{JsError, Json}
 
 class UploadStatusSpec extends AnyWordSpec with Matchers {
 
-  val statuses: List[UploadStatus] = List(NotStarted, Failed, InProgress, Quarantined, Rejected)
+  val statuses: List[UploadStatus] = List(NotStarted, Failed, InProgress, Quarantined)
 
   "UploadStatus json Reads" must {
 
@@ -78,6 +78,16 @@ class UploadStatusSpec extends AnyWordSpec with Matchers {
           val expectedJson =
             s"""{"name":"$expectedName","downloadUrl":"$expectedUrl","_type":"UploadedSuccessfully"}"""
           val uploadStatus: UploadStatus = UploadedSuccessfully(expectedName, expectedUrl)
+          Json.toJson(uploadStatus).toString() mustBe expectedJson
+        }
+      }
+
+      "set _type as UploadRejected with error details in json" when {
+        "status is UploadRejected" in {
+          val errorDetails: ErrorDetails = ErrorDetails("REJECTED", "message")
+          val expectedJson =
+            s"""{"details":{"failureReason":"REJECTED","message":"message"},"_type":"UploadRejected"}"""
+          val uploadStatus: UploadStatus = UploadRejected(errorDetails)
           Json.toJson(uploadStatus).toString() mustBe expectedJson
         }
       }

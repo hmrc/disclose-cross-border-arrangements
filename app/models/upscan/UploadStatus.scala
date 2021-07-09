@@ -23,7 +23,6 @@ case object NotStarted extends UploadStatus
 case object InProgress extends UploadStatus
 case object Failed extends UploadStatus
 case object Quarantined extends UploadStatus
-case object Rejected extends UploadStatus
 case object Empty extends UploadStatus
 
 case class UploadedSuccessfully(name: String, downloadUrl: String) extends UploadStatus
@@ -33,6 +32,7 @@ case class UploadRejected(details: ErrorDetails) extends UploadStatus
 object UploadStatus {
   implicit val uploadedSuccessfullyFormat: OFormat[UploadedSuccessfully] = Json.format[UploadedSuccessfully]
 
+  import CallbackBody.errorDetailsFormat
   implicit val uploadRejectedFormat: OFormat[UploadRejected] = Json.format[UploadRejected]
 
   implicit val read: Reads[UploadStatus] = new Reads[UploadStatus] {
@@ -44,7 +44,6 @@ object UploadStatus {
         case Some(JsString("InProgress"))           => JsSuccess(InProgress)
         case Some(JsString("Failed"))               => JsSuccess(Failed)
         case Some(JsString("Quarantined"))          => JsSuccess(Quarantined)
-        case Some(JsString("Rejected"))             => JsSuccess(Rejected)
         case Some(JsString("UploadedSuccessfully")) => Json.fromJson[UploadedSuccessfully](jsObject)(uploadedSuccessfullyFormat)
         case Some(JsString("UploadRejected"))       => Json.fromJson[UploadRejected](jsObject)(uploadRejectedFormat)
         case Some(value)                            => JsError(s"Unexpected value of _type: $value")
@@ -61,7 +60,7 @@ object UploadStatus {
         case InProgress              => JsObject(Map("_type" -> JsString("InProgress")))
         case Failed                  => JsObject(Map("_type" -> JsString("Failed")))
         case Quarantined             => JsObject(Map("_type" -> JsString("Quarantined")))
-        case s: UploadRejected       => Json.toJson(s)(uploadRejectedFormat).as[JsObject] + ("_type" -> JsString("UploadRejected"))
+        case s: UploadRejected       => Json.toJson(s)(uploadRejectedFormat).as[JsObject] + ("_type"       -> JsString("UploadRejected"))
         case s: UploadedSuccessfully => Json.toJson(s)(uploadedSuccessfullyFormat).as[JsObject] + ("_type" -> JsString("UploadedSuccessfully"))
       }
     }
