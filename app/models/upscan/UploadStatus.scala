@@ -23,7 +23,6 @@ case object NotStarted extends UploadStatus
 case object InProgress extends UploadStatus
 case object Failed extends UploadStatus
 case object Quarantined extends UploadStatus
-case object Empty extends UploadStatus
 
 case class UploadedSuccessfully(name: String, downloadUrl: String) extends UploadStatus
 
