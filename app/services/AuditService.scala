@@ -106,8 +106,8 @@ class AuditService @Inject()(appConfig: AppConfig, auditConnector: AuditConnecto
     }
   }
 
-  def auditUploadSubmissionParseFailure(enrolmentId: String, metaData: Option[Dac6MetaData], errors: Seq[GenericError])
-                                       (implicit hc: HeaderCarrier): Unit = {
+  def auditUploadSubmissionFailure(enrolmentId: String, metaData: Option[Dac6MetaData], errors: Seq[GenericError])
+                                  (implicit hc: HeaderCarrier): Unit = {
 
     val validationFailureType = "UploadSubmissionParseFailure"
 

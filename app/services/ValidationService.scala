@@ -78,6 +78,27 @@ class XMLValidationService @Inject() (xmlValidatingParser: XMLValidatingParser) 
     }.load(new StringReader(xml.mkString))
     list
   }
+
+
+  def validateUploadXml(upScanUrl: String): (Elem, ListBuffer[SaxParseError]) = {
+    val list: ListBuffer[SaxParseError] = new ListBuffer[SaxParseError]
+
+    trait AccumulatorState extends DefaultHandler {
+      override def warning(e: SAXParseException): Unit = list += SaxParseError(e.getLineNumber, e.getMessage)
+      override def error(e: SAXParseException): Unit = list += SaxParseError(e.getLineNumber, e.getMessage)
+      override def fatalError(e: SAXParseException): Unit = list += SaxParseError(e.getLineNumber, e.getMessage)
+    }
+
+    val elem = new scala.xml.factory.XMLLoader[scala.xml.Elem] {
+      override def parser: SAXParser = xmlValidatingParser.validatingParser
+      override def adapter =
+        new scala.xml.parsing.NoBindingFactoryAdapter
+          with AccumulatorState
+
+    }.load(new URL(upScanUrl))
+
+    (elem, list)
+  }
 }
 
 

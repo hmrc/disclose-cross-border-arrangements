@@ -150,12 +150,12 @@ class UploadSubmissionValidationEngineSpec extends SpecBase {
 
     "must return UploadSubmissionValidationSuccess when xml with no errors received" in new SetUp {
 
-      when(mockXmlValidationService.validateManualSubmission(any())).thenReturn(noErrors)
+      when(mockXmlValidationService.validateUploadXml(any())).thenReturn((elem, noErrors))
       when(mockMetaDataValidationService.verifyMetaDataForUploadSubmission(any(), any(), any())(any(), any())).thenReturn(Future.successful(Right(mockMetaData)))
 
-      Await.result(validationEngine.validateUploadSubmission(elem, enrolmentId), 10 seconds) mustBe Some(UploadSubmissionValidationSuccess(mockMetaData))
+      Await.result(validationEngine.validateUploadSubmission(Some(source), enrolmentId), 10 seconds) mustBe Some(UploadSubmissionValidationSuccess(mockMetaData))
 
-      verify(mockAuditService, times(0)).auditUploadSubmissionParseFailure(any(), any(), any())(any())
+      verify(mockAuditService, times(0)).auditUploadSubmissionFailure(any(), any(), any())(any())
 
     }
 
@@ -163,47 +163,47 @@ class UploadSubmissionValidationEngineSpec extends SpecBase {
 
       override val doesFileHaveBusinessErrors = true
 
-      when(mockXmlValidationService.validateManualSubmission(any())).thenReturn(noErrors)
+      when(mockXmlValidationService.validateUploadXml(any())).thenReturn((elem, noErrors))
       when(mockMetaDataValidationService.verifyMetaDataForUploadSubmission(any(), any(), any())(any(), any())).thenReturn(Future.successful(Right(mockMetaData)))
 
       val expectedResult = Some(UploadSubmissionValidationFailure(Seq(GenericError(lineNumber, defaultError))))
-      Await.result(validationEngine.validateUploadSubmission(elem, enrolmentId), 10 seconds) mustBe expectedResult
-      verify(mockAuditService, times(0)).auditUploadSubmissionParseFailure(any(), any(), any())(any())
+      Await.result(validationEngine.validateUploadSubmission(Some(source), enrolmentId), 10 seconds) mustBe expectedResult
+      verify(mockAuditService, times(1)).auditUploadSubmissionFailure(any(), any(), any())(any())
 
     }
 
     "must return errors when xml with metaData errors received" in new SetUp {
 
-      when(mockXmlValidationService.validateManualSubmission(any())).thenReturn(noErrors)
+      when(mockXmlValidationService.validateUploadXml(any())).thenReturn((elem, noErrors))
 
       when(mockMetaDataValidationService.verifyMetaDataForUploadSubmission(any(), any(), any())(any(), any())).thenReturn(
         Future.successful(Left(Seq(GenericError(lineNumber, "metaDataRules.arrangementId.arrangementIdDoesNotMatchRecords")))))
 
       val expectedResult = Some(UploadSubmissionValidationFailure(Seq(GenericError(lineNumber, "metaDataRules.arrangementId.arrangementIdDoesNotMatchRecords"))))
-      Await.result(validationEngine.validateUploadSubmission(elem, enrolmentId), 10 seconds) mustBe expectedResult
-      verify(mockAuditService, times(0)).auditUploadSubmissionParseFailure(any(), any(), any())(any())
+      Await.result(validationEngine.validateUploadSubmission(Some(source), enrolmentId), 10 seconds) mustBe expectedResult
+      verify(mockAuditService, times(1)).auditUploadSubmissionFailure(any(), any(), any())(any())
 
     }
 
     "must return ValidationFailure for file which multiple pieces of mandatory information missing" in new SetUp {
 
-      when(mockXmlValidationService.validateManualSubmission(any())).thenReturn(ListBuffer(addressError1, addressError2, cityError1, cityError2))
+      when(mockXmlValidationService.validateUploadXml(any())).thenReturn((elem, ListBuffer(addressError1, addressError2, cityError1, cityError2)))
       when(mockMetaDataValidationService.verifyMetaDataForUploadSubmission(any(), any(), any())(any(), any())).thenReturn(Future.successful(Right(mockMetaData)))
 
       val expectedErrors = Seq(GenericError(20, "Enter a Street"), GenericError(27, "Enter a City"))
 
-      Await.result(validationEngine.validateUploadSubmission(elem, enrolmentId), 10 seconds) mustBe Some(UploadSubmissionValidationFailure(expectedErrors))
+      Await.result(validationEngine.validateUploadSubmission(Some(source), enrolmentId), 10 seconds) mustBe Some(UploadSubmissionValidationFailure(expectedErrors))
     }
 
     "must return ValidationFailure for valid file which fails metaDataCheck and audit outcome" in new SetUp {
 
-      when(mockXmlValidationService.validateManualSubmission(any())).thenReturn(noErrors)
+      when(mockXmlValidationService.validateUploadXml(any())).thenReturn((elem, noErrors))
       when(mockMetaDataValidationService.verifyMetaDataForUploadSubmission(any(), any(), any())(any(), any())).thenReturn(
         Future(Left(Seq(GenericError(1, "metaDataRules.arrangementId.arrangementIdDoesNotMatchRecords")))))
 
       val expectedResult = Some(UploadSubmissionValidationFailure(Seq(GenericError(1, "metaDataRules.arrangementId.arrangementIdDoesNotMatchRecords"))))
-      Await.result(validationEngine.validateUploadSubmission(elem, enrolmentId), 10 seconds) mustBe expectedResult
-      verify(mockAuditService, times(0)).auditUploadSubmissionParseFailure(any(), any(), any())(any())
+      Await.result(validationEngine.validateUploadSubmission(Some(source), enrolmentId), 10 seconds) mustBe expectedResult
+      verify(mockAuditService, times(1)).auditUploadSubmissionFailure(any(), any(), any())(any())
     }
 
     "must return ValidationFailure for file missing mandatory attributes" in new SetUp {
@@ -212,141 +212,141 @@ class UploadSubmissionValidationEngineSpec extends SpecBase {
 
       when(mockMetaDataValidationService.verifyMetaDataForUploadSubmission(any(), any(), any())(any(), any())).thenReturn(Future.successful(Right(mockMetaData)))
 
-      when(mockXmlValidationService.validateManualSubmission(any())).thenReturn(ListBuffer(missingAttributeError))
+      when(mockXmlValidationService.validateUploadXml(any())).thenReturn((elem, ListBuffer(missingAttributeError)))
 
       val expectedErrors = Seq(GenericError(175, "Enter an Amount currCode"))
 
-      Await.result(validationEngine.validateUploadSubmission(elem, enrolmentId), 10 seconds)  mustBe Some(UploadSubmissionValidationFailure(expectedErrors))
+      Await.result(validationEngine.validateUploadSubmission(Some(source), enrolmentId), 10 seconds)  mustBe Some(UploadSubmissionValidationFailure(expectedErrors))
     }
 
     "must return ValidationFailure for file where element is too long (1-400 allowed)" in new SetUp {
 
-      when(mockXmlValidationService.validateManualSubmission(any())).thenReturn(ListBuffer(maxLengthError1, maxlengthError2))
+      when(mockXmlValidationService.validateUploadXml(any())).thenReturn((elem, ListBuffer(maxLengthError1, maxlengthError2)))
       when(mockMetaDataValidationService.verifyMetaDataForUploadSubmission(any(), any(), any())(any(), any())).thenReturn(Future.successful(Right(mockMetaData)))
 
       val expectedErrors = Seq(GenericError(116, "BuildingIdentifier must be 400 characters or less"))
 
-      Await.result(validationEngine.validateUploadSubmission(elem, enrolmentId), 10 seconds)  mustBe Some(UploadSubmissionValidationFailure(expectedErrors))
+      Await.result(validationEngine.validateUploadSubmission(Some(source), enrolmentId), 10 seconds)  mustBe Some(UploadSubmissionValidationFailure(expectedErrors))
     }
 
     "must return ValidationFailure for file where element is too long (1-4000 allowed)" in new SetUp {
 
-      when(mockXmlValidationService.validateManualSubmission(any())).thenReturn(ListBuffer(maxLengthError3, maxlengthError4))
+      when(mockXmlValidationService.validateUploadXml(any())).thenReturn((elem, ListBuffer(maxLengthError3, maxlengthError4)))
       when(mockMetaDataValidationService.verifyMetaDataForUploadSubmission(any(), any(), any())(any(), any())).thenReturn(Future.successful(Right(mockMetaData)))
 
       val expectedErrors = Seq(GenericError(116, "NationalProvision must be 4000 characters or less"))
 
-      Await.result(validationEngine.validateUploadSubmission(elem, enrolmentId), 10 seconds)  mustBe Some(UploadSubmissionValidationFailure(expectedErrors))
+      Await.result(validationEngine.validateUploadSubmission(Some(source), enrolmentId), 10 seconds)  mustBe Some(UploadSubmissionValidationFailure(expectedErrors))
     }
 
     "must return ValidationFailure for file with invalid country code" in new SetUp {
 
-      when(mockXmlValidationService.validateManualSubmission(any())).thenReturn(ListBuffer(countryCodeError1, countryCodeError2))
+      when(mockXmlValidationService.validateUploadXml(any())).thenReturn((elem, ListBuffer(countryCodeError1, countryCodeError2)))
       when(mockMetaDataValidationService.verifyMetaDataForUploadSubmission(any(), any(), any())(any(), any())).thenReturn(Future.successful(Right(mockMetaData)))
 
       val expectedErrors = Seq(GenericError(123, "Country is not one of the ISO country codes"))
 
-      Await.result(validationEngine.validateUploadSubmission(elem, enrolmentId), 10 seconds)  mustBe Some(UploadSubmissionValidationFailure(expectedErrors))
+      Await.result(validationEngine.validateUploadSubmission(Some(source), enrolmentId), 10 seconds)  mustBe Some(UploadSubmissionValidationFailure(expectedErrors))
     }
 
     "must return ValidationFailure for file with invalid countryMS code" in new SetUp {
-      when(mockXmlValidationService.validateManualSubmission(any())).thenReturn(ListBuffer(concernedMsError1, concernedMsError2))
+      when(mockXmlValidationService.validateUploadXml(any())).thenReturn((elem, ListBuffer(concernedMsError1, concernedMsError2)))
       when(mockMetaDataValidationService.verifyMetaDataForUploadSubmission(any(), any(), any())(any(), any())).thenReturn(Future.successful(Right(mockMetaData)))
 
       val expectedErrors = Seq(GenericError(177, "ConcernedMS is not one of the ISO EU Member State country codes"))
 
-      Await.result(validationEngine.validateUploadSubmission(elem, enrolmentId), 10 seconds)  mustBe Some(UploadSubmissionValidationFailure(expectedErrors))
+      Await.result(validationEngine.validateUploadSubmission(Some(source), enrolmentId), 10 seconds)  mustBe Some(UploadSubmissionValidationFailure(expectedErrors))
     }
 
     "must return ValidationFailure for file with invalid countryExemption code" in new SetUp {
 
-      when(mockXmlValidationService.validateManualSubmission(any())).thenReturn(ListBuffer(countryExemptionError1, countryExemptionError2))
+      when(mockXmlValidationService.validateUploadXml(any())).thenReturn((elem, ListBuffer(countryExemptionError1, countryExemptionError2)))
       when(mockMetaDataValidationService.verifyMetaDataForUploadSubmission(any(), any(), any())(any(), any())).thenReturn(Future.successful(Right(mockMetaData)))
 
       val expectedErrors = Seq(GenericError(133, "CountryExemption is not one of the ISO country codes"))
 
-      Await.result(validationEngine.validateUploadSubmission(elem, enrolmentId), 10 seconds)  mustBe Some(UploadSubmissionValidationFailure(expectedErrors))
+      Await.result(validationEngine.validateUploadSubmission(Some(source), enrolmentId), 10 seconds)  mustBe Some(UploadSubmissionValidationFailure(expectedErrors))
     }
 
     "must return ValidationFailure for file with invalid Reason entry code" in new SetUp {
 
-      when(mockXmlValidationService.validateManualSubmission(any())).thenReturn(ListBuffer(reasonError1, reasonError2))
+      when(mockXmlValidationService.validateUploadXml(any())).thenReturn((elem, ListBuffer(reasonError1, reasonError2)))
       when(mockMetaDataValidationService.verifyMetaDataForUploadSubmission(any(), any(), any())(any(), any())).thenReturn(Future.successful(Right(mockMetaData)))
 
       val expectedErrors = Seq(GenericError(169, "Reason is not one of the allowed values"))
 
-      Await.result(validationEngine.validateUploadSubmission(elem, enrolmentId), 10 seconds)  mustBe Some(UploadSubmissionValidationFailure(expectedErrors))
+      Await.result(validationEngine.validateUploadSubmission(Some(source), enrolmentId), 10 seconds)  mustBe Some(UploadSubmissionValidationFailure(expectedErrors))
     }
 
     "must return ValidationFailure for file with invalid Intermediary Capacity code" in new SetUp {
 
-      when(mockXmlValidationService.validateManualSubmission(any())).thenReturn(ListBuffer(intermediaryCapacityError1, intermediaryCapacityError2))
+      when(mockXmlValidationService.validateUploadXml(any())).thenReturn((elem, ListBuffer(intermediaryCapacityError1, intermediaryCapacityError2)))
       when(mockMetaDataValidationService.verifyMetaDataForUploadSubmission(any(), any(), any())(any(), any())).thenReturn(Future.successful(Right(mockMetaData)))
 
       val expectedErrors = Seq(GenericError(129, "Capacity is not one of the allowed values (DAC61101, DAC61102) for Intermediary"))
 
-      Await.result(validationEngine.validateUploadSubmission(elem, enrolmentId), 10 seconds)  mustBe Some(UploadSubmissionValidationFailure(expectedErrors))
+      Await.result(validationEngine.validateUploadSubmission(Some(source), enrolmentId), 10 seconds)  mustBe Some(UploadSubmissionValidationFailure(expectedErrors))
     }
 
 
     "must return ValidationFailure for file with invalid RelevantTaxpayer Discloser Capacity code" in new SetUp {
 
-      when(mockXmlValidationService.validateManualSubmission(any())).thenReturn(ListBuffer(relevantTpDiscloserCapacityError1, relevantTpDiscloserCapacityError2))
+      when(mockXmlValidationService.validateUploadXml(any())).thenReturn((elem, ListBuffer(relevantTpDiscloserCapacityError1, relevantTpDiscloserCapacityError2)))
       when(mockMetaDataValidationService.verifyMetaDataForUploadSubmission(any(), any(), any())(any(), any())).thenReturn(Future.successful(Right(mockMetaData)))
 
       val expectedErrors = Seq(GenericError(37, "Capacity is not one of the allowed values (DAC61104, DAC61105, DAC61106) for Taxpayer"))
 
-      Await.result(validationEngine.validateUploadSubmission(elem, enrolmentId), 10 seconds)  mustBe Some(UploadSubmissionValidationFailure(expectedErrors))
+      Await.result(validationEngine.validateUploadSubmission(Some(source), enrolmentId), 10 seconds)  mustBe Some(UploadSubmissionValidationFailure(expectedErrors))
     }
 
     "must return ValidationFailure for file with invalid issuedBy code" in new SetUp {
 
-      when(mockXmlValidationService.validateManualSubmission(any())).thenReturn(ListBuffer(issuedByError1, issuedByError2))
+      when(mockXmlValidationService.validateUploadXml(any())).thenReturn((elem, ListBuffer(issuedByError1, issuedByError2)))
       when(mockMetaDataValidationService.verifyMetaDataForUploadSubmission(any(), any(), any())(any(), any())).thenReturn(Future.successful(Right(mockMetaData)))
 
       val expectedErrors = Seq(GenericError(18, "TIN issuedBy is not one of the ISO country codes"))
 
-      Await.result(validationEngine.validateUploadSubmission(elem, enrolmentId), 10 seconds)  mustBe Some(UploadSubmissionValidationFailure(expectedErrors))
+      Await.result(validationEngine.validateUploadSubmission(Some(source), enrolmentId), 10 seconds)  mustBe Some(UploadSubmissionValidationFailure(expectedErrors))
     }
 
     "must return ValidationFailure with generic error message if parse error is not in an expected format" in new SetUp {
 
       val randomParseError: SaxParseError = SaxParseError(lineNumber, xsdError)
-      when(mockXmlValidationService.validateManualSubmission(any())).thenReturn(ListBuffer(randomParseError))
+      when(mockXmlValidationService.validateUploadXml(any())).thenReturn((elem, ListBuffer(randomParseError)))
       when(mockMetaDataValidationService.verifyMetaDataForUploadSubmission(any(), any(), any())(any(), any())).thenReturn(Future.successful(Right(mockMetaData)))
 
       val expectedErrors = Seq(GenericError(lineNumber, "There is a problem with this line number"))
 
-      Await.result(validationEngine.validateUploadSubmission(elem, enrolmentId), 10 seconds)  mustBe Some(UploadSubmissionValidationFailure(expectedErrors))
+      Await.result(validationEngine.validateUploadSubmission(Some(source), enrolmentId), 10 seconds)  mustBe Some(UploadSubmissionValidationFailure(expectedErrors))
     }
 
     "must return ValidationFailure for file which fails business rules validation" in new SetUp {
       override val doesFileHaveBusinessErrors = true
 
       when(mockMetaDataValidationService.verifyMetaDataForUploadSubmission(any(), any(), any())(any(), any())).thenReturn(Future.successful(Right(mockMetaData)))
-      when(mockXmlValidationService.validateManualSubmission(any())).thenReturn(noErrors)
+      when(mockXmlValidationService.validateUploadXml(any())).thenReturn((elem, noErrors))
 
       val expectedErrors = Seq(GenericError(lineNumber, defaultError))
-      Await.result(validationEngine.validateUploadSubmission(elem, enrolmentId), 10 seconds)  mustBe Some(UploadSubmissionValidationFailure(expectedErrors))
+      Await.result(validationEngine.validateUploadSubmission(Some(source), enrolmentId), 10 seconds)  mustBe Some(UploadSubmissionValidationFailure(expectedErrors))
     }
 
     "must return a ValidationFailure with a combined list of errors for a for file which " +
       "fails both xsd checks and business rules validation and order errors correctly" in new SetUp {
       override val doesFileHaveBusinessErrors = true
 
-      when(mockXmlValidationService.validateManualSubmission(any())).thenReturn(missingAddressErrors)
+      when(mockXmlValidationService.validateUploadXml(any())).thenReturn((elem, missingAddressErrors))
       when(mockMetaDataValidationService.verifyMetaDataForUploadSubmission(any(), any(), any())(any(), any())).thenReturn(Future.successful(Right(mockMetaData)))
 
       val expectedErrors = Seq(GenericError(lineNumber, defaultError), GenericError(20, "Enter a Street"))
-      Await.result(validationEngine.validateUploadSubmission(elem, enrolmentId), 10 seconds)  mustBe Some(UploadSubmissionValidationFailure(expectedErrors))
+      Await.result(validationEngine.validateUploadSubmission(Some(source), enrolmentId), 10 seconds)  mustBe Some(UploadSubmissionValidationFailure(expectedErrors))
     }
 
     "must return none when xml parsing fails and audit failure" in new SetUp {
       val exception = new RuntimeException
-      when(mockXmlValidationService.validateManualSubmission(any())).thenThrow(exception)
+      when(mockXmlValidationService.validateUploadXml(any())).thenThrow(exception)
       when(mockMetaDataValidationService.verifyMetaDataForUploadSubmission(any(), any(), any())(any(), any())).thenReturn(Future.successful(Right(mockMetaData)))
 
-      Await.result(validationEngine.validateUploadSubmission(elem, enrolmentId), 10 seconds) mustBe None
+      Await.result(validationEngine.validateUploadSubmission(Some(source), enrolmentId), 10 seconds) mustBe None
     }
   }
 }

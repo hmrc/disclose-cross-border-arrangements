@@ -24,7 +24,7 @@ import uk.gov.hmrc.http.HeaderCarrier
 import javax.inject.Inject
 import scala.collection.mutable.ListBuffer
 import scala.concurrent.{ExecutionContext, Future}
-import scala.xml.{Elem, NodeSeq}
+import scala.xml.Elem
 
 class UploadSubmissionValidationEngine @Inject()(xmlValidationService: XMLValidationService,
                                                  businessRuleValidationService: BusinessRuleValidationService,
@@ -36,44 +36,46 @@ class UploadSubmissionValidationEngine @Inject()(xmlValidationService: XMLValida
   private val logger = LoggerFactory.getLogger(getClass)
   private val noErrors = Seq()
 
-  def validateUploadSubmission(xml: NodeSeq, enrolmentId: String)
+  def validateUploadSubmission(upScanUrl: Option[String], enrolmentId: String)
                               (implicit hc: HeaderCarrier, ec: ExecutionContext) : Future[Option[UploadSubmissionValidationResult]] = {
 
-    val elem: Elem = xml.asInstanceOf[Elem]
+//    val elem: Elem = xml.asInstanceOf[Elem]
+    val xmlUrl = upScanUrl.fold(throw new Exception("Unable to retrieve XML from Upscan URL"))(xmlLocation => xmlLocation)
 
     try {
-      val xmlValidationResult: Seq[GenericError] = performXmlValidation(elem)
-      val metaData: Option[Dac6MetaData] = businessRuleValidationService.extractDac6MetaData()(elem)
+      val xmlAndXmlValidationStatus: (Elem, Seq[GenericError]) = performXmlValidation(xmlUrl)
+      val metaData: Option[Dac6MetaData] = businessRuleValidationService.extractDac6MetaData()(xmlAndXmlValidationStatus._1)
 
       for {
-        metaDataResult <- metaDataValidationService.verifyMetaDataForUploadSubmission(metaData, enrolmentId, elem)
-        businessRulesResult <- performBusinessRulesValidation(elem)
+        metaDataResult <- metaDataValidationService.verifyMetaDataForUploadSubmission(metaData, enrolmentId, xmlAndXmlValidationStatus._1)
+        businessRulesResult <- performBusinessRulesValidation(xmlAndXmlValidationStatus._1)
       } yield {
 
-        combineUploadResults(xmlValidationResult, businessRulesResult, metaDataResult) match {
+        combineUploadResults(xmlAndXmlValidationStatus._2, businessRulesResult, metaDataResult) match {
           case Seq() =>
             Some(UploadSubmissionValidationSuccess(metaDataResult.right.get))
           case errors: Seq[GenericError] =>
+            auditService.auditUploadSubmissionFailure(enrolmentId, metaData, errors)
             Some(UploadSubmissionValidationFailure(errors))
           case _ =>
-            auditService.auditUploadSubmissionParseFailure(enrolmentId, metaData, xmlValidationResult)
             None
         }
       }
     } catch {
       case e: Exception =>
-        logger.warn(s"XML validation failed. The XML parser has thrown the exception: $e")
+        logger.warn(s"XML parsing failed. The XML parser has thrown the exception: $e")
         Future.successful(None)
     }
   }
 
-  def performXmlValidation(elem: Elem): Seq[GenericError] = {
-    val xmlErrors: ListBuffer[SaxParseError] = xmlValidationService.validateManualSubmission(elem)
-    if (xmlErrors.isEmpty) {
-      noErrors
+  def performXmlValidation(xmlUrl: String): (Elem, Seq[GenericError]) = {
+
+    val xmlErrors: (Elem, ListBuffer[SaxParseError]) = xmlValidationService.validateUploadXml(xmlUrl)
+    if (xmlErrors._2.isEmpty) {
+      (xmlErrors._1, noErrors)
     } else {
-      val filteredErrors: Seq[GenericError] = xmlErrorMessageHelper.generateErrorMessages(xmlErrors)
-      filteredErrors
+      val filteredErrors: Seq[GenericError] = xmlErrorMessageHelper.generateErrorMessages(xmlErrors._2)
+      (xmlErrors._1, filteredErrors)
     }
   }
 
@@ -92,8 +94,7 @@ class UploadSubmissionValidationEngine @Inject()(xmlValidationService: XMLValida
   private def combineUploadResults(xmlResult: Seq[GenericError], businessRulesResult: Seq[GenericError],
                              metaDataResult:  Either[Seq[GenericError], Dac6MetaData]): Seq[GenericError] = {
 
-    val combinedErrors =
-      (xmlResult ++ businessRulesResult ++ metaDataResult.left.getOrElse(Seq.empty)).sortBy(_.lineNumber)
+    val combinedErrors = (xmlResult ++ businessRulesResult ++ metaDataResult.left.getOrElse(Seq.empty)).sortBy(_.lineNumber)
 
     if (combinedErrors.isEmpty)
         noErrors

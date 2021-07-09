@@ -230,7 +230,7 @@ class AuditServiceSpec extends SpecBase with BeforeAndAfterEach {
 
         val errors = Seq(GenericError(1, "error-message"))
 
-        auditService.auditUploadSubmissionParseFailure(enrolmentID, Some(metaData), errors)
+        auditService.auditUploadSubmissionFailure(enrolmentID, Some(metaData), errors)
 
         val arrangmentIdValue = arrangementID.getOrElse("None Provided")
         val disclosureIdValue = disclosureID.getOrElse("None Provided")
@@ -279,7 +279,7 @@ class AuditServiceSpec extends SpecBase with BeforeAndAfterEach {
 
         val errors = Seq(GenericError(1, "error-message"), GenericError(2, "error-message2"))
 
-        auditService.auditUploadSubmissionParseFailure(enrolmentID, Some(metaData), errors)
+        auditService.auditUploadSubmissionFailure(enrolmentID, Some(metaData), errors)
 
         val arrangmentIdValue = arrangementID.getOrElse("None Provided")
         val disclosureIdValue = disclosureID.getOrElse("None Provided")

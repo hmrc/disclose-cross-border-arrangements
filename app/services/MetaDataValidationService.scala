@@ -58,7 +58,6 @@ class MetaDataValidationService @Inject()(
 
     verifyMetaData(dac6MetaData, enrolmentId).flatMap {
       case Seq() if dac6MetaData.isDefined => Future(Right(dac6MetaData.get))
-      case Seq(Validation("metaDataRules.messageRefId.notUnique", false, _))  => verifyMetaDataForUploadSubmission(dac6MetaData, enrolmentId, xml)
       case errors => Future(Left(errorMessageHelper.convertToGenericErrors(errors, xml)))
     }
   }
@@ -195,8 +194,9 @@ class MetaDataValidationService @Inject()(
     result match {
       case Success(Some(error)) => Seq(Validation(error, false))
       case Success(None) => Seq()
-      case _ =>   if(dac6MetaData.isDefined && dac6MetaData.get.messageRefId.trim.isEmpty) {Seq()
-      }else Seq(Validation("metaDataRules.messageRefId.wrongFormat", false))
+      case _ =>
+        if (dac6MetaData.isDefined && dac6MetaData.get.messageRefId.trim.isEmpty) { Seq() }
+        else Seq(Validation("metaDataRules.messageRefId.wrongFormat", false))
     }
   }
 
