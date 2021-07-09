@@ -148,12 +148,11 @@ class UploadSubmissionValidationEngineSpec extends SpecBase {
             v1 <- dummyValidation()
           } yield Future.successful(Seq(v1).filterNot(_.value))
 
-        override def extractDac6MetaData(): ReaderT[Option, NodeSeq, Dac6MetaData] = {
+        override def extractDac6MetaData(): ReaderT[Option, NodeSeq, Dac6MetaData] =
           for {
             _ <- dummyReader
           } yield Dac6MetaData("DAC6NEW", disclosureInformationPresent = true, initialDisclosureMA = false, messageRefId = "messageRefId")
 
-        }
       }
 
     val validationEngine = new UploadSubmissionValidationEngine(mockXmlValidationService,
