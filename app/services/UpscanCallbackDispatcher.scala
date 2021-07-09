@@ -33,6 +33,7 @@ class UpscanCallbackDispatcher @Inject() (sessionStorage: UploadProgressTracker)
       case s: FailedCallbackBody if s.failureDetails.failureReason == "QUARANTINE" =>
         Quarantined
       case s: FailedCallbackBody if s.failureDetails.failureReason == "REJECTED" =>
+        logger.debug(s"FailedCallbackBody: the failed message is ${s.failureDetails}")
         Rejected
       case _: FailedCallbackBody =>
         Failed
