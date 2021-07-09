@@ -26,7 +26,7 @@ class UpscanCallbackDispatcher @Inject() (sessionStorage: UploadProgressTracker)
   private val logger = LoggerFactory.getLogger(getClass)
 
   def handleCallback(callback: CallbackBody): Future[Boolean] = {
-    logger.debug("\n\nHandling the callback\n\n")
+    logger.debug("\n\nHandling the callback\n\n"+callback)
     val uploadStatus = callback match {
       case s: ReadyCallbackBody =>
         UploadedSuccessfully(s.uploadDetails.fileName, s.downloadUrl)
