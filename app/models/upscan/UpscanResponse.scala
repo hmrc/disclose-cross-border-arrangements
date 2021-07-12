@@ -66,7 +66,7 @@ object CallbackBody {
 
   implicit val uploadDetailsReads = Json.reads[UploadDetails]
 
-  implicit val errorDetailsReads = Json.reads[ErrorDetails]
+  implicit val errorDetailsFormat = Json.format[ErrorDetails]
 
   implicit val failedCallbackBodyReads = Json.reads[FailedCallbackBody]
 
