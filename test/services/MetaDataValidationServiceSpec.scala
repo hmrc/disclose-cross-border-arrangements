@@ -17,7 +17,7 @@
 package services
 
 import base.SpecBase
-import helpers.SuffixHelper
+import helpers.{ErrorMessageHelper, SuffixHelper}
 import models.{Dac6MetaData, SubmissionDetails, Validation}
 import org.mockito.ArgumentMatchers.any
 import org.mockito.Mockito
@@ -39,8 +39,9 @@ class MetaDataValidationServiceSpec extends SpecBase with BeforeAndAfterEach {
   val mockSuffixHelper                = mock[SuffixHelper]
   val mockSubmissionDetailsRepository = mock[SubmissionDetailsRepository]
   val mockIDService                   = mock[IdService]
+  val mockErrorMessageHelper          = mock[ErrorMessageHelper]
 
-  val service = new MetaDataValidationService(mockSuffixHelper, mockSubmissionDetailsRepository, mockIDService)
+  val service = new MetaDataValidationService(mockSuffixHelper, mockSubmissionDetailsRepository, mockIDService, mockErrorMessageHelper)
 
   implicit val postFixOps                            = scala.language.postfixOps
   implicit val ec: scala.concurrent.ExecutionContext = scala.concurrent.ExecutionContext.global

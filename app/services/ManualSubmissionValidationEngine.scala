@@ -16,7 +16,7 @@
 
 package services
 
-import models.{ManualSubmissionValidationFailure, ManualSubmissionValidationResult, ManualSubmissionValidationSuccess, SaxParseError}
+import models._
 import org.slf4j.LoggerFactory
 import uk.gov.hmrc.http.HeaderCarrier
 
@@ -39,22 +39,22 @@ class ManualSubmissionValidationEngine @Inject() (xmlValidationService: XMLValid
     ec: ExecutionContext
   ): Future[Option[ManualSubmissionValidationResult]] = {
 
-    val elem = xml.asInstanceOf[Elem]
+    val elem: Elem = xml.asInstanceOf[Elem]
 
     try {
       val xmlAndXmlValidationStatus: ListBuffer[SaxParseError] = performXmlValidation(elem)
       val metaData                                             = businessRuleValidationService.extractDac6MetaData()(elem)
 
       for {
-        metaDateResult      <- metaDataValidationService.verifyMetaDataForManualSubmission(metaData, enrolmentId)
+        metaDataResult      <- metaDataValidationService.verifyMetaDataForManualSubmission(metaData, enrolmentId)
         businessRulesResult <- performBusinessRulesValidation(elem)
       } yield {
-        combineResults(xmlAndXmlValidationStatus, businessRulesResult, metaDateResult) match {
+        combineResults(xmlAndXmlValidationStatus, businessRulesResult, metaDataResult) match {
 
           case None =>
             auditService.auditManualSubmissionParseFailure(enrolmentId, metaData, xmlAndXmlValidationStatus)
             None
-          case Some(Seq())       => Some(ManualSubmissionValidationSuccess(metaDateResult.right.getOrElse(metaData.fold("id")(_.messageRefId))))
+          case Some(Seq())       => Some(ManualSubmissionValidationSuccess(metaDataResult.right.getOrElse(metaData.fold("id")(_.messageRefId))))
           case Some(Seq(errors)) => Some(ManualSubmissionValidationFailure(Seq(errors)))
         }
       }
@@ -91,20 +91,5 @@ class ManualSubmissionValidationEngine @Inject() (xmlValidationService: XMLValid
         }
       case None => Future.successful(noErrors)
     }
-
-  }
-
-  def performBusinessRulesValidationForMan(elem: Elem)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Seq[String]] = {
-
-    businessRuleValidationService.validateFile()(hc, ec)(elem) match {
-      case Some(value) =>
-        value.map {
-          seqValidation =>
-            seqValidation.map(_.key)
-
-        }
-      case None => Future(Seq())
-    }
-
   }
 }
