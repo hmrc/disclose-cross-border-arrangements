@@ -223,7 +223,7 @@ class ErrorMessageHelperSpec extends SpecBase with TestXml {
         )
 
         val result = errorHelper.convertToGenericErrors(Seq(failedValidation), invalidDatesOfBirthXml)
-        result mustBe List(GenericError(28, "Check BirthDate field is on or after 1 January 1900 for all AssociatedEnterprises"))
+        result mustBe List(GenericError(27, "Check BirthDate field is on or after 1 January 1900 for all AssociatedEnterprises"))
       }
 
       "must  return correct error message for disclosing date of birth before 01/01/1900" in {
