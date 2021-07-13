@@ -121,7 +121,7 @@ class MetaDataValidationService @Inject() (
     if (arrangementIdExists) {
       Future(true)
     } else {
-      idService.verifyArrangementId(arrangementId).map(_.get)
+      idService.verifyArrangementId(arrangementId).map(_.getOrElse(false))
     }
 
   }
