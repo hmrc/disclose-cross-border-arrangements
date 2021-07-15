@@ -44,7 +44,7 @@ class UploadSubmissionValidationResultSpec extends SpecBase {
     "must marshall correctly for validation failure" in {
       val json =
         """
-          |{
+          |{ "validationErrors": {
           | "errors": [{
           |     "lineNumber": 50,
           |     "messageKey": "It's an error"
@@ -54,12 +54,15 @@ class UploadSubmissionValidationResultSpec extends SpecBase {
           |     "messageKey": "Oh no!"
           |   }
           | ]
-          |}""".stripMargin
+          |}}""".stripMargin
 
       val expectedResult = UploadSubmissionValidationFailure(
-        Seq(
-          GenericError(50, "It's an error"),
-          GenericError(52, "Oh no!")
+        ValidationErrors(
+          Seq(
+            GenericError(50, "It's an error"),
+            GenericError(52, "Oh no!")
+          ),
+          None
         )
       )
 

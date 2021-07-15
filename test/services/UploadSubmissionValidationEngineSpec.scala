@@ -194,9 +194,8 @@ class UploadSubmissionValidationEngineSpec extends SpecBase {
       when(mockMetaDataValidationService.verifyMetaDataForUploadSubmission(any(), any(), any())(any(), any()))
         .thenReturn(Future.successful(Right(mockMetaData)))
 
-      val expectedResult = Some(UploadSubmissionValidationFailure(Seq(GenericError(lineNumber, defaultError))))
+      val expectedResult = Some(UploadSubmissionValidationFailure(ValidationErrors(Seq(GenericError(lineNumber, defaultError)), Some(mockMetaData))))
       Await.result(validationEngine.validateUploadSubmission(Some(source), enrolmentId), 10 seconds) mustBe expectedResult
-      verify(mockAuditService, times(1)).auditUploadSubmissionFailure(any(), any(), any())(any())
 
     }
 
@@ -208,10 +207,12 @@ class UploadSubmissionValidationEngineSpec extends SpecBase {
         .thenReturn(Future.successful(Left(Seq(GenericError(lineNumber, "metaDataRules.arrangementId.arrangementIdDoesNotMatchRecords")))))
 
       val expectedResult =
-        Some(UploadSubmissionValidationFailure(Seq(GenericError(lineNumber, "metaDataRules.arrangementId.arrangementIdDoesNotMatchRecords"))))
+        Some(
+          UploadSubmissionValidationFailure(
+            ValidationErrors(Seq(GenericError(lineNumber, "metaDataRules.arrangementId.arrangementIdDoesNotMatchRecords")), Some(mockMetaData))
+          )
+        )
       Await.result(validationEngine.validateUploadSubmission(Some(source), enrolmentId), 10 seconds) mustBe expectedResult
-      verify(mockAuditService, times(1)).auditUploadSubmissionFailure(any(), any(), any())(any())
-
     }
 
     "must return ValidationFailure for file which multiple pieces of mandatory information missing" in new SetUp {
@@ -223,7 +224,7 @@ class UploadSubmissionValidationEngineSpec extends SpecBase {
       val expectedErrors = Seq(GenericError(20, "Enter a Street"), GenericError(27, "Enter a City"))
 
       Await.result(validationEngine.validateUploadSubmission(Some(source), enrolmentId), 10 seconds) mustBe Some(
-        UploadSubmissionValidationFailure(expectedErrors)
+        UploadSubmissionValidationFailure(ValidationErrors(expectedErrors, Some(mockMetaData)))
       )
     }
 
@@ -233,9 +234,13 @@ class UploadSubmissionValidationEngineSpec extends SpecBase {
       when(mockMetaDataValidationService.verifyMetaDataForUploadSubmission(any(), any(), any())(any(), any()))
         .thenReturn(Future(Left(Seq(GenericError(1, "metaDataRules.arrangementId.arrangementIdDoesNotMatchRecords")))))
 
-      val expectedResult = Some(UploadSubmissionValidationFailure(Seq(GenericError(1, "metaDataRules.arrangementId.arrangementIdDoesNotMatchRecords"))))
+      val expectedResult =
+        Some(
+          UploadSubmissionValidationFailure(
+            ValidationErrors(Seq(GenericError(1, "metaDataRules.arrangementId.arrangementIdDoesNotMatchRecords")), Some(mockMetaData))
+          )
+        )
       Await.result(validationEngine.validateUploadSubmission(Some(source), enrolmentId), 10 seconds) mustBe expectedResult
-      verify(mockAuditService, times(1)).auditUploadSubmissionFailure(any(), any(), any())(any())
     }
 
     "must return ValidationFailure for file missing mandatory attributes" in new SetUp {
@@ -250,7 +255,7 @@ class UploadSubmissionValidationEngineSpec extends SpecBase {
       val expectedErrors = Seq(GenericError(175, "Enter an Amount currCode"))
 
       Await.result(validationEngine.validateUploadSubmission(Some(source), enrolmentId), 10 seconds) mustBe Some(
-        UploadSubmissionValidationFailure(expectedErrors)
+        UploadSubmissionValidationFailure(ValidationErrors(expectedErrors, Some(mockMetaData)))
       )
     }
 
@@ -263,7 +268,7 @@ class UploadSubmissionValidationEngineSpec extends SpecBase {
       val expectedErrors = Seq(GenericError(116, "BuildingIdentifier must be 400 characters or less"))
 
       Await.result(validationEngine.validateUploadSubmission(Some(source), enrolmentId), 10 seconds) mustBe Some(
-        UploadSubmissionValidationFailure(expectedErrors)
+        UploadSubmissionValidationFailure(ValidationErrors(expectedErrors, Some(mockMetaData)))
       )
     }
 
@@ -276,7 +281,7 @@ class UploadSubmissionValidationEngineSpec extends SpecBase {
       val expectedErrors = Seq(GenericError(116, "NationalProvision must be 4000 characters or less"))
 
       Await.result(validationEngine.validateUploadSubmission(Some(source), enrolmentId), 10 seconds) mustBe Some(
-        UploadSubmissionValidationFailure(expectedErrors)
+        UploadSubmissionValidationFailure(ValidationErrors(expectedErrors, Some(mockMetaData)))
       )
     }
 
@@ -289,7 +294,7 @@ class UploadSubmissionValidationEngineSpec extends SpecBase {
       val expectedErrors = Seq(GenericError(123, "Country is not one of the ISO country codes"))
 
       Await.result(validationEngine.validateUploadSubmission(Some(source), enrolmentId), 10 seconds) mustBe Some(
-        UploadSubmissionValidationFailure(expectedErrors)
+        UploadSubmissionValidationFailure(ValidationErrors(expectedErrors, Some(mockMetaData)))
       )
     }
 
@@ -301,7 +306,7 @@ class UploadSubmissionValidationEngineSpec extends SpecBase {
       val expectedErrors = Seq(GenericError(177, "ConcernedMS is not one of the ISO EU Member State country codes"))
 
       Await.result(validationEngine.validateUploadSubmission(Some(source), enrolmentId), 10 seconds) mustBe Some(
-        UploadSubmissionValidationFailure(expectedErrors)
+        UploadSubmissionValidationFailure(ValidationErrors(expectedErrors, Some(mockMetaData)))
       )
     }
 
@@ -314,7 +319,7 @@ class UploadSubmissionValidationEngineSpec extends SpecBase {
       val expectedErrors = Seq(GenericError(133, "CountryExemption is not one of the ISO country codes"))
 
       Await.result(validationEngine.validateUploadSubmission(Some(source), enrolmentId), 10 seconds) mustBe Some(
-        UploadSubmissionValidationFailure(expectedErrors)
+        UploadSubmissionValidationFailure(ValidationErrors(expectedErrors, Some(mockMetaData)))
       )
     }
 
@@ -327,7 +332,7 @@ class UploadSubmissionValidationEngineSpec extends SpecBase {
       val expectedErrors = Seq(GenericError(169, "Reason is not one of the allowed values"))
 
       Await.result(validationEngine.validateUploadSubmission(Some(source), enrolmentId), 10 seconds) mustBe Some(
-        UploadSubmissionValidationFailure(expectedErrors)
+        UploadSubmissionValidationFailure(ValidationErrors(expectedErrors, Some(mockMetaData)))
       )
     }
 
@@ -340,7 +345,7 @@ class UploadSubmissionValidationEngineSpec extends SpecBase {
       val expectedErrors = Seq(GenericError(129, "Capacity is not one of the allowed values (DAC61101, DAC61102) for Intermediary"))
 
       Await.result(validationEngine.validateUploadSubmission(Some(source), enrolmentId), 10 seconds) mustBe Some(
-        UploadSubmissionValidationFailure(expectedErrors)
+        UploadSubmissionValidationFailure(ValidationErrors(expectedErrors, Some(mockMetaData)))
       )
     }
 
@@ -354,7 +359,7 @@ class UploadSubmissionValidationEngineSpec extends SpecBase {
       val expectedErrors = Seq(GenericError(37, "Capacity is not one of the allowed values (DAC61104, DAC61105, DAC61106) for Taxpayer"))
 
       Await.result(validationEngine.validateUploadSubmission(Some(source), enrolmentId), 10 seconds) mustBe Some(
-        UploadSubmissionValidationFailure(expectedErrors)
+        UploadSubmissionValidationFailure(ValidationErrors(expectedErrors, Some(mockMetaData)))
       )
     }
 
@@ -367,7 +372,7 @@ class UploadSubmissionValidationEngineSpec extends SpecBase {
       val expectedErrors = Seq(GenericError(18, "TIN issuedBy is not one of the ISO country codes"))
 
       Await.result(validationEngine.validateUploadSubmission(Some(source), enrolmentId), 10 seconds) mustBe Some(
-        UploadSubmissionValidationFailure(expectedErrors)
+        UploadSubmissionValidationFailure(ValidationErrors(expectedErrors, Some(mockMetaData)))
       )
     }
 
@@ -381,7 +386,7 @@ class UploadSubmissionValidationEngineSpec extends SpecBase {
       val expectedErrors = Seq(GenericError(lineNumber, "There is a problem with this line number"))
 
       Await.result(validationEngine.validateUploadSubmission(Some(source), enrolmentId), 10 seconds) mustBe Some(
-        UploadSubmissionValidationFailure(expectedErrors)
+        UploadSubmissionValidationFailure(ValidationErrors(expectedErrors, Some(mockMetaData)))
       )
     }
 
@@ -394,7 +399,7 @@ class UploadSubmissionValidationEngineSpec extends SpecBase {
 
       val expectedErrors = Seq(GenericError(lineNumber, defaultError))
       Await.result(validationEngine.validateUploadSubmission(Some(source), enrolmentId), 10 seconds) mustBe Some(
-        UploadSubmissionValidationFailure(expectedErrors)
+        UploadSubmissionValidationFailure(ValidationErrors(expectedErrors, Some(mockMetaData)))
       )
     }
 
@@ -408,7 +413,7 @@ class UploadSubmissionValidationEngineSpec extends SpecBase {
 
         val expectedErrors = Seq(GenericError(lineNumber, defaultError), GenericError(20, "Enter a Street"))
         Await.result(validationEngine.validateUploadSubmission(Some(source), enrolmentId), 10 seconds) mustBe Some(
-          UploadSubmissionValidationFailure(expectedErrors)
+          UploadSubmissionValidationFailure(ValidationErrors(expectedErrors, Some(mockMetaData)))
         )
       }
 

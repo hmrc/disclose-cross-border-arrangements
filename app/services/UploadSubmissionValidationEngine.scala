@@ -59,8 +59,8 @@ class UploadSubmissionValidationEngine @Inject() (xmlValidationService: XMLValid
           case Seq() =>
             Some(UploadSubmissionValidationSuccess(metaDataResult.right.get))
           case errors: Seq[GenericError] =>
-            auditService.auditUploadSubmissionFailure(enrolmentId, metaData, errors)
-            Some(UploadSubmissionValidationFailure(errors))
+            // ToDo remove when frontend working        auditService.auditUploadSubmissionFailure(enrolmentId, metaData, errors)
+            Some(UploadSubmissionValidationFailure(ValidationErrors(errors, metaData)))
           case _ =>
             None
         }

@@ -129,6 +129,7 @@ class AuditService @Inject() (appConfig: AppConfig, auditConnector: AuditConnect
     }
   }
 
+  //Todo Remove this when frontend audit working
   def auditUploadSubmissionFailure(enrolmentId: String, metaData: Option[Dac6MetaData], errors: Seq[GenericError])(implicit hc: HeaderCarrier): Unit = {
 
     val validationFailureType = "UploadSubmissionParseFailure"
