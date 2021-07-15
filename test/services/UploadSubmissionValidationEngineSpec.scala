@@ -181,9 +181,6 @@ class UploadSubmissionValidationEngineSpec extends SpecBase {
       Await.result(validationEngine.validateUploadSubmission(Some(source), enrolmentId), 10 seconds) mustBe Some(
         UploadSubmissionValidationSuccess(mockMetaData)
       )
-
-      verify(mockAuditService, times(0)).auditUploadSubmissionFailure(any(), any(), any())(any())
-
     }
 
     "must return errors when xml with businessErrors received" in new SetUp {
