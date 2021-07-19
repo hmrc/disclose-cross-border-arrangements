@@ -16,21 +16,23 @@
 
 package services
 
-import helpers.SuffixHelper
+import helpers.{ErrorMessageHelper, SuffixHelper}
 import uk.gov.hmrc.http.HeaderCarrier
 
 import java.time.LocalDateTime
 import scala.concurrent.{ExecutionContext, Future}
-import models.{Dac6MetaData, SubmissionHistory, Validation}
+import models.{Dac6MetaData, GenericError, SubmissionHistory, Validation}
 import repositories.SubmissionDetailsRepository
 
 import javax.inject.Inject
 import scala.util.{Success, Try}
+import scala.xml.Elem
 
 class MetaDataValidationService @Inject() (
   suffixGenerator: SuffixHelper,
   submissionDetailsRepository: SubmissionDetailsRepository,
-  idService: IdService
+  idService: IdService,
+  errorMessageHelper: ErrorMessageHelper
 ) {
   implicit val localDateOrdering: Ordering[LocalDateTime] = Ordering.by(_.toLocalTime)
 
@@ -53,6 +55,15 @@ class MetaDataValidationService @Inject() (
     }
   }
 
+  def verifyMetaDataForUploadSubmission(dac6MetaData: Option[Dac6MetaData], enrolmentId: String, xml: Elem)(implicit
+    hc: HeaderCarrier,
+    ec: ExecutionContext
+  ): Future[Either[Seq[GenericError], Dac6MetaData]] =
+    verifyMetaData(dac6MetaData, enrolmentId).flatMap {
+      case Seq() if dac6MetaData.isDefined => Future(Right(dac6MetaData.get))
+      case errors                          => Future(Left(errorMessageHelper.convertToGenericErrors(errors, xml)))
+    }
+
   def verifyMetaData(dac6MetaData: Option[Dac6MetaData], enrolmentId: String)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Seq[Validation]] = {
 
     submissionDetailsRepository.retrieveSubmissionHistory(enrolmentId).flatMap {
@@ -66,7 +77,7 @@ class MetaDataValidationService @Inject() (
 
           case Some(Dac6MetaData(_, _, _, _, _, _)) => verifyIds(dac6MetaData.get, SubmissionHistory(history)).map(_ ++ messageRefResult)
 
-          case _ => Future(Seq(Validation("File does not contain necessary data", false)))
+          case _ => Future(Seq(Validation("File does not contain necessary data", value = false)))
         }
     }
   }
@@ -100,7 +111,6 @@ class MetaDataValidationService @Inject() (
 
         }
     }
-
   }
 
   private def verifyArrangementId(arrangementId: String, history: SubmissionHistory)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Boolean] = {
@@ -111,7 +121,7 @@ class MetaDataValidationService @Inject() (
     if (arrangementIdExists) {
       Future(true)
     } else {
-      idService.verifyArrangementId(arrangementId).map(_.get)
+      idService.verifyArrangementId(arrangementId).map(_.getOrElse(false))
     }
 
   }
@@ -128,8 +138,8 @@ class MetaDataValidationService @Inject() (
     submissionContainingDisclosureId match {
       case Some(submission) =>
         if (submission.arrangementID.contains(arrangementId)) {
-          dac6MetaData.importInstruction match {
 
+          dac6MetaData.importInstruction match {
             case "DAC6REP" if submission.importInstruction.equals("New") && !dac6MetaData.disclosureInformationPresent =>
               Seq(Validation("metaDataRules.disclosureInformation.noInfoWhenReplacingDAC6NEW", false))
 
@@ -143,13 +153,11 @@ class MetaDataValidationService @Inject() (
               Seq(Validation("metaDataRules.initialDisclosureMA.arrangementNoLongerMarketable", false))
 
             case _ => Seq()
-
           }
-
-        } else Seq(Validation("metaDataRules.disclosureId.disclosureIDDoesNotMatchArrangementID", false))
-
+        } else {
+          Seq(Validation("metaDataRules.disclosureId.disclosureIDDoesNotMatchArrangementID", false))
+        }
       case None => Seq(Validation("metaDataRules.disclosureId.disclosureIDDoesNotMatchUser", false))
-
     }
   }
 
@@ -169,9 +177,7 @@ class MetaDataValidationService @Inject() (
           Seq(Validation("metaDataRules.disclosureInformation.disclosureInformationMissingFromDAC6ADD", false))
 
         } else Seq()
-
     }
-
   }
 
   private def verifyMessageRefId(dac6MetaData: Option[Dac6MetaData], enrolmentId: String, history: SubmissionHistory): Seq[Validation] = {
@@ -188,7 +194,6 @@ class MetaDataValidationService @Inject() (
       } else if (userIdValid) {
         Some("metaDataRules.messageRefId.wrongFormat")
       } else Some("metaDataRules.messageRefId.noUserId")
-
     }
 
     result match {
@@ -198,7 +203,6 @@ class MetaDataValidationService @Inject() (
         if (dac6MetaData.isDefined && dac6MetaData.get.messageRefId.trim.isEmpty) { Seq() }
         else Seq(Validation("metaDataRules.messageRefId.wrongFormat", false))
     }
-
   }
 
   private def isMessageRefIdUnique(messageRefId: String, history: SubmissionHistory): Boolean =
@@ -218,7 +222,5 @@ class MetaDataValidationService @Inject() (
 
       case _ => false
     }
-
   }
-
 }

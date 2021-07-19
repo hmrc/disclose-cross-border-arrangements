@@ -14,18 +14,32 @@
  * limitations under the License.
  */
 
-package models
+package helpers
 
-import play.api.libs.json.{Json, OFormat}
+import scala.xml.PrettyPrinter
 
-case class GenericError(lineNumber: Int, messageKey: String)
+class ErrorMessageHelper {
 
-object GenericError {
+  import models.{GenericError, Validation}
 
-  implicit def orderByLineNumber[A <: GenericError]: Ordering[A] =
-    Ordering.by(
-      ge => (ge.lineNumber, ge.messageKey)
+  val WIDTH = 1000000
+  val STEP  = 2
+
+  import scala.xml.Elem
+
+  def convertToGenericErrors(validations: Seq[Validation], xml: Elem): Seq[GenericError] = {
+
+    val prettyPrinter = new PrettyPrinter(WIDTH, STEP)
+
+    val xmlArray = prettyPrinter.formatNodes(xml).split("\n")
+
+    val validationWithLineNumber = validations.map(
+      validation => validation.setLineNumber(xmlArray)
     )
 
-  implicit val format: OFormat[GenericError] = Json.format[GenericError]
+    validationWithLineNumber.map(
+      validation => validation.toGenericError
+    )
+
+  }
 }

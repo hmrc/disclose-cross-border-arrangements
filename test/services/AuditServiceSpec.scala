@@ -17,11 +17,13 @@
 package services
 
 import base.SpecBase
-import models.{Dac6MetaData, SaxParseError}
+import models.{Dac6MetaData, GenericError, SaxParseError}
 import org.mockito.ArgumentCaptor
 import org.mockito.ArgumentMatchers.any
 import org.scalacheck.Arbitrary.arbitrary
 import org.scalatest.BeforeAndAfterEach
+import org.mockito.ArgumentMatchers.any
+
 import org.scalatestplus.scalacheck.ScalaCheckPropertyChecks.forAll
 import play.api.inject
 import play.api.inject.guice.GuiceApplicationBuilder
@@ -60,7 +62,7 @@ class AuditServiceSpec extends SpecBase with BeforeAndAfterEach {
 
   val auditType = "disclosureFileSubmission"
 
-  "Audit service must" - {
+  "Audit service" - {
     "must generate correct payload for failed Manual Submission parsing" in {
       forAll(arbitrary[String], arbitrary[Option[String]], arbitrary[Option[String]], arbitrary[String]) {
         (enrolmentID, arrangementID, disclosureID, messageRefID) =>
