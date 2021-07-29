@@ -18,7 +18,7 @@ package controllers
 
 import base.SpecBase
 import connectors.SubscriptionConnector
-import controllers.auth.{FakeIdentifierAuthAction, IdentifierAuthAction}
+import controllers.auth.{AuthAction, FakeAuthAction, FakeIdentifierAuthAction, IdentifierAuthAction}
 import generators.CacheModelGenerators
 import models.subscription._
 import models.subscription.cache.CreateSubscriptionForDACRequest
@@ -48,7 +48,8 @@ class CacheControllerSpec extends SpecBase with CacheModelGenerators with Before
       .overrides(
         bind[SubscriptionCacheService].toInstance(mockSubscriptionCacheService),
         bind[SubscriptionConnector].toInstance(mockSubscriptionConnector),
-        bind[IdentifierAuthAction].to[FakeIdentifierAuthAction]
+        bind[IdentifierAuthAction].to[FakeIdentifierAuthAction],
+        bind[AuthAction].to[FakeAuthAction]
       )
       .build()
 

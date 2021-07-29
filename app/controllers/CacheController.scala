@@ -17,7 +17,7 @@
 package controllers
 
 import connectors.SubscriptionConnector
-import controllers.auth.IdentifierAuthAction
+import controllers.auth.{AuthAction, IdentifierAuthAction}
 import models.ErrorDetails
 import models.subscription.DisplaySubscriptionForDACRequest
 import models.subscription.cache.CreateSubscriptionForDACRequest
@@ -34,6 +34,7 @@ import scala.util.{Success, Try}
 
 class CacheController @Inject() (
   authenticate: IdentifierAuthAction,
+  authAction: AuthAction,
   subscriptionCacheService: SubscriptionCacheService,
   subscriptionConnector: SubscriptionConnector,
   cc: ControllerComponents
@@ -44,9 +45,9 @@ class CacheController @Inject() (
 
   private val logger: Logger = Logger(this.getClass)
 
-  def storeSubscriptionDetails: Action[JsValue] = authenticate(parse.json).async {
+  def storeSubscriptionDetails: Action[JsValue] = authAction.async(parse.json) {
     implicit request =>
-      val subscriptionRequest = request.request.body.validate[CreateSubscriptionForDACRequest]
+      val subscriptionRequest = request.body.validate[CreateSubscriptionForDACRequest]
 
       subscriptionRequest.fold(
         invalid = errors => Future.successful(BadRequest("")),
