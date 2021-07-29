@@ -43,7 +43,7 @@ class IdentifierAuthActionImpl @Inject() (
   private val enrolmentIDKey: String = "DAC6ID"
 
   override def invokeBlock[A](request: Request[A], block: UserRequest[A] => Future[Result]): Future[Result] = {
-    implicit val hc: HeaderCarrier = HeaderCarrierConverter.fromRequest(request)
+    implicit val hc: HeaderCarrier = HeaderCarrierConverter.fromHeadersAndSession(request.headers)
 
     authorised(Enrolment(enrolmentKey)).retrieve(Retrievals.internalId and Retrievals.authorisedEnrolments) {
       case Some(internalID) ~ Enrolments(enrolments) =>
