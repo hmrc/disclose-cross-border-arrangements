@@ -86,6 +86,23 @@ class CacheControllerSpec extends SpecBase with CacheModelGenerators with Before
       }
     }
 
+    "must update a subscription when given a valid subscription payload" in {
+      when(mockSubscriptionCacheService.storeSubscriptionDetails(any(), any()))
+        .thenReturn(Future.successful(true))
+
+      forAll(arbitrary[CreateSubscriptionForDACRequest]) {
+        subscriptionRequest =>
+          val payload = Json.toJson(subscriptionRequest)
+          val request = FakeRequest(POST, routes.CacheController.updateSubscriptionDetails().url)
+            .withJsonBody(payload)
+
+          val result: Future[Result] = route(application, request).value
+
+          status(result) mustBe OK
+
+      }
+    }
+
     "must retrieve a subscription from the cache where one exists" in {
       when(mockSubscriptionCacheService.retrieveSubscriptionDetails(any())(any()))
         .thenReturn(

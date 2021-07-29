@@ -58,6 +58,19 @@ class CacheController @Inject() (
       )
   }
 
+  def updateSubscriptionDetails: Action[JsValue] = authenticate(parse.json).async {
+    implicit request =>
+      val subscriptionRequest = request.request.body.validate[CreateSubscriptionForDACRequest]
+
+      subscriptionRequest.fold(
+        invalid = errors => Future.successful(BadRequest("")),
+        valid = createSubscription =>
+          subscriptionCacheService.storeSubscriptionDetails(createSubscription.subscriptionID, createSubscription).map {
+            _ => Ok
+          }
+      )
+  }
+
   def retrieveSubscription: Action[JsValue] = authenticate(parse.json).async {
     implicit request =>
       val displaySubscriptionResult: JsResult[DisplaySubscriptionForDACRequest] =

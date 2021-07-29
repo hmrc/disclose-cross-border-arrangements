@@ -16,6 +16,7 @@ GET        /history/is-marketable-arrangement/:arrangementId  controllers.Histor
 POST       /subscription/display-subscription           controllers.SubscriptionController.displaySubscriptionDetails
 POST       /subscription/update-subscription            controllers.SubscriptionController.updateSubscription
 POST       /subscription/cache-subscription             controllers.CacheController.storeSubscriptionDetails
+POST       /subscription/update-cache-subscription      controllers.CacheController.updateSubscriptionDetails
 POST       /subscription/retrieve-subscription          controllers.CacheController.retrieveSubscription
 
 POST       /callback                                    controllers.UploadCallbackController.callback
