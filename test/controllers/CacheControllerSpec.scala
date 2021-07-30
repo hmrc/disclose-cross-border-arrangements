@@ -18,7 +18,7 @@ package controllers
 
 import base.SpecBase
 import connectors.SubscriptionConnector
-import controllers.auth.{FakeIdentifierAuthAction, IdentifierAuthAction}
+import controllers.auth.{AuthAction, FakeAuthAction, FakeIdentifierAuthAction, IdentifierAuthAction}
 import generators.CacheModelGenerators
 import models.subscription._
 import models.subscription.cache.CreateSubscriptionForDACRequest
@@ -48,7 +48,8 @@ class CacheControllerSpec extends SpecBase with CacheModelGenerators with Before
       .overrides(
         bind[SubscriptionCacheService].toInstance(mockSubscriptionCacheService),
         bind[SubscriptionConnector].toInstance(mockSubscriptionConnector),
-        bind[IdentifierAuthAction].to[FakeIdentifierAuthAction]
+        bind[IdentifierAuthAction].to[FakeIdentifierAuthAction],
+        bind[AuthAction].to[FakeAuthAction]
       )
       .build()
 
@@ -76,6 +77,23 @@ class CacheControllerSpec extends SpecBase with CacheModelGenerators with Before
         subscriptionRequest =>
           val payload = Json.toJson(subscriptionRequest)
           val request = FakeRequest(POST, routes.CacheController.storeSubscriptionDetails().url)
+            .withJsonBody(payload)
+
+          val result: Future[Result] = route(application, request).value
+
+          status(result) mustBe OK
+
+      }
+    }
+
+    "must update a subscription when given a valid subscription payload" in {
+      when(mockSubscriptionCacheService.storeSubscriptionDetails(any(), any()))
+        .thenReturn(Future.successful(true))
+
+      forAll(arbitrary[CreateSubscriptionForDACRequest]) {
+        subscriptionRequest =>
+          val payload = Json.toJson(subscriptionRequest)
+          val request = FakeRequest(POST, routes.CacheController.updateSubscriptionDetails().url)
             .withJsonBody(payload)
 
           val result: Future[Result] = route(application, request).value
