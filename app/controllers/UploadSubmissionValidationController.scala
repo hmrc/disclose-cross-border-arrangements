@@ -42,7 +42,7 @@ class UploadSubmissionValidationController @Inject() (identify: IdentifierAuthAc
           Ok(Json.toJson(UploadSubmissionValidationFailure(errors)))
 
         case _ =>
-          BadRequest("Invalid XML")
+          NotAcceptable("Invalid XML")
       }
   }
 }
