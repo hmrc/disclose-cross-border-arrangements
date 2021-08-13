@@ -414,13 +414,13 @@ class UploadSubmissionValidationEngineSpec extends SpecBase {
         )
       }
 
-    "must return none when xml parsing fails and audit failure" in new SetUp {
+    "must return UploadSubmissionValidationInvalid when xml parsing fails and audit failure" in new SetUp {
       val exception = new RuntimeException
       when(mockXmlValidationService.validateUploadXml(any())).thenThrow(exception)
       when(mockMetaDataValidationService.verifyMetaDataForUploadSubmission(any(), any(), any())(any(), any()))
         .thenReturn(Future.successful(Right(mockMetaData)))
 
-      Await.result(validationEngine.validateUploadSubmission(Some(source), enrolmentId), 10 seconds) mustBe None
+      Await.result(validationEngine.validateUploadSubmission(Some(source), enrolmentId), 10 seconds) mustBe Some(UploadSubmissionValidationInvalid())
     }
   }
 }

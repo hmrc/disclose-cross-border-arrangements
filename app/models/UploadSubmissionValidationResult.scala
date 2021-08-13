@@ -52,6 +52,8 @@ object UploadSubmissionValidationSuccess {
 
 case class UploadSubmissionValidationFailure(validationErrors: ValidationErrors) extends UploadSubmissionValidationResult
 
+case class UploadSubmissionValidationInvalid() extends UploadSubmissionValidationResult
+
 object UploadSubmissionValidationFailure {
   implicit val format: OFormat[UploadSubmissionValidationFailure] = Json.format[UploadSubmissionValidationFailure]
 }
