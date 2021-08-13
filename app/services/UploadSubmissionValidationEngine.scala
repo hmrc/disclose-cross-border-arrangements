@@ -21,6 +21,7 @@ import models._
 import org.slf4j.LoggerFactory
 import uk.gov.hmrc.http.HeaderCarrier
 
+import java.net.ConnectException
 import javax.inject.Inject
 import scala.collection.mutable.ListBuffer
 import scala.concurrent.{ExecutionContext, Future}
@@ -61,13 +62,16 @@ class UploadSubmissionValidationEngine @Inject() (xmlValidationService: XMLValid
           case errors: Seq[GenericError] =>
             Some(UploadSubmissionValidationFailure(ValidationErrors(errors, metaData)))
           case _ =>
-            None
+            Some(UploadSubmissionValidationInvalid())
         }
       }
     } catch {
-      case e: Exception =>
+      case e: ConnectException =>
         logger.warn(s"XML parsing failed. The XML parser has thrown the exception: $e")
         Future.successful(None)
+      case e: Exception =>
+        logger.warn(s"XML parsing failed. The XML parser has thrown the exception: $e")
+        Future.successful(Some(UploadSubmissionValidationInvalid()))
     }
   }
 

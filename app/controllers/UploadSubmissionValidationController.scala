@@ -17,7 +17,7 @@
 package controllers
 
 import controllers.auth.IdentifierAuthAction
-import models.{UploadSubmissionValidationFailure, UploadSubmissionValidationSuccess}
+import models.{UploadSubmissionValidationFailure, UploadSubmissionValidationInvalid, UploadSubmissionValidationSuccess}
 import play.api.libs.json.Json
 import play.api.mvc.{Action, AnyContent, ControllerComponents}
 import services.UploadSubmissionValidationEngine
@@ -41,8 +41,11 @@ class UploadSubmissionValidationController @Inject() (identify: IdentifierAuthAc
         case Some(UploadSubmissionValidationFailure(errors)) =>
           Ok(Json.toJson(UploadSubmissionValidationFailure(errors)))
 
-        case _ =>
+        case Some(UploadSubmissionValidationInvalid()) =>
           BadRequest("Invalid XML")
+
+        case _ =>
+          BadRequest("Service unavailable")
       }
   }
 }
