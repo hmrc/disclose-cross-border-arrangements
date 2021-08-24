@@ -21,7 +21,7 @@ import uk.gov.hmrc.http.HeaderCarrier
 
 import java.time.LocalDateTime
 import scala.concurrent.{ExecutionContext, Future}
-import models.{Dac6MetaData, GenericError, SubmissionHistory, Validation}
+import models.{Dac6MetaData, GenericError, SubmissionDetails, SubmissionHistory, Validation}
 import repositories.SubmissionDetailsRepository
 
 import javax.inject.Inject
@@ -143,13 +143,13 @@ class MetaDataValidationService @Inject() (
             case "DAC6REP" if submission.importInstruction.equals("New") && !dac6MetaData.disclosureInformationPresent =>
               Seq(Validation("metaDataRules.disclosureInformation.noInfoWhenReplacingDAC6NEW", false))
 
-            case "DAC6REP" if !isMarketableArrangement(dac6MetaData, history) && !dac6MetaData.disclosureInformationPresent =>
+            case "DAC6REP" if !isMarketableArrangementWithDisclosureID(dac6MetaData, history) && !dac6MetaData.disclosureInformationPresent =>
               Seq(Validation("metaDataRules.disclosureInformation.noInfoForNonMaDAC6REP", false))
 
-            case "DAC6REP" if !isMarketableArrangement(dac6MetaData, history) && dac6MetaData.initialDisclosureMA =>
+            case "DAC6REP" if !isMarketableArrangementWithDisclosureID(dac6MetaData, history) && dac6MetaData.initialDisclosureMA =>
               Seq(Validation("metaDataRules.initialDisclosureMA.arrangementNowMarketable", false))
 
-            case "DAC6REP" if isMarketableArrangement(dac6MetaData, history) && !dac6MetaData.initialDisclosureMA =>
+            case "DAC6REP" if isMarketableArrangementWithDisclosureID(dac6MetaData, history) && !dac6MetaData.initialDisclosureMA =>
               Seq(Validation("metaDataRules.initialDisclosureMA.arrangementNoLongerMarketable", false))
 
             case _ => Seq()
@@ -216,6 +216,23 @@ class MetaDataValidationService @Inject() (
     )
     relevantArrangement.find(
       submissionDetails => submissionDetails.importInstruction.equals("New")
+    ) match {
+      case Some(details) =>
+        details.initialDisclosureMA
+
+      case _ => false
+    }
+  }
+
+  private def isMarketableArrangementWithDisclosureID(dac6MetaData: Dac6MetaData, history: SubmissionHistory): Boolean = {
+    val relevantArrangement: Seq[SubmissionDetails] = history.details.filter(
+      submission => submission.arrangementID.equals(dac6MetaData.arrangementID) && submission.disclosureID.equals(dac6MetaData.disclosureID)
+    )
+
+    val maxSubmissionDate = relevantArrangement.map(_.submissionTime).max
+
+    relevantArrangement.find(
+      submissionDetails => submissionDetails.submissionTime.equals(maxSubmissionDate)
     ) match {
       case Some(details) =>
         details.initialDisclosureMA
