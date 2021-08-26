@@ -143,7 +143,7 @@ class MetaDataValidationService @Inject() (
             case "DAC6REP" if submission.importInstruction.equals("New") && !dac6MetaData.disclosureInformationPresent =>
               Seq(Validation("metaDataRules.disclosureInformation.noInfoWhenReplacingDAC6NEW", false))
 
-            case "DAC6REP" if !isMarketableArrangementWithDisclosureID(dac6MetaData, history) && !dac6MetaData.disclosureInformationPresent =>
+            case "DAC6REP" if !isMarketableArrangement(dac6MetaData, history) && !dac6MetaData.disclosureInformationPresent =>
               Seq(Validation("metaDataRules.disclosureInformation.noInfoForNonMaDAC6REP", false))
 
             case "DAC6REP" if !isMarketableArrangementWithDisclosureID(dac6MetaData, history) && dac6MetaData.initialDisclosureMA =>
@@ -240,4 +240,5 @@ class MetaDataValidationService @Inject() (
       case _ => false
     }
   }
+
 }
