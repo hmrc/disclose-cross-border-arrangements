@@ -63,6 +63,8 @@ case class Validation(key: String, value: Boolean, lineNumber: Option[Int] = Non
       case "businessrules.hallmarks.dHallmarkWithOtherHallmarks" => "Enter a category D hallmark only"
 
       case "metaDataRules.arrangementId.arrangementIdDoesNotMatchRecords" => "ArrangementID does not match HMRC's records"
+      case "metaDataRules.disclosureInformation.noInfoOnWhenInitialDisclosureWasFalseForDAC6DEL" =>
+        "Provide DisclosureInformation in this DAC6DEL file. This is mandatory for arrangements that are not marketable"
       case "metaDataRules.disclosureInformation.noInfoWhenReplacingDAC6NEW" =>
         "Provide DisclosureInformation in this DAC6REP file, to replace the original arrangement details"
       case "metaDataRules.disclosureInformation.noInfoForNonMaDAC6REP" =>
@@ -108,19 +110,20 @@ case class Validation(key: String, value: Boolean, lineNumber: Option[Int] = Non
       case "businessrules.hallmarks.dHallmarkNotProvided"                                  => "Hallmarks"
       case "businessrules.hallmarks.dHallmarkWithOtherHallmarks"                           => "Hallmarks"
 
-      case "metaDataRules.arrangementId.arrangementIdDoesNotMatchRecords"                => "ArrangementID"
-      case "metaDataRules.disclosureInformation.noInfoWhenReplacingDAC6NEW"              => "DisclosureImportInstruction"
-      case "metaDataRules.disclosureInformation.noInfoForNonMaDAC6REP"                   => "DisclosureImportInstruction"
-      case "metaDataRules.initialDisclosureMA.arrangementNowMarketable"                  => "InitialDisclosureMA"
-      case "metaDataRules.initialDisclosureMA.arrangementNoLongerMarketable"             => "InitialDisclosureMA"
-      case "metaDataRules.disclosureId.disclosureIDDoesNotMatchArrangementID"            => "DisclosureID"
-      case "metaDataRules.disclosureId.disclosureIDDoesNotMatchUser"                     => "DisclosureID"
-      case "metaDataRules.disclosureInformation.disclosureInformationMissingFromDAC6NEW" => "DisclosureImportInstruction"
-      case "metaDataRules.disclosureInformation.disclosureInformationMissingFromDAC6ADD" => "DisclosureImportInstruction"
-      case "metaDataRules.messageRefId.wrongFormat"                                      => "MessageRefId"
-      case "metaDataRules.messageRefId.noUserId"                                         => "MessageRefId"
-      case "metaDataRules.messageRefId.notUnique"                                        => "MessageRefId"
-      case "businessrules.addDisclosure.mustNotBeInitialDisclosureMA"                    => "InitialDisclosureMA"
+      case "metaDataRules.arrangementId.arrangementIdDoesNotMatchRecords"                        => "ArrangementID"
+      case "metaDataRules.disclosureInformation.noInfoOnWhenInitialDisclosureWasFalseForDAC6DEL" => "DisclosureImportInstruction"
+      case "metaDataRules.disclosureInformation.noInfoWhenReplacingDAC6NEW"                      => "DisclosureImportInstruction"
+      case "metaDataRules.disclosureInformation.noInfoForNonMaDAC6REP"                           => "DisclosureImportInstruction"
+      case "metaDataRules.initialDisclosureMA.arrangementNowMarketable"                          => "InitialDisclosureMA"
+      case "metaDataRules.initialDisclosureMA.arrangementNoLongerMarketable"                     => "InitialDisclosureMA"
+      case "metaDataRules.disclosureId.disclosureIDDoesNotMatchArrangementID"                    => "DisclosureID"
+      case "metaDataRules.disclosureId.disclosureIDDoesNotMatchUser"                             => "DisclosureID"
+      case "metaDataRules.disclosureInformation.disclosureInformationMissingFromDAC6NEW"         => "DisclosureImportInstruction"
+      case "metaDataRules.disclosureInformation.disclosureInformationMissingFromDAC6ADD"         => "DisclosureImportInstruction"
+      case "metaDataRules.messageRefId.wrongFormat"                                              => "MessageRefId"
+      case "metaDataRules.messageRefId.noUserId"                                                 => "MessageRefId"
+      case "metaDataRules.messageRefId.notUnique"                                                => "MessageRefId"
+      case "businessrules.addDisclosure.mustNotBeInitialDisclosureMA"                            => "InitialDisclosureMA"
 
       case _ => "DisclosureImportInstruction"
 

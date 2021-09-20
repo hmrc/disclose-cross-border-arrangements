@@ -1887,6 +1887,82 @@ class BusinessRuleValidationServiceSpec extends SpecBase with MockitoSugar with 
     }
   }
 
+  "must correctly validate a DAC6DEL when DAC6NEW is not marketable and disclosure information is not provided" in {
+
+    val firstDisclosure: SubmissionDetails = SubmissionDetails(
+      "enrolmentID",
+      LocalDateTime.parse("2020-05-14T17:10:00"),
+      "fileName",
+      Some("GBA20200904AAAAAA"),
+      Some("GBD20200904AAAAAA"),
+      "New",
+      initialDisclosureMA = false,
+      messageRefId = "GB0000000XXX"
+    )
+
+    when(mockSubmissionDetailsRepository.retrieveFirstDisclosureForArrangementId("GBA20200904AAAAAA"))
+      .thenReturn(Future.successful(Some(firstDisclosure)))
+
+    val xml =
+      <DAC6_Arrangement version="First" xmlns="urn:ukdac6:v0.1">
+        <Header>
+          <MessageRefId>GBXADAC0001122345004DeleteWithoutDisclosureInformation</MessageRefId>
+          <Timestamp>2020-05-14T17:10:00</Timestamp>
+        </Header>
+        <ArrangementID>GBA20210825D5PLT4</ArrangementID>
+        <DAC6Disclosures>
+          <DisclosureID>GBD202108252MVP6A</DisclosureID>
+          <DisclosureImportInstruction>DAC6DEL</DisclosureImportInstruction>
+          <InitialDisclosureMA>false</InitialDisclosureMA>
+        </DAC6Disclosures>
+      </DAC6_Arrangement>
+
+    val service = app.injector.instanceOf[BusinessRuleValidationService]
+    val result  = service.validateDeletionWhenInitialDisclosureIsFalse()(implicitly, implicitly)(xml)
+
+    whenReady(result.get) {
+      _.value mustBe true
+    }
+  }
+
+  "must correctly validate a DAC6DEL when DAC6NEW is marketable and disclosure information is not provided" in {
+
+    val firstDisclosure: SubmissionDetails = SubmissionDetails(
+      "enrolmentID",
+      LocalDateTime.parse("2020-05-14T17:10:00"),
+      "fileName",
+      Some("GBA20200904AAAAAA"),
+      Some("GBD20200904AAAAAA"),
+      "New",
+      initialDisclosureMA = true,
+      messageRefId = "GB0000000XXX"
+    )
+
+    when(mockSubmissionDetailsRepository.retrieveFirstDisclosureForArrangementId("GBA20200904AAAAAA"))
+      .thenReturn(Future.successful(Some(firstDisclosure)))
+
+    val xml =
+      <DAC6_Arrangement version="First" xmlns="urn:ukdac6:v0.1">
+        <Header>
+          <MessageRefId>GBXADAC0001122345004DeleteWithoutDisclosureInformation</MessageRefId>
+          <Timestamp>2020-05-14T17:10:00</Timestamp>
+        </Header>
+        <ArrangementID>GBA20210825D5PLT4</ArrangementID>
+        <DAC6Disclosures>
+          <DisclosureID>GBD202108252MVP6A</DisclosureID>
+          <DisclosureImportInstruction>DAC6DEL</DisclosureImportInstruction>
+          <InitialDisclosureMA>true</InitialDisclosureMA>
+        </DAC6Disclosures>
+      </DAC6_Arrangement>
+
+    val service = app.injector.instanceOf[BusinessRuleValidationService]
+    val result  = service.validateDeletionWhenInitialDisclosureIsFalse()(implicitly, implicitly)(xml)
+
+    whenReady(result.get) {
+      _.value mustBe false
+    }
+  }
+
   "must correctly extract the hallmarks" in {
     val xml =
       <DAC6_Arrangement version="First" xmlns="urn:ukdac6:v0.1">
@@ -2930,6 +3006,7 @@ class BusinessRuleValidationServiceSpec extends SpecBase with MockitoSugar with 
       )
     )
   }
+
   "must throw exception if disclosureImportInstruction is invalid or missing" in {
     val xml =
       <DAC6_Arrangement version="First" xmlns="urn:ukdac6:v0.1">

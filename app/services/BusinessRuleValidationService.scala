@@ -36,6 +36,36 @@ class BusinessRuleValidationService @Inject() (submissionDetailsRepository: Subm
 
   private val logger = LoggerFactory.getLogger(getClass)
 
+  def validateDeletionWhenInitialDisclosureIsFalse()(implicit hc: HeaderCarrier, ec: ExecutionContext): ReaderT[Option, NodeSeq, Future[Validation]] = {
+
+    for {
+      importInstruction     <- disclosureImportInstruction
+      isInitialDisclosureMA <- isInitialDisclosureMA
+      arrangementID         <- arrangementID
+      disclosureInformation <- disclosureInformation
+      disclosureID          <- disclosureID
+    } yield {
+
+      val getInitialDisclosureValue: Future[Boolean] = submissionDetailsRepository.retrieveFirstDisclosureForArrangementId(arrangementID).map {
+        submissionDetails =>
+          if (submissionDetails.exists(_.disclosureID.contains(disclosureID))) {
+            submissionDetails.get.initialDisclosureMA
+          } else {
+            isInitialDisclosureMA
+          }
+      }
+
+      getInitialDisclosureValue.map {
+        dac6newValue =>
+          Validation(
+            key = "metaDataRules.disclosureInformation.noInfoOnWhenInitialDisclosureWasFalseForDAC6DEL",
+            value = if (dac6newValue && disclosureInformation.isEmpty) { false }
+            else { true }
+          )
+      }
+    }
+  }
+
   def validateInitialDisclosureHasRelevantTaxPayer()(implicit hc: HeaderCarrier, ec: ExecutionContext): ReaderT[Option, NodeSeq, Future[Validation]] = {
 
     for {
@@ -46,7 +76,7 @@ class BusinessRuleValidationService @Inject() (submissionDetailsRepository: Subm
       disclosureID                <- disclosureID
     } yield {
 
-      val initialDisclosureMaValue = if (disclosureImportInstruction.equals("DAC6REP")) {
+      val initialDisclosureMaValue: Future[Boolean] = if (disclosureImportInstruction.equals("DAC6REP")) {
 
         submissionDetailsRepository
           .retrieveFirstDisclosureForArrangementId(arrangementID)
@@ -547,5 +577,4 @@ object BusinessRuleValidationService {
       xml =>
         Some((xml \\ "DAC6D1OtherInfo").length > 0)
     }
-
 }
