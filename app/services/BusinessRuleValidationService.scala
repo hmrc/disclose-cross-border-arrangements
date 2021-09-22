@@ -40,27 +40,29 @@ class BusinessRuleValidationService @Inject() (submissionDetailsRepository: Subm
 
     for {
       importInstruction     <- disclosureImportInstruction
-      isInitialDisclosureMA <- isInitialDisclosureMA
       arrangementID         <- arrangementID
       disclosureInformation <- disclosureInformation
       disclosureID          <- disclosureID
     } yield {
 
-      val getInitialDisclosureValue: Future[Boolean] = submissionDetailsRepository.retrieveFirstDisclosureForArrangementId(arrangementID).map {
-        submissionDetails =>
-          if (submissionDetails.exists(_.disclosureID.contains(disclosureID))) {
-            submissionDetails.get.initialDisclosureMA
-          } else {
-            isInitialDisclosureMA
+      val initialMaValue = ImportInstruction(importInstruction) match {
+        case Delete =>
+          submissionDetailsRepository.retrieveFirstDisclosureForArrangementId(arrangementID).map {
+            submissionDetails: Option[SubmissionDetails] =>
+              submissionDetails.fold(false)(
+                details => if (details.disclosureID.contains(disclosureID)) details.initialDisclosureMA else false
+              )
           }
+
+        case _ =>
+          Future(false)
       }
 
-      getInitialDisclosureValue.map {
-        dac6newValue =>
+      initialMaValue.map {
+        dac6NewValue =>
           Validation(
             key = "metaDataRules.disclosureInformation.noInfoOnWhenInitialDisclosureWasFalseForDAC6DEL",
-            value = if (dac6newValue && disclosureInformation.isEmpty) { false }
-            else { true }
+            value = if (disclosureInformation.isEmpty && dac6NewValue.equals(false)) true else false
           )
       }
     }
@@ -403,12 +405,16 @@ class BusinessRuleValidationService @Inject() (submissionDetailsRepository: Subm
       v13 <- validateAffectedPersonsDatesOfBirth()
       v14 <- validateAssociatedEnterprisesDatesOfBirth()
       v15 <- validateHallmarks()
+      v16 <- validateDeletionWhenInitialDisclosureIsFalse()
     } yield {
       v1.flatMap {
-        v1Validation =>
-          v9.map {
-            v9Validation =>
-              Seq(v1Validation, v2, v3, v4, v5, v6, v7, v8, v9Validation, v10, v11, v12, v13, v14, v15).filterNot(_.value)
+        v1Validation: Validation =>
+          v16.flatMap {
+            v16Validation =>
+              v9.map {
+                v9Validation: Validation =>
+                  Seq(v1Validation, v2, v3, v4, v5, v6, v7, v8, v9Validation, v10, v11, v12, v13, v14, v15, v16Validation).filterNot(_.value)
+              }
           }
       }
     }

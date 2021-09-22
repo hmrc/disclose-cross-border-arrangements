@@ -1854,7 +1854,9 @@ class BusinessRuleValidationServiceSpec extends SpecBase with MockitoSugar with 
     val result  = service.validateFile()(implicitly, implicitly)(xml)
 
     whenReady(result.get) {
-      _ mustBe List(Validation("businessrules.initialDisclosureMA.missingRelevantTaxPayerDates", false))
+      _ mustBe List(
+        Validation("businessrules.initialDisclosureMA.missingRelevantTaxPayerDates", false)
+      )
     }
   }
 
@@ -1959,7 +1961,7 @@ class BusinessRuleValidationServiceSpec extends SpecBase with MockitoSugar with 
     val result  = service.validateDeletionWhenInitialDisclosureIsFalse()(implicitly, implicitly)(xml)
 
     whenReady(result.get) {
-      _.value mustBe false
+      _.value mustBe true
     }
   }
 
@@ -2765,6 +2767,72 @@ class BusinessRuleValidationServiceSpec extends SpecBase with MockitoSugar with 
         whenReady(result.get) {
           _ mustBe List()
         }
+    }
+  }
+
+  "must pass validation DAC6DEL when initialDisclosureMA is false but disclosure information has been provided" in {
+
+    val firstDisclosure: SubmissionDetails = SubmissionDetails(
+      "enrolmentID",
+      LocalDateTime.parse("2020-05-14T17:10:00"),
+      "fileName",
+      Some("GBA20200904AAAAAA"),
+      Some("GBD20200904AAAAAA"),
+      "New",
+      initialDisclosureMA = false,
+      messageRefId = "GB0000000XXX"
+    )
+
+    when(mockSubmissionDetailsRepository.retrieveFirstDisclosureForArrangementId("GBA20200904AAAAAA"))
+      .thenReturn(Future.successful(Some(firstDisclosure)))
+
+    val xml =
+      <DAC6_Arrangement version="First" xmlns="urn:ukdac6:v0.1">
+            <Header>
+              <MessageRefId>GBXADAC0001122345004duplicateFileUploadSpike</MessageRefId>
+              <Timestamp>2020-05-14T17:10:00</Timestamp>
+            </Header>
+            <ArrangementID>GBA20200908YBOXYX</ArrangementID>
+            <DAC6Disclosures>
+              <DisclosureID>GBD20200914EKGXYX</DisclosureID>
+              <DisclosureImportInstruction>DAC6DEL</DisclosureImportInstruction>
+              <Disclosing>
+                <ID>
+                  <Organisation>
+                    <OrganisationName>X</OrganisationName>
+                    <ResCountryCode>GB</ResCountryCode>
+                  </Organisation>
+                </ID>
+              </Disclosing>
+              <InitialDisclosureMA>false</InitialDisclosureMA>
+              <DisclosureInformation>
+                <ImplementingDate>2018-06-26</ImplementingDate>
+                <Summary>
+                  <Disclosure_Name>xxxxxx</Disclosure_Name>
+                  <Disclosure_Description>xxxxxxxxx</Disclosure_Description>
+                </Summary>
+                <NationalProvision>xxxxxxxx</NationalProvision>
+                <Amount currCode="GBP">0</Amount>
+                <ConcernedMSs>
+                  <ConcernedMS>GB</ConcernedMS>
+                </ConcernedMSs>
+                <MainBenefitTest1>false</MainBenefitTest1>
+                <Hallmarks>
+                  <ListHallmarks>
+                    <Hallmark>DAC6D1Other</Hallmark>
+                  </ListHallmarks>
+                  <DAC6D1OtherInfo>xxxxx</DAC6D1OtherInfo>
+                </Hallmarks>
+              </DisclosureInformation>
+            </DAC6Disclosures>
+          </DAC6_Arrangement>
+
+    val service = app.injector.instanceOf[BusinessRuleValidationService]
+    val result  = service.validateFile()(implicitly, implicitly)(xml)
+
+    whenReady(result.get) {
+      _ mustBe List()
+
     }
   }
 
