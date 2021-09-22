@@ -1861,15 +1861,30 @@ class BusinessRuleValidationServiceSpec extends SpecBase with MockitoSugar with 
   }
 
   "must correctly validate a DAC6DEL MA with Relevant Tax Payers that has a missing TaxPayer Implementation Date" in {
+
+    val firstDisclosure: SubmissionDetails = SubmissionDetails(
+      "enrolmentID",
+      LocalDateTime.parse("2020-05-14T17:10:00"),
+      "fileName",
+      Some("GBA20200904AAAAAA"),
+      Some("GBD20200904AAAAAA"),
+      "New",
+      initialDisclosureMA = true,
+      messageRefId = "GB0000000XXX"
+    )
+
+    when(mockSubmissionDetailsRepository.retrieveFirstDisclosureForArrangementId("GBA20200904AAAAAA"))
+      .thenReturn(Future.successful(Some(firstDisclosure)))
+
     val xml =
       <DAC6_Arrangement version="First" xmlns="urn:ukdac6:v0.1">
         <Header>
           <MessageRefId>GB0000000XXX</MessageRefId>
-          <ArrangementID>AAA000000000</ArrangementID>
+          <ArrangementID>GBA20200904AAAAAA</ArrangementID>
           <Timestamp>2020-05-14T17:10:00</Timestamp>
         </Header>
         <DAC6Disclosures>
-          <DisclosureID>AAA000000000</DisclosureID>
+          <DisclosureID>GBD20200904AAAAAA</DisclosureID>
           <DisclosureImportInstruction>DAC6DEL</DisclosureImportInstruction>
           <InitialDisclosureMA>true</InitialDisclosureMA>
           <RelevantTaxPayers>
@@ -1908,12 +1923,12 @@ class BusinessRuleValidationServiceSpec extends SpecBase with MockitoSugar with 
     val xml =
       <DAC6_Arrangement version="First" xmlns="urn:ukdac6:v0.1">
         <Header>
-          <MessageRefId>GBXADAC0001122345004DeleteWithoutDisclosureInformation</MessageRefId>
+          <MessageRefId>GB0000000XXX</MessageRefId>
           <Timestamp>2020-05-14T17:10:00</Timestamp>
         </Header>
-        <ArrangementID>GBA20210825D5PLT4</ArrangementID>
+        <ArrangementID>GBA20200904AAAAAA</ArrangementID>
         <DAC6Disclosures>
-          <DisclosureID>GBD202108252MVP6A</DisclosureID>
+          <DisclosureID>GBD20200904AAAAAA</DisclosureID>
           <DisclosureImportInstruction>DAC6DEL</DisclosureImportInstruction>
           <InitialDisclosureMA>false</InitialDisclosureMA>
         </DAC6Disclosures>
@@ -1923,7 +1938,7 @@ class BusinessRuleValidationServiceSpec extends SpecBase with MockitoSugar with 
     val result  = service.validateDeletionWhenInitialDisclosureIsFalse()(implicitly, implicitly)(xml)
 
     whenReady(result.get) {
-      _.value mustBe true
+      _.value mustBe false
     }
   }
 
@@ -1946,12 +1961,12 @@ class BusinessRuleValidationServiceSpec extends SpecBase with MockitoSugar with 
     val xml =
       <DAC6_Arrangement version="First" xmlns="urn:ukdac6:v0.1">
         <Header>
-          <MessageRefId>GBXADAC0001122345004DeleteWithoutDisclosureInformation</MessageRefId>
+          <MessageRefId>GB0000000XXX</MessageRefId>
           <Timestamp>2020-05-14T17:10:00</Timestamp>
         </Header>
-        <ArrangementID>GBA20210825D5PLT4</ArrangementID>
+        <ArrangementID>GBA20200904AAAAAA</ArrangementID>
         <DAC6Disclosures>
-          <DisclosureID>GBD202108252MVP6A</DisclosureID>
+          <DisclosureID>GBD20200904AAAAAA</DisclosureID>
           <DisclosureImportInstruction>DAC6DEL</DisclosureImportInstruction>
           <InitialDisclosureMA>true</InitialDisclosureMA>
         </DAC6Disclosures>
@@ -2751,6 +2766,25 @@ class BusinessRuleValidationServiceSpec extends SpecBase with MockitoSugar with 
             <DisclosureID>AAA000000000</DisclosureID>
             <DisclosureImportInstruction>DAC6DEL</DisclosureImportInstruction>
             <InitialDisclosureMA>false</InitialDisclosureMA>
+            <DisclosureInformation>
+              <ImplementingDate>2018-06-26</ImplementingDate>
+              <Summary>
+                <Disclosure_Name>xxxxxx</Disclosure_Name>
+                <Disclosure_Description>xxxxxxxxx</Disclosure_Description>
+              </Summary>
+              <NationalProvision>xxxxxxxx</NationalProvision>
+              <Amount currCode="GBP">0</Amount>
+              <ConcernedMSs>
+                <ConcernedMS>GB</ConcernedMS>
+              </ConcernedMSs>
+              <MainBenefitTest1>false</MainBenefitTest1>
+              <Hallmarks>
+                <ListHallmarks>
+                  <Hallmark>DAC6D1Other</Hallmark>
+                </ListHallmarks>
+                <DAC6D1OtherInfo>xxxxx</DAC6D1OtherInfo>
+              </Hallmarks>
+            </DisclosureInformation>
             <RelevantTaxPayers>
             </RelevantTaxPayers>
             <Hallmarks>
@@ -2767,72 +2801,6 @@ class BusinessRuleValidationServiceSpec extends SpecBase with MockitoSugar with 
         whenReady(result.get) {
           _ mustBe List()
         }
-    }
-  }
-
-  "must pass validation DAC6DEL when initialDisclosureMA is false but disclosure information has been provided" in {
-
-    val firstDisclosure: SubmissionDetails = SubmissionDetails(
-      "enrolmentID",
-      LocalDateTime.parse("2020-05-14T17:10:00"),
-      "fileName",
-      Some("GBA20200904AAAAAA"),
-      Some("GBD20200904AAAAAA"),
-      "New",
-      initialDisclosureMA = false,
-      messageRefId = "GB0000000XXX"
-    )
-
-    when(mockSubmissionDetailsRepository.retrieveFirstDisclosureForArrangementId("GBA20200904AAAAAA"))
-      .thenReturn(Future.successful(Some(firstDisclosure)))
-
-    val xml =
-      <DAC6_Arrangement version="First" xmlns="urn:ukdac6:v0.1">
-            <Header>
-              <MessageRefId>GBXADAC0001122345004duplicateFileUploadSpike</MessageRefId>
-              <Timestamp>2020-05-14T17:10:00</Timestamp>
-            </Header>
-            <ArrangementID>GBA20200908YBOXYX</ArrangementID>
-            <DAC6Disclosures>
-              <DisclosureID>GBD20200914EKGXYX</DisclosureID>
-              <DisclosureImportInstruction>DAC6DEL</DisclosureImportInstruction>
-              <Disclosing>
-                <ID>
-                  <Organisation>
-                    <OrganisationName>X</OrganisationName>
-                    <ResCountryCode>GB</ResCountryCode>
-                  </Organisation>
-                </ID>
-              </Disclosing>
-              <InitialDisclosureMA>false</InitialDisclosureMA>
-              <DisclosureInformation>
-                <ImplementingDate>2018-06-26</ImplementingDate>
-                <Summary>
-                  <Disclosure_Name>xxxxxx</Disclosure_Name>
-                  <Disclosure_Description>xxxxxxxxx</Disclosure_Description>
-                </Summary>
-                <NationalProvision>xxxxxxxx</NationalProvision>
-                <Amount currCode="GBP">0</Amount>
-                <ConcernedMSs>
-                  <ConcernedMS>GB</ConcernedMS>
-                </ConcernedMSs>
-                <MainBenefitTest1>false</MainBenefitTest1>
-                <Hallmarks>
-                  <ListHallmarks>
-                    <Hallmark>DAC6D1Other</Hallmark>
-                  </ListHallmarks>
-                  <DAC6D1OtherInfo>xxxxx</DAC6D1OtherInfo>
-                </Hallmarks>
-              </DisclosureInformation>
-            </DAC6Disclosures>
-          </DAC6_Arrangement>
-
-    val service = app.injector.instanceOf[BusinessRuleValidationService]
-    val result  = service.validateFile()(implicitly, implicitly)(xml)
-
-    whenReady(result.get) {
-      _ mustBe List()
-
     }
   }
 
@@ -2864,7 +2832,10 @@ class BusinessRuleValidationServiceSpec extends SpecBase with MockitoSugar with 
     val result  = service.validateFile()(implicitly, implicitly)(xml)
 
     whenReady(result.get) {
-      _ mustBe List(Validation("businessrules.hallmarks.dHallmarkNotProvided", false))
+      _ mustBe List(
+        Validation("businessrules.hallmarks.dHallmarkNotProvided", false),
+        Validation("metaDataRules.disclosureInformation.noInfoOnWhenInitialDisclosureWasFalseForDAC6DEL", false)
+      )
     }
   }
 
@@ -2899,7 +2870,10 @@ class BusinessRuleValidationServiceSpec extends SpecBase with MockitoSugar with 
         val result  = service.validateFile()(implicitly, implicitly)(xml)
 
         whenReady(result.get) {
-          _ mustBe List(Validation("businessrules.hallmarks.dHallmarkWithOtherHallmarks", false))
+          _ mustBe List(
+            Validation("businessrules.hallmarks.dHallmarkWithOtherHallmarks", false),
+            Validation("metaDataRules.disclosureInformation.noInfoOnWhenInitialDisclosureWasFalseForDAC6DEL", false)
+          )
         }
     }
   }

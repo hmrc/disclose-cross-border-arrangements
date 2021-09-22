@@ -44,29 +44,95 @@ class BusinessRuleValidationService @Inject() (submissionDetailsRepository: Subm
       disclosureInformation <- disclosureInformation
       disclosureID          <- disclosureID
     } yield {
-
-      val initialMaValue = ImportInstruction(importInstruction) match {
+      ImportInstruction(importInstruction) match {
         case Delete =>
-          submissionDetailsRepository.retrieveFirstDisclosureForArrangementId(arrangementID).map {
+          println(s"\nImportInstruction ${ImportInstruction(importInstruction)} @@\n")
+
+          val initialMAValue = submissionDetailsRepository.retrieveFirstDisclosureForArrangementId(arrangementID).map {
             submissionDetails: Option[SubmissionDetails] =>
               submissionDetails.fold(false)(
-                details => if (details.disclosureID.contains(disclosureID)) details.initialDisclosureMA else false
+                details => details.initialDisclosureMA
               )
           }
 
-        case _ =>
-          Future(false)
-      }
+          initialMAValue.map {
+            dac6newValue =>
+              if (dac6newValue.equals(false) && disclosureInformation.isEmpty) {
+                println("\n\n@ failed validation @\n\n")
+                Validation(
+                  key = "metaDataRules.disclosureInformation.noInfoOnWhenInitialDisclosureWasFalseForDAC6DEL",
+                  value = false
+                )
+              } else {
 
-      initialMaValue.map {
-        dac6NewValue =>
-          Validation(
-            key = "metaDataRules.disclosureInformation.noInfoOnWhenInitialDisclosureWasFalseForDAC6DEL",
-            value = if (disclosureInformation.isEmpty && dac6NewValue.equals(false)) true else false
+                println("\n\n@ passed validation @\n\n")
+                Validation(key = "metaDataRules.disclosureInformation.noInfoOnWhenInitialDisclosureWasFalseForDAC6DEL", value = true)
+              }
+          }
+
+//          initialMAValue.map {
+//            dac6NewValue =>
+//              println(s"\n\ndac6newValue = ${!dac6NewValue} + ${disclosureInformation.nonEmpty} \n\n")
+//              Validation(
+//                key = "metaDataRules.disclosureInformation.noInfoOnWhenInitialDisclosureWasFalseForDAC6DEL",
+//                value = !dac6NewValue && disclosureInformation.isEmpty
+//              )
+//          }
+
+        case _ =>
+          println(s"\nOther ImportInstruction ${ImportInstruction(importInstruction)} @@\n")
+          Future(
+            Validation(
+              key = "metaDataRules.disclosureInformation.noInfoOnWhenInitialDisclosureWasFalseForDAC6DEL",
+              value = true
+            )
           )
       }
     }
   }
+
+//
+//  def validateDeletionWhenInitialDisclosureIsFalse()(implicit hc: HeaderCarrier, ec: ExecutionContext): ReaderT[Option, NodeSeq, Future[Validation]] = {
+//
+//    for {
+//      importInstruction     <- disclosureImportInstruction
+//      arrangementID         <- arrangementID
+//      initialDisclosureMA   <- isInitialDisclosureMA
+//      disclosureInformation <- disclosureInformation
+//      disclosureID          <- disclosureID
+//    } yield {
+//      if (importInstruction.equals("DAC6DEL")) {
+//        val initialMaValue: Future[Boolean] = ImportInstruction(importInstruction) match {
+//          case Delete =>
+//            submissionDetailsRepository.retrieveFirstDisclosureForArrangementId(arrangementID).map {
+//              submissionDetails: Option[SubmissionDetails] =>
+//                submissionDetails.fold(false)(
+//                  details => if (details.disclosureID.contains(disclosureID)) details.initialDisclosureMA else false
+//                )
+//            }
+//
+//          case _ =>
+//            Future(initialDisclosureMA)
+//        }
+//
+//        initialMaValue.map {
+//          dac6NewValue =>
+//            Validation(
+//              key = "metaDataRules.disclosureInformation.noInfoOnWhenInitialDisclosureWasFalseForDAC6DEL",
+//              value = disclosureInformation.isEmpty && dac6NewValue.equals(false)
+//            )
+//        }
+//
+//      } else {
+//        Future(
+//          Validation(
+//            key = "metaDataRules.disclosureInformation.noInfoOnWhenInitialDisclosureWasFalseForDAC6DEL",
+//            value = true
+//          )
+//        )
+//      }
+//    }
+//  }
 
   def validateInitialDisclosureHasRelevantTaxPayer()(implicit hc: HeaderCarrier, ec: ExecutionContext): ReaderT[Option, NodeSeq, Future[Validation]] = {
 
