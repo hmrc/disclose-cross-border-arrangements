@@ -40,47 +40,29 @@ class BusinessRuleValidationService @Inject() (submissionDetailsRepository: Subm
 
     for {
       importInstruction     <- disclosureImportInstruction
-      arrangementID         <- arrangementID
       disclosureInformation <- disclosureInformation
       disclosureID          <- disclosureID
     } yield {
       ImportInstruction(importInstruction) match {
         case Delete =>
-          println(s"\nImportInstruction ${ImportInstruction(importInstruction)} @@\n")
-
-          val initialMAValue = submissionDetailsRepository.retrieveFirstDisclosureForArrangementId(arrangementID).map {
+          val initialMAValue = submissionDetailsRepository.getSubmissionDetails(disclosureID).map {
             submissionDetails: Option[SubmissionDetails] =>
-              submissionDetails.fold(false)(
-                details => details.initialDisclosureMA
-              )
+              submissionDetails.exists(_.initialDisclosureMA)
           }
 
           initialMAValue.map {
             dac6newValue =>
               if (dac6newValue.equals(false) && disclosureInformation.isEmpty) {
-                println("\n\n@ failed validation @\n\n")
                 Validation(
                   key = "metaDataRules.disclosureInformation.noInfoOnWhenInitialDisclosureWasFalseForDAC6DEL",
                   value = false
                 )
               } else {
-
-                println("\n\n@ passed validation @\n\n")
                 Validation(key = "metaDataRules.disclosureInformation.noInfoOnWhenInitialDisclosureWasFalseForDAC6DEL", value = true)
               }
           }
 
-//          initialMAValue.map {
-//            dac6NewValue =>
-//              println(s"\n\ndac6newValue = ${!dac6NewValue} + ${disclosureInformation.nonEmpty} \n\n")
-//              Validation(
-//                key = "metaDataRules.disclosureInformation.noInfoOnWhenInitialDisclosureWasFalseForDAC6DEL",
-//                value = !dac6NewValue && disclosureInformation.isEmpty
-//              )
-//          }
-
         case _ =>
-          println(s"\nOther ImportInstruction ${ImportInstruction(importInstruction)} @@\n")
           Future(
             Validation(
               key = "metaDataRules.disclosureInformation.noInfoOnWhenInitialDisclosureWasFalseForDAC6DEL",
@@ -90,7 +72,7 @@ class BusinessRuleValidationService @Inject() (submissionDetailsRepository: Subm
       }
     }
   }
-
+  
 //
 //  def validateDeletionWhenInitialDisclosureIsFalse()(implicit hc: HeaderCarrier, ec: ExecutionContext): ReaderT[Option, NodeSeq, Future[Validation]] = {
 //
