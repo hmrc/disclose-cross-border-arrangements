@@ -374,6 +374,20 @@ class ErrorMessageHelperSpec extends SpecBase with TestXml {
           )
         }
 
+      "must return correct error message when user does not provide DisclosureInformation for a DAC6DEL file" +
+        "linked to a non marketable arrangement" in {
+
+          val failedValidation = Validation(
+            key = "metaDataRules.disclosureInformation.noInfoOnWhenInitialDisclosureWasFalseForDAC6DEL",
+            value = false
+          )
+
+          val result = errorHelper.convertToGenericErrors(Seq(failedValidation), importInstructionDAC6DELErrorXml)
+          result mustBe List(
+            GenericError(8, "Provide DisclosureInformation in this DAC6DEL file. This is mandatory for arrangements that are not marketable")
+          )
+        }
+
       "must  return correct error message when MessageRefID is in wrong format" in {
 
         val failedValidation = Validation(

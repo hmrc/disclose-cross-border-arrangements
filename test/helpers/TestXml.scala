@@ -203,6 +203,25 @@ trait TestXml {
       <DisclosureID>AAA000000000</DisclosureID>
     </DAC6_Arrangement>
 
+  val importInstructionDAC6DELErrorXml =
+    <DAC6_Arrangement version="First" xmlns="urn:ukdac6:v0.1">
+      <Header>
+        <MessageRefId>GB0000000XXX</MessageRefId>
+        <Timestamp>2020-05-14T17:10:00</Timestamp>
+      </Header>
+      <ArrangementID>AAA000000000</ArrangementID>
+      <DAC6Disclosures>
+        <DisclosureImportInstruction>DAC6DEL</DisclosureImportInstruction>
+        <DisclosureInformation>
+          <ImplementingDate>2020-01-14</ImplementingDate>
+        </DisclosureInformation>
+        <DisclosureInformation>
+          <ImplementingDate>2018-06-25</ImplementingDate>
+        </DisclosureInformation>
+      </DAC6Disclosures>
+      <DisclosureID>AAA000000000</DisclosureID>
+    </DAC6_Arrangement>
+
   val missingTaxPayerImplementingDateXml =
     <DAC6_Arrangement version="First" xmlns="urn:ukdac6:v0.1">
       <Header>

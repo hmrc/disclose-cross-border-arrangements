@@ -36,6 +36,39 @@ class BusinessRuleValidationService @Inject() (submissionDetailsRepository: Subm
 
   private val logger = LoggerFactory.getLogger(getClass)
 
+  def validateDeletionWhenInitialDisclosureIsFalse()(implicit hc: HeaderCarrier, ec: ExecutionContext): ReaderT[Option, NodeSeq, Future[Validation]] = {
+
+    for {
+      importInstruction     <- disclosureImportInstruction
+      disclosureInformation <- disclosureInformation
+      disclosureID          <- disclosureID
+    } yield {
+      ImportInstruction(importInstruction) match {
+        case Delete =>
+          val initialMAValue = submissionDetailsRepository.getSubmissionDetails(disclosureID).map {
+            submissionDetails: Option[SubmissionDetails] =>
+              submissionDetails.exists(_.initialDisclosureMA)
+          }
+
+          initialMAValue.map {
+            dac6newValue =>
+              Validation(
+                key = "metaDataRules.disclosureInformation.noInfoOnWhenInitialDisclosureWasFalseForDAC6DEL",
+                value = !dac6newValue && disclosureInformation.nonEmpty
+              )
+          }
+
+        case _ =>
+          Future(
+            Validation(
+              key = "metaDataRules.disclosureInformation.noInfoOnWhenInitialDisclosureWasFalseForDAC6DEL",
+              value = true
+            )
+          )
+      }
+    }
+  }
+
   def validateInitialDisclosureHasRelevantTaxPayer()(implicit hc: HeaderCarrier, ec: ExecutionContext): ReaderT[Option, NodeSeq, Future[Validation]] = {
 
     for {
@@ -46,7 +79,7 @@ class BusinessRuleValidationService @Inject() (submissionDetailsRepository: Subm
       disclosureID                <- disclosureID
     } yield {
 
-      val initialDisclosureMaValue = if (disclosureImportInstruction.equals("DAC6REP")) {
+      val initialDisclosureMaValue: Future[Boolean] = if (disclosureImportInstruction.equals("DAC6REP")) {
 
         submissionDetailsRepository
           .retrieveFirstDisclosureForArrangementId(arrangementID)
@@ -373,12 +406,16 @@ class BusinessRuleValidationService @Inject() (submissionDetailsRepository: Subm
       v13 <- validateAffectedPersonsDatesOfBirth()
       v14 <- validateAssociatedEnterprisesDatesOfBirth()
       v15 <- validateHallmarks()
+      v16 <- validateDeletionWhenInitialDisclosureIsFalse()
     } yield {
       v1.flatMap {
-        v1Validation =>
-          v9.map {
-            v9Validation =>
-              Seq(v1Validation, v2, v3, v4, v5, v6, v7, v8, v9Validation, v10, v11, v12, v13, v14, v15).filterNot(_.value)
+        v1Validation: Validation =>
+          v16.flatMap {
+            v16Validation =>
+              v9.map {
+                v9Validation: Validation =>
+                  Seq(v1Validation, v2, v3, v4, v5, v6, v7, v8, v9Validation, v10, v11, v12, v13, v14, v15, v16Validation).filterNot(_.value)
+              }
           }
       }
     }
@@ -547,5 +584,4 @@ object BusinessRuleValidationService {
       xml =>
         Some((xml \\ "DAC6D1OtherInfo").length > 0)
     }
-
 }
