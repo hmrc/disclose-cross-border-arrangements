@@ -52,10 +52,14 @@ class BusinessRuleValidationService @Inject() (submissionDetailsRepository: Subm
 
           initialMAValue.map {
             dac6newValue =>
-              Validation(
-                key = "metaDataRules.disclosureInformation.noInfoOnWhenInitialDisclosureWasFalseForDAC6DEL",
-                value = !dac6newValue && disclosureInformation.nonEmpty
-              )
+              if (dac6newValue.equals(false) && disclosureInformation.isEmpty) {
+                Validation(
+                  key = "metaDataRules.disclosureInformation.noInfoOnWhenInitialDisclosureWasFalseForDAC6DEL",
+                  value = false
+                )
+              } else {
+                Validation(key = "metaDataRules.disclosureInformation.noInfoOnWhenInitialDisclosureWasFalseForDAC6DEL", value = true)
+              }
           }
 
         case _ =>
