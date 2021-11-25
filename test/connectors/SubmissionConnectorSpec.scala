@@ -29,7 +29,9 @@ class SubmissionConnectorSpec extends SpecBase with GuiceOneAppPerSuite with Wir
 
   override def fakeApplication(): Application = new GuiceApplicationBuilder()
     .configure(
-      "microservice.services.submission.port" -> server.port()
+      "microservice.services.submission.port"         -> server.port(),
+      "microservice.services.submission.environment"  -> "local",
+      "microservice.services.submission.bearer-token" -> "token"
     )
     .build()
 

@@ -37,7 +37,9 @@ class SubscriptionConnectorSpec extends SpecBase with WireMockServerHandler with
 
   override lazy val app: Application = new GuiceApplicationBuilder()
     .configure(
-      conf = "microservice.services.registration.port" -> server.port()
+      conf = "microservice.services.registration.port" -> server.port(),
+      "microservice.services.submission.environment"  -> "local",
+      "microservice.services.submission.bearer-token" -> "token"
     )
     .build()
 
