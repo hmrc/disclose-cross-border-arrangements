@@ -31,7 +31,7 @@ package object connectors {
 
   val stripSession: String => String = (input: String) => input.replace("session-", "")
 
-  implicit class SeqOps(val seq: Seq[(String, String)] = Seq.empty[(String, String)]) {
+  implicit class SeqOps(val seq: Seq[(String, String)]) {
 
     def withBearerToken(bearerToken: String)(implicit headerCarrier: HeaderCarrier): Seq[(String, String)] =
       seq :+ (HeaderNames.authorisation -> s"Bearer $bearerToken")
