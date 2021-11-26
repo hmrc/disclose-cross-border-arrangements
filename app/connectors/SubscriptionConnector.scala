@@ -71,7 +71,6 @@ class SubscriptionConnector @Inject() (val config: AppConfig, val http: HttpClie
       .withAccept()
       .withEnvironment(Some(config.eisEnvironment))
     logger.info(s"ExtraHeaders size = ${extraHeaders.size}")
-    logger.debug(s"ExtraHeaders = $extraHeaders")
 
     http.POST[UpdateSubscriptionForDACRequest, HttpResponse](displaySubscriptionUrl, updateSubscriptionForDACRequest, extraHeaders)(
       wts = UpdateSubscriptionForDACRequest.format,

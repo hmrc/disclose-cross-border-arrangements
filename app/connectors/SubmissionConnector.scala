@@ -43,7 +43,6 @@ class SubmissionConnector @Inject() (
       .withAccept()
       .withEnvironment(Some(config.eisEnvironment))
     logger.info(s"ExtraHeaders size = ${extraHeaders.size}")
-    logger.debug(s"ExtraHeaders = $extraHeaders")
     http.POSTString[HttpResponse](submissionUrl, submission.mkString, extraHeaders)(implicitly, hc, ec)
   }
 
