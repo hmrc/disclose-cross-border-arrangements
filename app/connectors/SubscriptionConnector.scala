@@ -18,14 +18,13 @@ package connectors
 
 import config.AppConfig
 import models.subscription.{DisplaySubscriptionForDACRequest, UpdateSubscriptionForDACRequest}
-import play.api.Logger
+import play.api.Logging
 import uk.gov.hmrc.http.{HeaderCarrier, HttpClient, HttpResponse}
 
 import javax.inject.Inject
 import scala.concurrent.{ExecutionContext, Future}
 
-class SubscriptionConnector @Inject() (val config: AppConfig, val http: HttpClient) {
-  private val logger: Logger = Logger(this.getClass)
+class SubscriptionConnector @Inject() (val config: AppConfig, val http: HttpClient) extends Logging {
 
   def displaySubscriptionForDAC(
     subscriptionForDACRequest: DisplaySubscriptionForDACRequest

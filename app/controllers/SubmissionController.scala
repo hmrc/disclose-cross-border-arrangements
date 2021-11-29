@@ -20,7 +20,7 @@ import connectors.SubmissionConnector
 import controllers.auth.IdentifierAuthAction
 import helpers.DateHelper
 import models._
-import org.slf4j.LoggerFactory
+import play.api.Logging
 import play.api.libs.json.{JsSuccess, Json}
 import play.api.mvc.{Action, AnyContent, ControllerComponents, Result}
 import repositories.SubmissionDetailsRepository
@@ -47,11 +47,10 @@ class SubmissionController @Inject() (
   submissionDetailsRepository: SubmissionDetailsRepository,
   auditService: AuditService
 )(implicit ec: ExecutionContext)
-    extends BackendController(cc) {
+    extends BackendController(cc)
+    with Logging {
 
   import APIDateTimeFormats._
-
-  private val logger = LoggerFactory.getLogger(getClass)
 
   def submitDisclosure: Action[NodeSeq] = authenticate.async(parse.xml) {
     implicit request =>

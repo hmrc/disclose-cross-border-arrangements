@@ -22,7 +22,7 @@ import controllers.auth.AuthAction
 import javax.inject.Inject
 import models.ErrorDetails
 import models.subscription.{DisplaySubscriptionForDACRequest, UpdateSubscriptionForDACRequest}
-import play.api.Logger
+import play.api.Logging
 import play.api.libs.json.{JsResult, JsSuccess, JsValue, Json}
 import play.api.mvc.{Action, ControllerComponents, Result}
 import uk.gov.hmrc.http.{HeaderCarrier, HttpResponse}
@@ -37,9 +37,8 @@ class SubscriptionController @Inject() (
   subscriptionConnector: SubscriptionConnector,
   cc: ControllerComponents
 )(implicit ec: ExecutionContext)
-    extends BackendController(cc) {
-
-  private val logger: Logger = Logger(this.getClass)
+    extends BackendController(cc)
+    with Logging {
 
   def displaySubscriptionDetails: Action[JsValue] = authenticate(parse.json).async {
     implicit request =>

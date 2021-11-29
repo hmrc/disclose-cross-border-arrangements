@@ -17,7 +17,7 @@
 package connectors
 
 import config.AppConfig
-import play.api.Logger
+import play.api.Logging
 import uk.gov.hmrc.http.{HeaderCarrier, HttpClient, HttpResponse}
 
 import javax.inject.Inject
@@ -27,9 +27,9 @@ import scala.xml.NodeSeq
 class SubmissionConnector @Inject() (
   val config: AppConfig,
   http: HttpClient
-)(implicit ec: ExecutionContext) {
-  private val logger: Logger = Logger(this.getClass)
-  val submissionUrl          = s"${config.submissionUrl}/dac6/dct06/v1"
+)(implicit ec: ExecutionContext)
+    extends Logging {
+  val submissionUrl = s"${config.submissionUrl}/dac6/dct06/v1"
 
   def submitDisclosure(submission: NodeSeq)(implicit hc: HeaderCarrier): Future[HttpResponse] = {
 
