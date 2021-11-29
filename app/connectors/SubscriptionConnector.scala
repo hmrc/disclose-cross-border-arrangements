@@ -17,17 +17,14 @@
 package connectors
 
 import config.AppConfig
+import models.subscription.{DisplaySubscriptionForDACRequest, UpdateSubscriptionForDACRequest}
+import play.api.Logging
+import uk.gov.hmrc.http.{HeaderCarrier, HttpClient, HttpResponse}
 
 import javax.inject.Inject
-import models.subscription.{DisplaySubscriptionForDACRequest, UpdateSubscriptionForDACRequest}
-import uk.gov.hmrc.http.{Authorization, HeaderCarrier, HeaderNames, HttpClient, HttpResponse}
-
-import java.time.ZonedDateTime
-import java.time.format.DateTimeFormatter
-import java.util.UUID
 import scala.concurrent.{ExecutionContext, Future}
 
-class SubscriptionConnector @Inject() (val config: AppConfig, val http: HttpClient) {
+class SubscriptionConnector @Inject() (val config: AppConfig, val http: HttpClient) extends Logging {
 
   def displaySubscriptionForDAC(
     subscriptionForDACRequest: DisplaySubscriptionForDACRequest
@@ -37,9 +34,19 @@ class SubscriptionConnector @Inject() (val config: AppConfig, val http: HttpClie
     //x-conversation-id must match conversationID in RequestCommon otherwise EIS will throw a 400 Bad Request
     val conversationID = subscriptionForDACRequest.displaySubscriptionForDACRequest.requestCommon.conversationID.getOrElse("")
 
-    val extraHeader: Seq[(String, String)] = extraHeaders(conversationID)
+    val extraHeaders = Seq()
+      .withBearerToken(s"${config.bearerToken}")
+      .withXForwardedHost()
+      .withDate()
+      .withXCorrelationId()
+      .withXConversationId(Some(conversationID))
+      .withContentType(Some("application/json"))
+      .withAccept(Some("application/json"))
+      .withEnvironment(Some(config.eisEnvironment))
+    logger.info(s"ExtraHeaders size = ${extraHeaders.size}")
+    logger.debug(s"ExtraHeaders = $extraHeaders")
 
-    http.POST[DisplaySubscriptionForDACRequest, HttpResponse](displaySubscriptionUrl, subscriptionForDACRequest, extraHeader)(
+    http.POST[DisplaySubscriptionForDACRequest, HttpResponse](displaySubscriptionUrl, subscriptionForDACRequest, extraHeaders)(
       wts = DisplaySubscriptionForDACRequest.format,
       rds = httpReads,
       hc = hc,
@@ -52,42 +59,23 @@ class SubscriptionConnector @Inject() (val config: AppConfig, val http: HttpClie
   )(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[HttpResponse] = {
 
     val displaySubscriptionUrl = s"${config.registrationUrl}/dac6/dct05/v1"
-    val conversationID         = hc.sessionId.map(_.value).getOrElse(UUID.randomUUID().toString)
 
-    val extraHeader: Seq[(String, String)] = extraHeaders(conversationID)
+    val extraHeaders = Seq()
+      .withBearerToken(s"${config.bearerToken}")
+      .withXForwardedHost()
+      .withDate()
+      .withXCorrelationId()
+      .withXConversationId()
+      .withContentType(Some("application/json"))
+      .withAccept(Some("application/json"))
+      .withEnvironment(Some(config.eisEnvironment))
+    logger.info(s"ExtraHeaders size = ${extraHeaders.size}")
 
-    http.POST[UpdateSubscriptionForDACRequest, HttpResponse](displaySubscriptionUrl, updateSubscriptionForDACRequest, extraHeader)(
+    http.POST[UpdateSubscriptionForDACRequest, HttpResponse](displaySubscriptionUrl, updateSubscriptionForDACRequest, extraHeaders)(
       wts = UpdateSubscriptionForDACRequest.format,
       rds = httpReads,
       hc = hc,
       ec = ec
-    )
-  }
-
-  private def extraHeaders(conversationID: String)(implicit headerCarrier: HeaderCarrier): Seq[(String, String)] = {
-    val newHeaders = headerCarrier
-      .copy(authorization = Some(Authorization(s"Bearer ${config.bearerToken}")))
-
-    newHeaders.headers(Seq(HeaderNames.authorisation)).++(addHeaders(conversationID))
-  }
-
-  private def addHeaders(conversationID: String)(implicit headerCarrier: HeaderCarrier): Seq[(String, String)] = {
-
-    //HTTP-date format defined by RFC 7231 e.g. Fri, 01 Aug 2020 15:51:38 GMT+1
-    val formatter = DateTimeFormatter.ofPattern("EEE, dd MMM yyyy HH:mm:ss O")
-
-    Seq(
-      "date" -> ZonedDateTime.now().format(formatter),
-      "x-correlation-id" -> {
-        headerCarrier.requestId
-          .map(_.value)
-          .getOrElse(UUID.randomUUID().toString)
-      },
-      "x-conversation-id" -> conversationID,
-      "x-forwarded-host"  -> "mdtp",
-      "content-type"      -> "application/json",
-      "accept"            -> "application/json",
-      "Environment"       -> config.eisEnvironment
     )
   }
 
