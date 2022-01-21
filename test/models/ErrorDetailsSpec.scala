@@ -1,5 +1,5 @@
 /*
- * Copyright 2021 HM Revenue & Customs
+ * Copyright 2022 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -39,7 +39,7 @@ class ErrorDetailsSpec extends SpecBase {
       val model = ErrorDetails(
         ErrorDetail(
           timestamp = "2017-02-14T12:58:44Z",
-          correlationId = "aaaa",
+          correlationId = Some("aaaa"),
           errorCode = "400",
           errorMessage = "Invalid ID",
           source = "Back End",
@@ -69,7 +69,7 @@ class ErrorDetailsSpec extends SpecBase {
       val model = ErrorDetails(
         ErrorDetail(
           timestamp = "2016-08-16T18:15:41Z",
-          correlationId = "aaaa",
+          correlationId = Some("aaaa"),
           errorCode = "500",
           errorMessage = "Internal error",
           source = "Internal error",
@@ -98,7 +98,7 @@ class ErrorDetailsSpec extends SpecBase {
       val model = ErrorDetails(
         ErrorDetail(
           timestamp = "2016-08-16T18:15:41Z",
-          correlationId = "aaaa",
+          correlationId = Some("aaaa"),
           errorCode = "503",
           errorMessage = "Send timeout",
           source = "Back End",
