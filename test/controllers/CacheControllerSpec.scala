@@ -76,7 +76,7 @@ class CacheControllerSpec extends SpecBase with CacheModelGenerators with Before
       forAll(arbitrary[CreateSubscriptionForDACRequest]) {
         subscriptionRequest =>
           val payload = Json.toJson(subscriptionRequest)
-          val request = FakeRequest(POST, routes.CacheController.storeSubscriptionDetails().url)
+          val request = FakeRequest(POST, routes.CacheController.storeSubscriptionDetails.url)
             .withJsonBody(payload)
 
           val result: Future[Result] = route(application, request).value
@@ -93,7 +93,7 @@ class CacheControllerSpec extends SpecBase with CacheModelGenerators with Before
       forAll(arbitrary[CreateSubscriptionForDACRequest]) {
         subscriptionRequest =>
           val payload = Json.toJson(subscriptionRequest)
-          val request = FakeRequest(POST, routes.CacheController.updateSubscriptionDetails().url)
+          val request = FakeRequest(POST, routes.CacheController.updateSubscriptionDetails.url)
             .withJsonBody(payload)
 
           val result: Future[Result] = route(application, request).value
@@ -128,7 +128,7 @@ class CacheControllerSpec extends SpecBase with CacheModelGenerators with Before
         display =>
           val payload = Json.toJson(display)
 
-          val request = FakeRequest(POST, routes.CacheController.retrieveSubscription().url)
+          val request = FakeRequest(POST, routes.CacheController.retrieveSubscription.url)
             .withJsonBody(payload)
 
           val result: Future[Result] = route(application, request).value
@@ -149,7 +149,7 @@ class CacheControllerSpec extends SpecBase with CacheModelGenerators with Before
             .thenReturn(Future.successful(HttpResponse(statusCodes, "")))
 
           val payload = Json.toJson(display)
-          val request = FakeRequest(POST, routes.CacheController.retrieveSubscription().url)
+          val request = FakeRequest(POST, routes.CacheController.retrieveSubscription.url)
             .withJsonBody(payload)
 
           val result: Future[Result] = route(application, request).value
@@ -168,7 +168,7 @@ class CacheControllerSpec extends SpecBase with CacheModelGenerators with Before
             .thenReturn(Future.successful(HttpResponse(statusCodes, "")))
 
           val payload = Json.toJson(display)
-          val request = FakeRequest(POST, routes.CacheController.retrieveSubscription().url)
+          val request = FakeRequest(POST, routes.CacheController.retrieveSubscription.url)
             .withJsonBody(payload)
 
           val result: Future[Result] = route(application, request).value

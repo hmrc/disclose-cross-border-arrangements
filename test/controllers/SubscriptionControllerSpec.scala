@@ -56,7 +56,7 @@ class SubscriptionControllerSpec extends SpecBase with ModelGenerators with Scal
             when(mockSubscriptionConnector.displaySubscriptionForDAC(any())(any(), any()))
               .thenReturn(Future.successful(HttpResponse(OK, "")))
 
-            val request = FakeRequest(POST, routes.SubscriptionController.displaySubscriptionDetails().url)
+            val request = FakeRequest(POST, routes.SubscriptionController.displaySubscriptionDetails.url)
               .withJsonBody(Json.toJson(displaySubscriptionForDACRequest))
 
             val result = route(application, request).value
@@ -71,7 +71,7 @@ class SubscriptionControllerSpec extends SpecBase with ModelGenerators with Scal
             when(mockSubscriptionConnector.displaySubscriptionForDAC(any())(any(), any()))
               .thenReturn(Future.successful(HttpResponse(statusCode, "")))
 
-            val request = FakeRequest(POST, routes.SubscriptionController.displaySubscriptionDetails().url)
+            val request = FakeRequest(POST, routes.SubscriptionController.displaySubscriptionDetails.url)
               .withJsonBody(Json.toJson(displaySubscriptionForDACRequest))
 
             val result = route(application, request).value
@@ -88,7 +88,7 @@ class SubscriptionControllerSpec extends SpecBase with ModelGenerators with Scal
             when(mockSubscriptionConnector.updateSubscriptionForDAC(any())(any(), any()))
               .thenReturn(Future.successful(HttpResponse(OK, "")))
 
-            val request = FakeRequest(POST, routes.SubscriptionController.updateSubscription().url)
+            val request = FakeRequest(POST, routes.SubscriptionController.updateSubscription.url)
               .withJsonBody(Json.toJson(updateSubscriptionForDAC))
 
             val result = route(application, request).value
@@ -103,7 +103,7 @@ class SubscriptionControllerSpec extends SpecBase with ModelGenerators with Scal
             when(mockSubscriptionConnector.updateSubscriptionForDAC(any())(any(), any()))
               .thenReturn(Future.successful(HttpResponse(statusCode, "")))
 
-            val request = FakeRequest(POST, routes.SubscriptionController.updateSubscription().url)
+            val request = FakeRequest(POST, routes.SubscriptionController.updateSubscription.url)
               .withJsonBody(Json.toJson(updateSubscriptionForDAC))
 
             val result = route(application, request).value
