@@ -21,7 +21,7 @@ object AppDependencies {
     "com.vladsch.flexmark"        %  "flexmark-all"             % "0.35.10",
     "com.github.tomakehurst"      %  "wiremock-standalone"      % "2.25.0",
     "org.scalatestplus"           %% "scalatestplus-scalacheck" % "3.1.0.0-RC2",
-    "uk.gov.hmrc.mongo"           %% "hmrc-mongo-test-play-27"  % "0.50.0"
+    "uk.gov.hmrc.mongo"           %% "hmrc-mongo-test-play-28"  % "0.68.0"
   ).map(_ % Test)
 
 }
