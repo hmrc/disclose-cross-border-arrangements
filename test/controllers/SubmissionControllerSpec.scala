@@ -101,7 +101,7 @@ class SubmissionControllerSpec extends SpecBase with MockitoSugar with ScalaChec
 
       val submission = minimalPassing
 
-      val request                = FakeRequest(POST, routes.SubmissionController.submitDisclosure().url).withXmlBody(submission)
+      val request                = FakeRequest(POST, routes.SubmissionController.submitDisclosure.url).withXmlBody(submission)
       val result: Future[Result] = route(application, request).value
 
       status(result) mustBe OK
@@ -127,7 +127,7 @@ class SubmissionControllerSpec extends SpecBase with MockitoSugar with ScalaChec
         .thenReturn(Future.failed(UpstreamErrorResponse("", INTERNAL_SERVER_ERROR)))
       val submission = minimalPassing
 
-      val request                = FakeRequest(POST, routes.SubmissionController.submitDisclosure().url).withXmlBody(submission)
+      val request                = FakeRequest(POST, routes.SubmissionController.submitDisclosure.url).withXmlBody(submission)
       val result: Future[Result] = route(application, request).value
 
       status(result) mustBe INTERNAL_SERVER_ERROR
@@ -145,7 +145,7 @@ class SubmissionControllerSpec extends SpecBase with MockitoSugar with ScalaChec
         .thenReturn(Future.failed(UpstreamErrorResponse("", INTERNAL_SERVER_ERROR)))
       val submission = oneError
 
-      val request                = FakeRequest(POST, routes.SubmissionController.submitDisclosure().url).withXmlBody(submission)
+      val request                = FakeRequest(POST, routes.SubmissionController.submitDisclosure.url).withXmlBody(submission)
       val result: Future[Result] = route(application, request).value
 
       status(result) mustBe INTERNAL_SERVER_ERROR
@@ -163,7 +163,7 @@ class SubmissionControllerSpec extends SpecBase with MockitoSugar with ScalaChec
         .thenReturn(Future.failed(UpstreamErrorResponse("", INTERNAL_SERVER_ERROR)))
       val submission = minimalPassing
 
-      val request                = FakeRequest(POST, routes.SubmissionController.submitDisclosure().url).withXmlBody(submission)
+      val request                = FakeRequest(POST, routes.SubmissionController.submitDisclosure.url).withXmlBody(submission)
       val result: Future[Result] = route(application, request).value
 
       status(result) mustBe INTERNAL_SERVER_ERROR
@@ -184,7 +184,7 @@ class SubmissionControllerSpec extends SpecBase with MockitoSugar with ScalaChec
 
       val submission = minimalPassing
 
-      val request                = FakeRequest(POST, routes.SubmissionController.submitDisclosure().url).withXmlBody(submission)
+      val request                = FakeRequest(POST, routes.SubmissionController.submitDisclosure.url).withXmlBody(submission)
       val result: Future[Result] = route(application, request).value
 
       status(result) mustBe INTERNAL_SERVER_ERROR
@@ -216,7 +216,7 @@ class SubmissionControllerSpec extends SpecBase with MockitoSugar with ScalaChec
       when(mockTransformService.addNameSpaces(any(), any())).thenReturn(minimalPassing)
 
       val submission = minimalPassing
-      val request = FakeRequest(POST, routes.SubmissionController.submitDisclosure().url)
+      val request = FakeRequest(POST, routes.SubmissionController.submitDisclosure.url)
         .withXmlBody(submission)
         .withHeaders((HeaderNames.xSessionId, s"session-${UUID.randomUUID()}"))
       val result: Future[Result] = route(app, request).value
@@ -255,7 +255,7 @@ class SubmissionControllerSpec extends SpecBase with MockitoSugar with ScalaChec
       when(mockTransformService.addNameSpaces(any(), any())).thenReturn(minimalPassing)
 
       val submission             = minimalPassing
-      val request                = FakeRequest(POST, routes.SubmissionController.submitDisclosure().url).withXmlBody(submission)
+      val request                = FakeRequest(POST, routes.SubmissionController.submitDisclosure.url).withXmlBody(submission)
       val result: Future[Result] = route(app, request).value
 
       status(result) mustBe INTERNAL_SERVER_ERROR
@@ -286,7 +286,7 @@ class SubmissionControllerSpec extends SpecBase with MockitoSugar with ScalaChec
 
           val submission = minimalPassing
 
-          val request                = FakeRequest(POST, routes.SubmissionController.submitDisclosure().url).withXmlBody(submission)
+          val request                = FakeRequest(POST, routes.SubmissionController.submitDisclosure.url).withXmlBody(submission)
           val result: Future[Result] = route(application, request).value
 
           status(result) mustBe statusCode
