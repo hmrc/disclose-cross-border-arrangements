@@ -66,7 +66,7 @@ class SubmissionDetailsRepositorySpec extends SpecBase with BeforeAndAfterEach {
     val disclosureID  = "GBD20200601AAA000"
     val enrolmentID   = "XADAC0001234567"
 
-    val date = LocalDateTime.now()
+    val date = LocalDateTime.now().truncatedTo(java.time.temporal.ChronoUnit.MILLIS)
 
     val submissionDetails = SubmissionDetails(
       enrolmentID = enrolmentID,
@@ -116,8 +116,10 @@ class SubmissionDetailsRepositorySpec extends SpecBase with BeforeAndAfterEach {
 
     "calling retrieveSubmissionHistory" - {
       "must retrieve submission details history - latest submissions first" in {
-        val olderSubmissionDetails = submissionDetails.copy(fileName = "another-file.xml", submissionTime = LocalDateTime.now().minusDays(1))
-        val diffSubmissionDetails  = submissionDetails.copy(enrolmentID = "diffEnrolmentID", fileName = "diff-file.xml")
+        val olderSubmissionDetails = submissionDetails.copy(fileName = "another-file.xml",
+                                                            submissionTime = LocalDateTime.now().minusDays(1).truncatedTo(java.time.temporal.ChronoUnit.MILLIS)
+        )
+        val diffSubmissionDetails = submissionDetails.copy(enrolmentID = "diffEnrolmentID", fileName = "diff-file.xml")
 
         val repo: SubmissionDetailsRepository = app.injector.instanceOf[SubmissionDetailsRepository]
 
