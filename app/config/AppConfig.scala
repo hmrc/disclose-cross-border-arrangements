@@ -35,6 +35,4 @@ class AppConfig @Inject() (config: Configuration, servicesConfig: ServicesConfig
 
   lazy val submissionUrl: String =
     s"${config.get[Service]("microservice.services.submission").baseUrl}${config.get[String]("microservice.services.submission.startUrl")}"
-  lazy val validationAuditToggle: Boolean = config.get[Boolean]("validationAuditToggle")
-
 }
