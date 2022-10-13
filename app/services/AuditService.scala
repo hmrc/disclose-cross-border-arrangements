@@ -100,33 +100,28 @@ class AuditService @Inject() (appConfig: AppConfig, auditConnector: AuditConnect
       "errors" -> buildManualErrorPayload(errors)
     )
 
-    if (appConfig.validationAuditToggle) {
-
-      auditConnector.sendExtendedEvent(
-        ExtendedDataEvent(
-          auditSource = appConfig.appName,
-          auditType = auditType,
-          detail = auditMap,
-          tags = AuditExtensions.auditHeaderCarrier(hc).toAuditDetails()
-        )
-      ) map {
-        ar: AuditResult =>
-          ar match {
-            case Failure(msg, ex) =>
-              ex match {
-                case Some(throwable) =>
-                  logger.warn(s"The attempt to issue audit event $auditType failed with message : $msg", throwable)
-                case None =>
-                  logger.warn(s"The attempt to issue audit event $auditType failed with message : $msg")
-              }
-              ar
-            case Disabled =>
-              logger.warn(s"The attempt to issue audit event $auditType was unsuccessful, as auditing is currently disabled in config"); ar
-            case _ => logger.debug(s"Audit event $auditType issued successfully."); ar
-          }
-      }
-    } else {
-      logger.warn(s"Validation has failed and auditing currently disabled for this event type")
+    auditConnector.sendExtendedEvent(
+      ExtendedDataEvent(
+        auditSource = appConfig.appName,
+        auditType = auditType,
+        detail = auditMap,
+        tags = AuditExtensions.auditHeaderCarrier(hc).toAuditDetails()
+      )
+    ) map {
+      ar: AuditResult =>
+        ar match {
+          case Failure(msg, ex) =>
+            ex match {
+              case Some(throwable) =>
+                logger.warn(s"The attempt to issue audit event $auditType failed with message : $msg", throwable)
+              case None =>
+                logger.warn(s"The attempt to issue audit event $auditType failed with message : $msg")
+            }
+            ar
+          case Disabled =>
+            logger.warn(s"The attempt to issue audit event $auditType was unsuccessful, as auditing is currently disabled in config"); ar
+          case _ => logger.debug(s"Audit event $auditType issued successfully."); ar
+        }
     }
   }
 
