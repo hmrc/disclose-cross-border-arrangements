@@ -388,7 +388,7 @@ class BusinessRuleValidationService @Inject() (submissionDetailsRepository: Subm
             initialDisclosureMA = isInitialDisclosureMA,
             messageRefId = messageRefId
           )
-        case _ => throw new RuntimeException("XML Data extraction failed - disclosure import instruction Missing")
+        case UnknownInstruction => None
       }
     }
   }
@@ -547,7 +547,7 @@ object BusinessRuleValidationService {
     )
   }
 
-  val disclosureImportInstruction: ReaderT[Option, NodeSeq, String] =
+  val   disclosureImportInstruction: ReaderT[Option, NodeSeq, String] =
     ReaderT[Option, NodeSeq, String] {
       xml =>
         Some((xml \\ "DisclosureImportInstruction").text)
