@@ -23,6 +23,7 @@ case object Add extends ImportInstruction
 case object Replace extends ImportInstruction
 case object Delete extends ImportInstruction
 case object UnknownInstruction extends ImportInstruction
+
 object ImportInstruction {
 
   def apply(name: String): ImportInstruction = name match {
@@ -30,6 +31,6 @@ object ImportInstruction {
     case "DAC6ADD" => Add
     case "DAC6REP" => Replace
     case "DAC6DEL" => Delete
-    case _ => UnknownInstruction
+    case _         => UnknownInstruction
   }
 }

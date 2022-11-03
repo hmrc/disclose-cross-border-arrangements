@@ -172,7 +172,7 @@ class BusinessRuleValidationService @Inject() (submissionDetailsRepository: Subm
           key = "businessrules.delDisclosure.mustHaveArrangementIDDisclosureIDAndMessageRefID",
           value = arrangementID.nonEmpty && disclosureID.nonEmpty && messageRefID.nonEmpty
         )
-      case _ => Validation(key = "businessrules.disclosure.notAValidDisclosureInstruction", value = false)
+      case _ => Validation(key = "businessrules.disclosure.notAValidDisclosureInstruction", value = true) //Send true for now
     }
   }
 
@@ -388,7 +388,17 @@ class BusinessRuleValidationService @Inject() (submissionDetailsRepository: Subm
             initialDisclosureMA = isInitialDisclosureMA,
             messageRefId = messageRefId
           )
-        case UnknownInstruction => None
+        case UnknownInstruction =>
+          logger.warn("Unknown Disclose Import instruction")
+          Dac6MetaData(
+            "UnknownImportInstruction",
+            Some(arrangementID),
+            Some(disclosureID),
+            disclosureInformationPresent = infoPresent,
+            initialDisclosureMA = isInitialDisclosureMA,
+            messageRefId = messageRefId
+          )
+        case _ => throw new RuntimeException("XML Data extraction failed - disclosure import instruction Missing")
       }
     }
   }
@@ -547,7 +557,7 @@ object BusinessRuleValidationService {
     )
   }
 
-  val   disclosureImportInstruction: ReaderT[Option, NodeSeq, String] =
+  val disclosureImportInstruction: ReaderT[Option, NodeSeq, String] =
     ReaderT[Option, NodeSeq, String] {
       xml =>
         Some((xml \\ "DisclosureImportInstruction").text)

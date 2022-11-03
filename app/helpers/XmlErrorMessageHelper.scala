@@ -69,6 +69,7 @@ class XmlErrorMessageHelper {
   }
 
   def extractInvalidEnumAttributeValues(errorMessage1: String, errorMessage2: String): Option[String] = {
+
     val formatOfFirstError =
       """cvc-enumeration-valid: Value '(.*?)' is not facet-valid with respect to enumeration '(.*?)'. It must be a value from the enumeration.""".stripMargin.r
     val formatOfSecondError =
@@ -79,7 +80,8 @@ class XmlErrorMessageHelper {
         errorMessage2 match {
           case formatOfSecondError(_, attribute, element, _) =>
             invalidCodeMessage(element + " " + attribute)
-          case _ => None
+          case _ =>
+            None
         }
       case _ => None
 
@@ -108,7 +110,6 @@ class XmlErrorMessageHelper {
   }
 
   def extractEmptyTagValues(errorMessage1: String, errorMessage2: String): Option[String] = {
-
     val formattedError = errorMessage2.replaceAll("\\[", "").replaceAll("\\]", "")
     val formatOfFirstError =
       """cvc-minLength-valid: Value '' with length = '0' is not facet-valid with respect to minLength '(.*?)' for type '(.*?)'.""".stripMargin.r
@@ -149,6 +150,7 @@ class XmlErrorMessageHelper {
   }
 
   def extractEnumErrorValues(errorMessage1: String, errorMessage2: String): Option[String] = {
+
     val formattedError = errorMessage1.replaceAll("\\[", "(").replaceAll("\\]", ")")
 
     val formatOfFirstError =
@@ -263,6 +265,8 @@ class XmlErrorMessageHelper {
       case ("ConcernedMS", _)                                   => Some("ConcernedMS is not one of the ISO EU Member State country codes")
       case ("Reason" | "IntermediaryNexus" | "RelevantTaxpayerNexus" | "Hallmark" | "ResCountryCode", _) =>
         Some(s"$elementName is not one of the allowed values")
+      case ("DisclosureImportInstruction", Some(values)) =>
+        Some(s"DisclosureImportInstruction is not one of the allowed values $values")
       case ("Capacity", Some(values)) =>
         if (values.equals("(DAC61104, DAC61105, DAC61106)")) {
           Some(s"Capacity is not one of the allowed values $values for Taxpayer")

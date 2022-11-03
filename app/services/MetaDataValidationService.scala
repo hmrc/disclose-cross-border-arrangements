@@ -74,7 +74,8 @@ class MetaDataValidationService @Inject() (
           case Some(Dac6MetaData("DAC6NEW", _, _, _, _, _)) =>
             val disclosureInformationResult = verifyDisclosureInformation(dac6MetaData.get, Some(SubmissionHistory(history)))
             Future(disclosureInformationResult ++ messageRefResult)
-
+//          case Some(Dac6MetaData("UnknownImportInstruction", _, _, _, _, _)) =>
+//            Future(Seq(Validation("metaDataRules.unknownImportInstruction", value = false)))
           case Some(Dac6MetaData(_, _, _, _, _, _)) => verifyIds(dac6MetaData.get, SubmissionHistory(history)).map(_ ++ messageRefResult)
 
           case _ => Future(Seq(Validation("File does not contain necessary data", value = false)))
