@@ -99,7 +99,7 @@ class SubmissionController @Inject() (
           //validate the payload
           _ = validationService.validateXml(disclosureSubmission.mkString).left.map {
             errors =>
-              auditService.auditValidationFailures(enrolmentID, errors)
+              auditService.auditValidationFailures(enrolmentID, errors.toSeq)
 
               //then throw an exception or return an internal server error
               throw new Exception("There have been errors in validating the submission payload")

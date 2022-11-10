@@ -16,9 +16,11 @@
 
 package helpers
 
+import scala.xml.Elem
+
 object SubmissionFixtures {
 
-  val minimalPassing =
+  val minimalPassing: Elem =
     <submission>
      <fileName>my-file.xml</fileName>
      <enrolmentID>enrolmentID</enrolmentID>
@@ -47,7 +49,7 @@ object SubmissionFixtures {
      </file>
    </submission>
 
-  val oneError =
+  val oneError: Elem =
     <submission>
       <fileName>my-file.xml</fileName>
       <enrolmentID>enrolmentID</enrolmentID>
