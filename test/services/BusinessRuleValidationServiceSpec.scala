@@ -3091,29 +3091,4 @@ class BusinessRuleValidationServiceSpec extends SpecBase with MockitoSugar with 
       )
     )
   }
-
-  "must throw exception if disclosureImportInstruction is invalid or missing" in {
-    val xml =
-      <DAC6_Arrangement version="First" xmlns="urn:ukdac6:v0.1">
-        <Header>
-          <MessageRefId>GB0000000XXX</MessageRefId>
-          <Timestamp>2020-05-14T17:10:00</Timestamp>
-        </Header>
-        <ArrangementID>AAA000000000</ArrangementID>
-        <DAC6Disclosures>
-          <DisclosureID>AAA000000000</DisclosureID>
-          <DisclosureInformation>
-            <ImplementingDate>2020-01-14</ImplementingDate>
-          </DisclosureInformation>
-          <DisclosureInformation>
-            <ImplementingDate>2018-06-25</ImplementingDate>
-          </DisclosureInformation>
-        </DAC6Disclosures>
-      </DAC6_Arrangement>
-
-    val service = app.injector.instanceOf[BusinessRuleValidationService]
-    a[RuntimeException] mustBe thrownBy {
-      service.extractDac6MetaData()(xml)
-    }
-  }
 }

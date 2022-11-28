@@ -172,7 +172,7 @@ class BusinessRuleValidationService @Inject() (submissionDetailsRepository: Subm
           key = "businessrules.delDisclosure.mustHaveArrangementIDDisclosureIDAndMessageRefID",
           value = arrangementID.nonEmpty && disclosureID.nonEmpty && messageRefID.nonEmpty
         )
-      case _ => Validation(key = "businessrules.disclosure.notAValidDisclosureInstruction", value = false)
+      case _ => Validation(key = "businessrules.disclosure.notAValidDisclosureInstruction", value = arrangementID.isEmpty && disclosureID.isEmpty)
     }
   }
 
@@ -343,7 +343,6 @@ class BusinessRuleValidationService @Inject() (submissionDetailsRepository: Subm
   }
 
   def extractDac6MetaData(): ReaderT[Option, NodeSeq, Dac6MetaData] = {
-
     for {
       disclosureImportInstruction <- disclosureImportInstruction
       arrangementID               <- arrangementID
@@ -388,7 +387,12 @@ class BusinessRuleValidationService @Inject() (submissionDetailsRepository: Subm
             initialDisclosureMA = isInitialDisclosureMA,
             messageRefId = messageRefId
           )
-        case _ => throw new RuntimeException("XML Data extraction failed - disclosure import instruction Missing")
+        case _ =>
+          Dac6MetaData(disclosureImportInstruction,
+                       disclosureInformationPresent = infoPresent,
+                       initialDisclosureMA = isInitialDisclosureMA,
+                       messageRefId = messageRefId
+          )
       }
     }
   }

@@ -263,6 +263,8 @@ class XmlErrorMessageHelper {
       case ("ConcernedMS", _)                                   => Some("ConcernedMS is not one of the ISO EU Member State country codes")
       case ("Reason" | "IntermediaryNexus" | "RelevantTaxpayerNexus" | "Hallmark" | "ResCountryCode", _) =>
         Some(s"$elementName is not one of the allowed values")
+      case ("DisclosureImportInstruction", Some(values)) =>
+        Some(s"DisclosureImportInstruction is not one of the allowed values $values")
       case ("Capacity", Some(values)) =>
         if (values.equals("(DAC61104, DAC61105, DAC61106)")) {
           Some(s"Capacity is not one of the allowed values $values for Taxpayer")

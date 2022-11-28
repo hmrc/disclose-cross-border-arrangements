@@ -91,6 +91,12 @@ class UploadSubmissionValidationEngineSpec extends SpecBase {
   )
   val intermediaryCapacityError2 = SaxParseError(129, "cvc-type.3.1.3: The value 'DAC61102fefef' of element 'Capacity' is not valid.")
 
+  val DisclosureImportInstruction1 = SaxParseError(
+    8,
+    "cvc-enumeration-valid: Value 'DAC6 NEW' is not facet-valid with respect to enumeration '[DAC6NEW, DAC6ADD, DAC6REP, DAC6DEL]'. It must be a value from the enumeration."
+  )
+  val DisclosureImportInstruction2 = SaxParseError(8, "cvc-type.3.1.3: The value 'DAC6 NEW' of element 'DisclosureImportInstruction' is not valid.")
+
   val relevantTpDiscloserCapacityError1 = SaxParseError(
     37,
     "cvc-enumeration-valid: Value 'DAC61105hhh' is not facet-valid with respect to enumeration '[DAC61104, DAC61105, DAC61106]'. It must be a value from the enumeration."
@@ -340,6 +346,19 @@ class UploadSubmissionValidationEngineSpec extends SpecBase {
         .thenReturn(Future.successful(Right(mockMetaData)))
 
       val expectedErrors = Seq(GenericError(129, "Capacity is not one of the allowed values (DAC61101, DAC61102) for Intermediary"))
+
+      Await.result(validationEngine.validateUploadSubmission(Some(source), enrolmentId), 10 seconds) mustBe Some(
+        UploadSubmissionValidationFailure(ValidationErrors(expectedErrors, Some(mockMetaData)))
+      )
+    }
+
+    "must return ValidationFailure for file with invalid DisclosureImportInstruction" in new SetUp {
+
+      when(mockXmlValidationService.validateUploadXml(any())).thenReturn((elem, ListBuffer(DisclosureImportInstruction1, DisclosureImportInstruction2)))
+      when(mockMetaDataValidationService.verifyMetaDataForUploadSubmission(any(), any(), any())(any(), any()))
+        .thenReturn(Future.successful(Right(mockMetaData)))
+
+      val expectedErrors = Seq(GenericError(8, "DisclosureImportInstruction is not one of the allowed values (DAC6NEW, DAC6ADD, DAC6REP, DAC6DEL)"))
 
       Await.result(validationEngine.validateUploadSubmission(Some(source), enrolmentId), 10 seconds) mustBe Some(
         UploadSubmissionValidationFailure(ValidationErrors(expectedErrors, Some(mockMetaData)))

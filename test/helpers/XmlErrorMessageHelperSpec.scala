@@ -175,6 +175,17 @@ class XmlErrorMessageHelperSpec extends SpecBase {
         result mustBe List(GenericError(lineNumber, "Capacity is not one of the allowed values (DAC61101, DAC61102) for Intermediary"))
       }
 
+      "must return correct error for invalid ImportInstruction" in {
+        val error1 = SaxParseError(
+          lineNumber,
+          "cvc-enumeration-valid: Value 'DAC6 NEW' is not facet-valid with respect to enumeration '[DAC6NEW, DAC6ADD, DAC6REP, DAC6DEL]'. It must be a value from the enumeration."
+        )
+        val error2 = SaxParseError(lineNumber, "cvc-type.3.1.3: The value 'DAC6 NEW' of element 'DisclosureImportInstruction' is not valid.")
+
+        val result = helper.generateErrorMessages(ListBuffer(error1, error2))
+        result mustBe List(GenericError(lineNumber, "DisclosureImportInstruction is not one of the allowed values (DAC6NEW, DAC6ADD, DAC6REP, DAC6DEL)"))
+      }
+
       "must return correct error for invalid TaxPayer Capacity" in {
         val error1 = SaxParseError(
           lineNumber,
