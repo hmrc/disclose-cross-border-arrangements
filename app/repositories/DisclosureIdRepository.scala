@@ -25,12 +25,14 @@ import uk.gov.hmrc.mongo.play.json.PlayMongoRepository
 
 import javax.inject.Inject
 import scala.concurrent.{ExecutionContext, Future}
+import javax.inject.Singleton
 
 object DisclosureIdRepository {
 
   def indexes = Seq(IndexModel(ascending("dateString"), IndexOptions().name("disclosure-id-date-index")))
 }
 
+@Singleton
 class DisclosureIdRepository @Inject() (mongo: MongoComponent)(implicit ec: ExecutionContext)
     extends PlayMongoRepository[DisclosureId](
       mongoComponent = mongo,

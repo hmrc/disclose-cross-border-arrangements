@@ -28,6 +28,7 @@ import java.time.LocalDateTime
 import java.util.concurrent.TimeUnit
 import javax.inject.Inject
 import scala.concurrent.{ExecutionContext, Future}
+import javax.inject.Singleton
 
 object SubscriptionCacheRepository {
 
@@ -38,6 +39,7 @@ object SubscriptionCacheRepository {
   )
 }
 
+@Singleton
 class SubscriptionCacheRepository @Inject() (mongo: MongoComponent, config: Configuration)(implicit ec: ExecutionContext)
     extends PlayMongoRepository[CreateSubscriptionForDACRequest](
       mongoComponent = mongo,
