@@ -29,6 +29,7 @@ import uk.gov.hmrc.mongo.play.json.{Codecs, PlayMongoRepository}
 import java.util.concurrent.TimeUnit
 import javax.inject.Inject
 import scala.concurrent.{ExecutionContext, Future}
+import javax.inject.Singleton
 
 object UploadSessionRepository {
 
@@ -39,6 +40,7 @@ object UploadSessionRepository {
   )
 }
 
+@Singleton
 class UploadSessionRepository @Inject() (mongo: MongoComponent, config: Configuration)(implicit ec: ExecutionContext)
     extends PlayMongoRepository[UploadSessionDetails](
       mongoComponent = mongo,
