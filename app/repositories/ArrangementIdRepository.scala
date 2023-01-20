@@ -23,6 +23,7 @@ import org.mongodb.scala.model.Indexes.ascending
 import org.mongodb.scala.model.{IndexModel, IndexOptions}
 import uk.gov.hmrc.mongo.MongoComponent
 import uk.gov.hmrc.mongo.play.json.PlayMongoRepository
+import javax.inject.Singleton
 
 import javax.inject.Inject
 import scala.concurrent.{ExecutionContext, Future}
@@ -32,6 +33,7 @@ object ArrangementIdRepository {
   def indexes = Seq(IndexModel(ascending("dateString"), IndexOptions().name("arrangement-id-date-index")))
 }
 
+@Singleton
 class ArrangementIdRepository @Inject() (mongo: MongoComponent)(implicit ec: ExecutionContext)
     extends PlayMongoRepository[ArrangementId](
       mongoComponent = mongo,

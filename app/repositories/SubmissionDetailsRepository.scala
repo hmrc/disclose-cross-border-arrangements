@@ -28,12 +28,14 @@ import uk.gov.hmrc.mongo.play.json.PlayMongoRepository
 import java.util.concurrent.TimeUnit
 import javax.inject.Inject
 import scala.concurrent.{ExecutionContext, Future}
+import javax.inject.Singleton
 
 object SubmissionDetailsRepository {
 
   def indexes = Seq(IndexModel(ascending("submissionTime"), IndexOptions().name("submission-time-ttl-index").expireAfter(6 * 365, TimeUnit.DAYS)))
 }
 
+@Singleton
 class SubmissionDetailsRepository @Inject() (mongo: MongoComponent)(implicit ec: ExecutionContext)
     extends PlayMongoRepository[SubmissionDetails](
       mongoComponent = mongo,
